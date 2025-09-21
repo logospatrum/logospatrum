@@ -1,0 +1,33 @@
+[
+  {
+    "author": "C.S. Lewis",
+    "title": "Mere Christianity",
+    "summary": "A theological book by C.S. Lewis, adapted from a series of BBC radio talks made between 1941 and 1944, while Lewis was at Oxford during the Second World War. Considered a classic of Christian apologetics, the book presents Lewis's arguments for the Christian faith.",
+    "date": "1952",
+    "link": "https://www.gutenberg.org/files/14644/14644-0.txt",
+    "genre": "Christian Apologetics",
+    "language": "English",
+    "pages": 227
+  },
+  {
+    "author": "Augustine of Hippo",
+    "title": "Confessions",
+    "summary": "The Confessions is an autobiographical work by Saint Augustine of Hippo, consisting of 13 books written in Latin between AD 397 and 400. The work outlines Saint Augustine's sinful youth and his conversion to Christianity.",
+    "date": "397-400 AD",
+    "link": "https://www.gutenberg.org/files/3296/3296-0.txt",
+    "genre": "Autobiography/Theology",
+    "language": "Latin (translated to English)",
+    "historical_period": "Late Antiquity"
+  },
+  {
+    "author": "Thomas à Kempis",
+    "title": "The Imitation of Christ",
+    "summary": "A Christian devotional book by Thomas à Kempis, first composed in Medieval Latin in the early 15th century. The Imitation is perhaps the most widely read Christian devotional work next to the Bible.",
+    "date": "1418-1427",
+    "link": "https://www.gutenberg.org/files/1653/1653-0.txt",
+    "genre": "Devotional",
+    "language": "Medieval Latin (translated)",
+    "influence": "One of the most influential Christian books"
+  }
+]
+

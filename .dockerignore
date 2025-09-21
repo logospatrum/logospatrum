@@ -1,0 +1,10 @@
+gc
+k8s
+pg
+venv
+.gitignore
+.env
+docker-compose.yml
+*.json
+README.md
+trigger
