@@ -1,0 +1,10 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "patristic": "./src/backend/graph.py:agent"
+  },
+  "env": "../../.env",
+  "http": {
+    "app": "./src/backend/catalog.py:app"
+  }
+}
