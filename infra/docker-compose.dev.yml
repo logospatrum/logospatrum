@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: patristic-postgres-dev
+    environment:
+      POSTGRES_DB: patristic
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d patristic"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-dev-data:
