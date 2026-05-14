@@ -5809,6 +5809,85 @@ git log --oneline | head -20
 
 ---
 
+### Task 42: Enrich через LM Studio (после прохождения goldset)
+
+**Files:**
+- Modify: `packages/pipeline/pipeline/config.py` — добавить `lmstudio_*` settings
+- Modify: `packages/pipeline/pipeline/enrich.py` — добавить provider switch
+
+**Когда запускать:** только после успешного прохождения Task 39 (goldset). До этого момента `works.topics = NULL`, что **не блокирует** ни поиск, ни цитирование (см. design spec §6.4). Эта таска добавляет topics в `works` и в frontmatter md без переиндексации эмбеддингов.
+
+**Pre-requisites (вручную):** запустить LM Studio с моделью (например `qwen/qwen3.5-9b` или любая 7-14B Q4). OpenAI-compatible endpoint: `http://localhost:1234/v1`.
+
+- [ ] **Step 1: Расширить config.py**
+
+Добавить поля в `Settings`:
+
+```python
+# Local LLM (LM Studio) for bulk enrich
+lmstudio_base_url: str = "http://localhost:1234/v1"
+lmstudio_model: str = "qwen/qwen3.5-9b"
+enrich_provider: str = "timeweb"  # "timeweb" | "local"
+```
+
+- [ ] **Step 2: Перепилить enrich.py — выбор client'а**
+
+Найди в `enrich.py` создание `client`:
+
+```python
+client = OpenAI(api_key=settings.timeweb_ai_key, base_url=settings.timeweb_base_url)
+```
+
+Замени на:
+
+```python
+if settings.enrich_provider == "local":
+    client = OpenAI(api_key="not-needed", base_url=settings.lmstudio_base_url)
+    model_name = settings.lmstudio_model
+else:
+    client = OpenAI(api_key=settings.timeweb_ai_key, base_url=settings.timeweb_base_url)
+    model_name = settings.enrich_model
+
+# и в вызове client.chat.completions.create(model=model_name, ...)
+```
+
+- [ ] **Step 3: Прогон**
+
+```bash
+# Терминал — убедись что LM Studio запущен и модель загружена
+curl http://localhost:1234/v1/models
+# должен вернуть список моделей включая loaded
+
+cd packages/pipeline
+ENRICH_PROVIDER=local .venv/bin/python -m pipeline enrich
+```
+
+Expected: проходит по 72K md, обновляет frontmatter и `works.topics`. На qwen 9B на 5070 Ti ~1-5 сек/файл = 20-100 часов. Можно запустить и оставить на сутки. **Идемпотентно** — если упало посередине, перезапуск пропустит уже обогащённые.
+
+- [ ] **Step 4: Финальные sanity-метрики**
+
+```sql
+SELECT COUNT(*) FROM works WHERE topics IS NOT NULL;
+-- должно быть = всему числу works
+
+SELECT slug, jsonb_array_length(topics) AS n_topics FROM works
+WHERE topics IS NOT NULL LIMIT 5;
+-- по 3-7 топиков на труд
+```
+
+- [ ] **Step 5: LibraryBrowser topic search smoke**
+
+Открой :3000 → Library → введи в поиск тему (например «молитва»). Должны разворачиваться авторы у которых есть truды с этой темой.
+
+- [ ] **Step 6: Final tag**
+
+```bash
+git commit -m "feat(pipeline): enrich provider switch + LM Studio config"
+git tag -a v0.2.0-enriched -m "Topics enriched across full corpus via LM Studio"
+```
+
+---
+
 ## Финальная проверка acceptance gate
 
 После всех тасков:
