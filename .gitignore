@@ -1,1 +1,39 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# Node
+node_modules/
+.next/
+out/
+
+# Data (не коммитим тяжёлые артефакты)
+packages/pipeline/data/**/*.epub
+packages/pipeline/data/**/*.json
+packages/pipeline/output/
+
+# Model cache
+models/
+
+# Env
 .env
+.env.local
+.env.prod
+.env.dev
+
+# IDE
+.idea/
+.vscode/
+
+# Misc
+*.log
+*.dump
+*.sql.gz
