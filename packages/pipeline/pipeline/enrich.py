@@ -1,14 +1,23 @@
+"""Enrich md files with topics extracted by an LLM, write to frontmatter AND works.topics.
+
+Provider switch: ENRICH_PROVIDER=timeweb uses Timeweb proxy (Haiku);
+ENRICH_PROVIDER=local uses LM Studio at LMSTUDIO_BASE_URL.
+"""
+import json
 import re
 from pathlib import Path
-from typing import Generator, List
 
 from openai import OpenAI
+from rich.progress import Progress
 
-from .config import Config
+from .config import settings
+from .db import init_pool, close_pool, conn
+from .slugify import slugify
 
-TOPIC_EXTRACTION_PROMPT = """Проанализируй следующий православный текст и выдели из него от 3 до 7 ключевых тем.
-Ответ дай в формате списка через запятую, без лишнего текста.
-Например: Евангелие, Покаяние, Молитва, Пост
+
+PROMPT = """Проанализируй следующий православный текст и выдели от 3 до 7 ключевых тем.
+Ответ — список через запятую, без пояснений и без префиксов.
+Пример: Евангелие, Покаяние, Молитва, Пост
 
 Текст:
 {text}
@@ -16,91 +25,82 @@ TOPIC_EXTRACTION_PROMPT = """Проанализируй следующий пр�
 Темы:"""
 
 
-class Enricher:
-    def __init__(self, config: Config):
-        self.config = config
-        self.client = OpenAI(
-            api_key="dummy",
-            base_url=config.api_url
-        ) if config.api_url else None
+def _read_md(path: Path) -> tuple[str, str, str]:
+    content = path.read_text(encoding="utf-8")
+    m = re.match(r"^---\n(.*?)\n---\n(.*)$", content, re.DOTALL)
+    if m:
+        return content, m.group(1), m.group(2)
+    return content, "", content
 
-    def iter_markdown_files(self) -> Generator[Path, None, None]:
-        output_dir = self.config.output_dir
-        if not output_dir.exists():
-            return
-        for md_path in output_dir.rglob("*.md"):
-            yield md_path
 
-    def read_markdown(self, path: Path) -> tuple[str, str, str]:
-        with open(path, "r", encoding="utf-8") as f:
-            content = f.read()
+def _add_topics(frontmatter: str, topics: list[str]) -> str:
+    frontmatter = re.sub(r"^topics:.*?\n", "", frontmatter, flags=re.MULTILINE)
+    line = f"topics: [{', '.join(topics)}]\n"
+    if frontmatter and not frontmatter.endswith("\n"):
+        frontmatter += "\n"
+    return frontmatter + line
 
-        match = re.match(r"^---\n(.*?)\n---\n(.*)$", content, re.DOTALL)
-        if match:
-            frontmatter = match.group(1)
-            body = match.group(2)
-        else:
-            frontmatter = ""
-            body = content
 
-        return content, frontmatter, body
+def _extract_topics(frontmatter: str) -> list[str] | None:
+    m = re.search(r"^topics:\s*\[(.*)\]\s*$", frontmatter, re.MULTILINE)
+    if not m:
+        return None
+    return [t.strip() for t in m.group(1).split(",") if t.strip()]
 
-    def extract_topics(self, text: str) -> List[str]:
-        if not self.client:
-            return []
 
-        truncated = text[:4000]
+def _make_client_and_model() -> tuple[OpenAI, str]:
+    if settings.enrich_provider == "local":
+        return (
+            OpenAI(api_key="not-needed", base_url=settings.lmstudio_base_url),
+            settings.lmstudio_model,
+        )
+    return (
+        OpenAI(api_key=settings.timeweb_ai_key, base_url=settings.timeweb_base_url),
+        settings.enrich_model,
+    )
 
-        try:
-            response = self.client.chat.completions.create(
-                model=self.config.model_name or "gpt-4",
-                messages=[
-                    {"role": "user", "content": TOPIC_EXTRACTION_PROMPT.format(text=truncated)}
-                ],
-                max_tokens=100,
-                temperature=0.3
+
+async def run() -> None:
+    client, model_name = _make_client_and_model()
+    print(f"Using provider={settings.enrich_provider} model={model_name}")
+
+    md_files = list(settings.output_dir.rglob("*.md"))
+    work_topics: dict[str, set[str]] = {}
+
+    with Progress() as progress:
+        task = progress.add_task("Enriching", total=len(md_files))
+        for path in md_files:
+            progress.update(task, advance=1)
+            content, fm, body = _read_md(path)
+
+            existing = _extract_topics(fm)
+            if existing is None:
+                resp = client.chat.completions.create(
+                    model=model_name,
+                    messages=[{"role": "user", "content": PROMPT.format(text=body[:4000])}],
+                    temperature=0.3,
+                    max_tokens=100,
+                )
+                topics_str = resp.choices[0].message.content.strip()
+                topics = [t.strip() for t in topics_str.split(",") if t.strip()][:7]
+                if topics:
+                    fm_new = _add_topics(fm, topics)
+                    path.write_text(f"---\n{fm_new}---\n{body}", encoding="utf-8")
+            else:
+                topics = existing
+
+            author = re.search(r"^author:\s*(.+)$", fm, re.MULTILINE)
+            book = re.search(r"^book_title:\s*(.+)$", fm, re.MULTILINE)
+            if author and book:
+                ws = slugify(f"{slugify(author.group(1).strip())}_{book.group(1).strip()}")
+                work_topics.setdefault(ws, set()).update(topics)
+
+    await init_pool()
+    async with conn() as c:
+        for ws, topics in work_topics.items():
+            await c.execute(
+                "UPDATE works SET topics=%s WHERE slug=%s",
+                [json.dumps(sorted(topics), ensure_ascii=False), ws],
             )
-            topics_str = response.choices[0].message.content.strip()
-            topics = [t.strip() for t in topics_str.split(",") if t.strip()]
-            return topics[:7]
-        except Exception as e:
-            print(f"Error extracting topics: {e}")
-            return []
-
-    def add_topics_to_frontmatter(self, frontmatter: str, topics: List[str]) -> str:
-        if "topics:" in frontmatter:
-            frontmatter = re.sub(r"topics:.*?\n", "", frontmatter)
-
-        topics_line = f"topics: [{', '.join(topics)}]\n"
-
-        if frontmatter and not frontmatter.endswith("\n"):
-            frontmatter += "\n"
-
-        return frontmatter + topics_line
-
-    def update_markdown(self, path: Path, frontmatter: str, body: str):
-        content = f"---\n{frontmatter}---\n{body}"
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(content)
-
-    def run(self):
-        if not self.client:
-            print("Error: API URL and model name required for enrichment")
-            return
-
-        for md_path in self.iter_markdown_files():
-            print(f"Enriching: {md_path.name}")
-
-            content, frontmatter, body = self.read_markdown(md_path)
-
-            if "topics:" in frontmatter:
-                print(f"  Already enriched, skipping")
-                continue
-
-            topics = self.extract_topics(body)
-            if topics:
-                print(f"  Topics: {topics}")
-                frontmatter = self.add_topics_to_frontmatter(frontmatter, topics)
-                self.update_markdown(md_path, frontmatter, body)
-
-        print("Enrichment completed!")
+    await close_pool()
+    print(f"Enriched topics for {len(work_topics)} works.")
