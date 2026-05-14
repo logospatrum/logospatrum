@@ -1,0 +1,304 @@
+# Patristic Chat MVP — Goldset
+# Format per entry:
+#   query: вопрос как пользователь напишет
+#   category: addressed | thematic | cross | negative
+#   expected_citations: [{work: <work_slug>, chapter: <N>}]   (для any_match)
+#   expected_authors: [<author_slug>, ...]                     (для at_least_*)
+#   passing: any_match | at_least_one_match | at_least_two_authors | empty_or_low_confidence
+#
+# NB: author slugs in expected_authors зависят от slugify() результата на реальных
+# именах из output/. После первой полной индексации (Task 31) — проверь slug-и
+# командой `SELECT slug FROM authors` и поправь здесь.
+
+# === Addressed (18) ===
+
+- query: "что Лествичник говорит о послушании"
+  category: addressed
+  expected_authors: [ioann_lestvichnik_prepodobnyj]
+  passing: at_least_one_match
+
+- query: "Августин о времени и вечности"
+  category: addressed
+  expected_authors: [avrelij_avgustin_blazhennyj]
+  passing: at_least_one_match
+
+- query: "Брянчанинов о духовной прелести"
+  category: addressed
+  expected_authors: [brjanchaninov_ignatij_svjatitel]
+  passing: at_least_one_match
+
+- query: "Палама о Фаворском свете"
+  category: addressed
+  expected_authors: [grigorij_palama_svjatitel]
+  passing: at_least_one_match
+
+- query: "Феофан Затворник о трезвении"
+  category: addressed
+  expected_authors: [govorov_feofan_zatvornik_svjati]
+  passing: at_least_one_match
+
+- query: "Иоанн Златоуст о милостыне"
+  category: addressed
+  expected_authors: [ioann_zlatoust_svjatitel]
+  passing: at_least_one_match
+
+- query: "Ефрем Сирин о покаянии"
+  category: addressed
+  expected_authors: [efrem_sirin_prepodobnyj]
+  passing: at_least_one_match
+
+- query: "Григорий Богослов о Святой Троице"
+  category: addressed
+  expected_authors: [grigorij_bogoslov_nazianzin_sv]
+  passing: at_least_one_match
+
+- query: "Авва Дорофей об отсечении воли"
+  category: addressed
+  expected_authors: [dorofej_avva_prepodobnyj]
+  passing: at_least_one_match
+
+- query: "Исаак Сирин о любви"
+  category: addressed
+  expected_authors: [isaak_sirin_ninevijskij_prepo]
+  passing: at_least_one_match
+
+- query: "Василий Великий о посте"
+  category: addressed
+  expected_authors: [vasilij_velikij_svjatitel]
+  passing: at_least_one_match
+
+- query: "Григорий Нисский о душе"
+  category: addressed
+  expected_authors: [grigorij_nisskij_svjatitel]
+  passing: at_least_one_match
+
+- query: "Афанасий Великий о вочеловечении"
+  category: addressed
+  expected_authors: [afanasij_velikij_svjatitel]
+  passing: at_least_one_match
+
+- query: "Иоанн Дамаскин о почитании икон"
+  category: addressed
+  expected_authors: [ioann_damaskin_prepodobnyj]
+  passing: at_least_one_match
+
+- query: "Антоний Великий о борьбе с помыслами"
+  category: addressed
+  expected_authors: [antonij_velikij_prepodobnyj]
+  passing: at_least_one_match
+
+- query: "Иоанн Кассиан о восьми греховных страстях"
+  category: addressed
+  expected_authors: [ioann_kassian_rimljanin_prepodobnyj]
+  passing: at_least_one_match
+
+- query: "Григорий Палама что говорит об исихии"
+  category: addressed
+  expected_authors: [grigorij_palama_svjatitel]
+  passing: at_least_one_match
+
+- query: "Августин о благодати и свободной воле"
+  category: addressed
+  expected_authors: [avrelij_avgustin_blazhennyj]
+  passing: at_least_one_match
+
+# === Thematic (22) ===
+
+- query: "найди цитаты про осуждение ближнего"
+  category: thematic
+  expected_authors: [ioann_lestvichnik_prepodobnyj, isaak_sirin_ninevijskij_prepo,
+                     brjanchaninov_ignatij_svjatitel, dorofej_avva_prepodobnyj]
+  passing: at_least_two_authors
+
+- query: "что святые отцы говорят о гордости и смирении"
+  category: thematic
+  expected_authors: [ioann_lestvichnik_prepodobnyj, brjanchaninov_ignatij_svjatitel,
+                     isaak_sirin_ninevijskij_prepo, ioann_zlatoust_svjatitel]
+  passing: at_least_two_authors
+
+- query: "об умной молитве и трезвении"
+  category: thematic
+  expected_authors: [grigorij_palama_svjatitel, govorov_feofan_zatvornik_svjati,
+                     brjanchaninov_ignatij_svjatitel]
+  passing: at_least_two_authors
+
+- query: "как бороться с унынием по святым отцам"
+  category: thematic
+  expected_authors: [evagrij_pontijskij, ioann_kassian_rimljanin_prepodobnyj,
+                     brjanchaninov_ignatij_svjatitel, dorofej_avva_prepodobnyj]
+  passing: at_least_two_authors
+
+- query: "что значит память смертная"
+  category: thematic
+  expected_authors: [ioann_lestvichnik_prepodobnyj, brjanchaninov_ignatij_svjatitel,
+                     isaak_sirin_ninevijskij_prepo]
+  passing: at_least_two_authors
+
+- query: "о духовной прелести"
+  category: thematic
+  expected_authors: [brjanchaninov_ignatij_svjatitel]
+  passing: at_least_one_match
+
+- query: "о покаянии и сокрушении сердца"
+  category: thematic
+  expected_authors: [efrem_sirin_prepodobnyj, ioann_zlatoust_svjatitel,
+                     isaak_sirin_ninevijskij_prepo]
+  passing: at_least_two_authors
+
+- query: "что такое страсти и как их преодолеть"
+  category: thematic
+  expected_authors: [ioann_kassian_rimljanin_prepodobnyj, evagrij_pontijskij,
+                     brjanchaninov_ignatij_svjatitel]
+  passing: at_least_two_authors
+
+- query: "о слезах и плаче"
+  category: thematic
+  expected_authors: [ioann_lestvichnik_prepodobnyj, isaak_sirin_ninevijskij_prepo]
+  passing: at_least_one_match
+
+- query: "о любви к врагам"
+  category: thematic
+  expected_authors: [ioann_zlatoust_svjatitel, isaak_sirin_ninevijskij_prepo,
+                     maksim_ispovednik]
+  passing: at_least_one_match
+
+- query: "о пользе и опасности безмолвия"
+  category: thematic
+  expected_authors: [ioann_lestvichnik_prepodobnyj, grigorij_palama_svjatitel,
+                     isaak_sirin_ninevijskij_prepo]
+  passing: at_least_two_authors
+
+- query: "о послушании духовнику"
+  category: thematic
+  expected_authors: [ioann_lestvichnik_prepodobnyj, dorofej_avva_prepodobnyj,
+                     varsonofij_velikij_i_ioann_pro]
+  passing: at_least_two_authors
+
+- query: "о грехе и падении первых людей"
+  category: thematic
+  expected_authors: [avrelij_avgustin_blazhennyj, ioann_zlatoust_svjatitel,
+                     grigorij_nisskij_svjatitel]
+  passing: at_least_two_authors
+
+- query: "что говорят о Святом Духе"
+  category: thematic
+  expected_authors: [vasilij_velikij_svjatitel, grigorij_bogoslov_nazianzin_sv,
+                     ioann_damaskin_prepodobnyj]
+  passing: at_least_two_authors
+
+- query: "о таинстве евхаристии"
+  category: thematic
+  expected_authors: [ioann_zlatoust_svjatitel, ioann_damaskin_prepodobnyj,
+                     kirill_aleksandrijskij]
+  passing: at_least_one_match
+
+- query: "о чревоугодии и посте"
+  category: thematic
+  expected_authors: [ioann_kassian_rimljanin_prepodobnyj, ioann_lestvichnik_prepodobnyj,
+                     vasilij_velikij_svjatitel]
+  passing: at_least_two_authors
+
+- query: "как святые отцы понимали обожение"
+  category: thematic
+  expected_authors: [afanasij_velikij_svjatitel, maksim_ispovednik,
+                     grigorij_palama_svjatitel]
+  passing: at_least_two_authors
+
+- query: "о страхе Божием"
+  category: thematic
+  expected_authors: [isaak_sirin_ninevijskij_prepo, brjanchaninov_ignatij_svjatitel,
+                     dorofej_avva_prepodobnyj]
+  passing: at_least_one_match
+
+- query: "о бесах и духах злобы"
+  category: thematic
+  expected_authors: [antonij_velikij_prepodobnyj, brjanchaninov_ignatij_svjatitel,
+                     evagrij_pontijskij]
+  passing: at_least_two_authors
+
+- query: "о том нельзя осуждать ближнего даже мысленно"
+  category: thematic
+  expected_authors: [ioann_lestvichnik_prepodobnyj, isaak_sirin_ninevijskij_prepo,
+                     brjanchaninov_ignatij_svjatitel, dorofej_avva_prepodobnyj]
+  passing: at_least_one_match
+
+- query: "о терпении скорбей"
+  category: thematic
+  expected_authors: [ioann_zlatoust_svjatitel, isaak_sirin_ninevijskij_prepo,
+                     brjanchaninov_ignatij_svjatitel]
+  passing: at_least_two_authors
+
+- query: "о девстве и целомудрии"
+  category: thematic
+  expected_authors: [ioann_zlatoust_svjatitel, vasilij_velikij_svjatitel,
+                     grigorij_nisskij_svjatitel]
+  passing: at_least_one_match
+
+# === Cross-corpus (8) ===
+
+- query: "что говорит Платон о справедливости"
+  category: cross
+  expected_authors: [platon]
+  passing: at_least_one_match
+
+- query: "Аристотель о добродетели"
+  category: cross
+  expected_authors: [aristotel]
+  passing: at_least_one_match
+
+- query: "что Псалом говорит о покаянии"
+  category: cross
+  expected_authors: [bible, david]
+  passing: at_least_one_match
+
+- query: "Платон о бессмертии души"
+  category: cross
+  expected_authors: [platon]
+  passing: at_least_one_match
+
+- query: "Нагорная проповедь о блаженствах"
+  category: cross
+  expected_authors: [bible]
+  passing: at_least_one_match
+
+- query: "что апостол Павел говорит о любви"
+  category: cross
+  expected_authors: [bible]
+  passing: at_least_one_match
+
+- query: "Аристотель о дружбе"
+  category: cross
+  expected_authors: [aristotel]
+  passing: at_least_one_match
+
+- query: "Платон об идее блага"
+  category: cross
+  expected_authors: [platon]
+  passing: at_least_one_match
+
+# === Negative (5) — must NOT fabricate ===
+
+- query: "что Ницше писал о морали"
+  category: negative
+  expected_authors: []
+  passing: empty_or_low_confidence
+
+- query: "Кант о категорическом императиве"
+  category: negative
+  expected_authors: []
+  passing: empty_or_low_confidence
+
+- query: "что говорит Бхагавадгита о карме"
+  category: negative
+  expected_authors: []
+  passing: empty_or_low_confidence
+
+- query: "что Маркс писал о капитале"
+  category: negative
+  expected_authors: []
+  passing: empty_or_low_confidence
+
+- query: "квантовая механика и христианство"
+  category: negative
+  expected_authors: []
+  passing: empty_or_low_confidence
