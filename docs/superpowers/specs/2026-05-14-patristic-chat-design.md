@@ -473,6 +473,30 @@ LANGGRAPH_API_URL=http://localhost:2024   # для фронта
 
 `tests/eval/gold.yaml` — 20-30 типичных запросов с ожидаемыми цитатами. `pipeline eval` прогоняет, считает recall@5, recall@10. Baseline после первой индексации, регрессия при изменениях параметров.
 
+Примеры записей:
+
+```yaml
+- query: "что Лествичник говорит о послушании"        # адресный (патристика)
+  expected_citations:
+    - work: "ioann_lestvichnik/lestvitsa"
+      chapter: 4   # Слово 4 «О блаженном и приснопамятном послушании»
+  passing: any_match
+
+- query: "найди про осуждение ближнего"               # тематический
+  expected_authors: ["ioann_lestvichnik", "isaak_sirin", "bryanchaninov"]
+  passing: at_least_two_authors
+
+- query: "что говорит Платон о справедливости"        # адресный (философия)
+  expected_authors: ["platon"]
+  passing: at_least_one_match
+
+- query: "что Ницше писал о морали"                   # negative — не в корпусе
+  expected_authors: []
+  passing: empty_or_low_confidence
+```
+
+Философия (Платон, Аристотель и т.п.) — **в корпусе**, потому что без неё патристика теряет половину контекста (отцы постоянно опираются на или полемизируют с античной философией). Negative test = что-то вне раздела `filosofija/` azbyka: послеантичные философы (Кант, Ницше), нехристианские священные тексты (Бхагавадгита, Коран), современная наука.
+
 ### 8.2 agent_runs таблица
 
 В БД с самого старта пишется `agent_runs(id, thread_id, messages, citations_used, created_at)`. UI для дашборда верификации **не делаем в MVP**, но данные накапливаются — миграция позже не потребуется.
