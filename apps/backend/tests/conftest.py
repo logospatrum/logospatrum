@@ -6,7 +6,15 @@ import pytest
 import psycopg
 
 
-DB_DSN_TEST = "postgresql://postgres:postgres@localhost:5432/patristic"
+import os
+# Use a dedicated test database so test fixtures NEVER touch production data.
+# The db_clean fixture TRUNCATEs everything; pointing this at the prod DB
+# destroys the corpus on every test run. See `infra/migrations/001_init.sql`
+# applied to patristic_test for schema setup.
+DB_DSN_TEST = os.environ.get(
+    "PATRISTIC_TEST_DSN",
+    "postgresql://postgres:postgres@localhost:5432/patristic_test",
+)
 
 
 class FakeModel:
