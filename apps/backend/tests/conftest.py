@@ -1,12 +1,6 @@
 """Pytest fixtures shared across backend tests."""
-import backend  # noqa: F401 — sets WindowsSelectorEventLoopPolicy on Windows
-
-from typing import Any
-import pytest
-import psycopg
-
-
 import os
+
 # Use a dedicated test database so test fixtures NEVER touch production data.
 # The db_clean fixture TRUNCATEs everything; pointing this at the prod DB
 # destroys the corpus on every test run. See `infra/migrations/001_init.sql`
@@ -15,6 +9,17 @@ DB_DSN_TEST = os.environ.get(
     "PATRISTIC_TEST_DSN",
     "postgresql://postgres:postgres@localhost:5432/patristic_test",
 )
+# MUST be set BEFORE `import backend` below, so backend.config.settings
+# (pydantic-settings BaseSettings) reads patristic_test, not patristic.
+# Otherwise tools (read_passage, lexical_search, …) hit the prod DB while
+# fixtures seed the test DB, and assertions fail with empty results.
+os.environ["POSTGRES_DSN"] = DB_DSN_TEST
+
+import backend  # noqa: F401,E402 — sets WindowsSelectorEventLoopPolicy on Windows
+
+from typing import Any  # noqa: E402
+import pytest  # noqa: E402
+import psycopg  # noqa: E402
 
 
 class FakeModel:

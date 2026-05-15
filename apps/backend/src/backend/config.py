@@ -17,7 +17,9 @@ class Settings(BaseSettings):
 
     timeweb_ai_key: str = ""
     timeweb_base_url: str = "https://api.timeweb.ai/v1"
-    main_agent_model: str = "anthropic/claude-sonnet-4-7"
+    # Timeweb AI proxy supports up to claude-sonnet-4-6 (no 4-7 yet).
+    # Confirmed via GET /v1/models on 2026-05-16.
+    main_agent_model: str = "anthropic/claude-sonnet-4-6"
     search_agent_model: str = "anthropic/claude-haiku-4-5"
 
     embedding_model: str = "BAAI/bge-m3"

@@ -37,9 +37,25 @@ async def test_read_passage_with_context(db_with_paragraphs):
 
 
 @pytest.mark.asyncio
-async def test_read_passage_unknown_citation_raises(db_with_paragraphs):
-    with pytest.raises(Exception):
-        await read_passage.ainvoke({
-            "citation": "fake/fake_work/0001/p1",
-            "context_n": 0,
-        })
+async def test_read_passage_unknown_citation_returns_structured_fail(db_with_paragraphs):
+    """Tool must NOT raise — one bad citation in a parallel batch would
+    cancel sibling calls (langgraph cancel-on-failure). It returns
+    {found: false, error: ...} so the agent can recover."""
+    result = await read_passage.ainvoke({
+        "citation": "fake/fake_work/0001/p1",
+        "context_n": 0,
+    })
+    assert result["found"] is False
+    assert "fake/fake_work" in result["error"]
+    assert result["work_exists"] is False
+
+
+@pytest.mark.asyncio
+async def test_read_passage_bad_format_returns_structured_fail(db_with_paragraphs):
+    """Malformed citation also returns structured fail (not raise)."""
+    result = await read_passage.ainvoke({
+        "citation": "garbage",
+        "context_n": 0,
+    })
+    assert result["found"] is False
+    assert "bad citation format" in result["error"]
