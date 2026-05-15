@@ -142,6 +142,30 @@ async def _upsert_chapter(c, work_slug: str, chapter_num: int,
     )
 
 
+# Bible ingest constants and regexes
+BIBLE_AUTHOR_SLUG = "svjashhennoe_pisanie"
+BIBLE_AUTHOR_NAME = "Священное Писание"
+BIBLE_SECTION = "Священное Писание"
+
+_BIBLE_FILENAME_RE = re.compile(
+    r"^(\d+)_([^_]+)_(\d+)_(\d+)(?:_(\d+))?_.*\.md$"
+)
+_BIBLE_VERSE_PREFIX_RE = re.compile(r"^\S+\.\s*\d+:\d+(?:-\d+)?\s+")
+
+
+def _parse_bible_filename(filename: str) -> tuple[int, int] | None:
+    """Filename '0001_1Кор_1_1_Павел_...md' -> (chapter=1, verse=1)."""
+    m = _BIBLE_FILENAME_RE.match(filename)
+    if not m:
+        return None
+    return int(m.group(3)), int(m.group(4))
+
+
+def _strip_verse_prefix(bible_verse: str) -> str:
+    """Strip leading citation: '1Кор.1:1 Павел, …' -> 'Павел, …'."""
+    return _BIBLE_VERSE_PREFIX_RE.sub("", bible_verse.strip())
+
+
 async def _replace_paragraphs(c, work_slug: str, chapter_num: int,
                               paragraphs: list[str], body: str) -> None:
     await c.execute(
@@ -174,18 +198,116 @@ async def _replace_paragraphs(c, work_slug: str, chapter_num: int,
             )
 
 
+def _is_bible_path(path: Path, output_dir: Path) -> bool:
+    """Bible md lives under output/Bible/<book>/."""
+    try:
+        rel = path.relative_to(output_dir)
+        return rel.parts[0] == "Bible"
+    except ValueError:
+        return False
+
+
+async def _ingest_bible(c, bible_files: list[Path]) -> dict[str, int]:
+    """One Bible verse per md file; group by book dir, then chapter.
+
+    File frontmatter has `book_title`, `bible_verse` ("1Кор.1:1 текст"),
+    `verse_number`. Filename pattern `NNNN_<book>_<chapter>_<verse>[_<end>]_...md`
+    is more reliable for (chapter, verse) than `bible_verse` (occasional
+    misattribution in upstream epubs). The verse text comes from
+    `bible_verse` with the leading "<book>.<chapter>:<verse> " stripped.
+    """
+    if not bible_files:
+        return {}
+
+    by_book: dict[str, list[Path]] = {}
+    for p in bible_files:
+        by_book.setdefault(p.parent.name, []).append(p)
+
+    await _upsert_author(c, BIBLE_AUTHOR_SLUG, BIBLE_AUTHOR_NAME,
+                         None, BIBLE_SECTION)
+
+    counts: dict[str, int] = {}
+    for book_dir, paths in sorted(by_book.items()):
+        book_title = ""
+        # by_chapter[chapter_num][verse_num] = verse_text (dedup on duplicates)
+        by_chapter: dict[int, dict[int, str]] = {}
+        for p in paths:
+            try:
+                content = p.read_text(encoding="utf-8")
+            except Exception as e:
+                print(f"  [skip] {p}: {e}")
+                continue
+            m_fm = _FRONTMATTER_RE.match(content)
+            if not m_fm:
+                continue
+            fm = _parse_frontmatter(m_fm.group(1))
+            book_title = book_title or fm.get("book_title", "").strip()
+
+            cv = _parse_bible_filename(p.name)
+            if cv is None:
+                continue
+            chapter, verse = cv
+
+            verse_text = _strip_verse_prefix(fm.get("bible_verse", ""))
+            if not verse_text or len(verse_text) < 5:
+                continue
+
+            by_chapter.setdefault(chapter, {})[verse] = verse_text
+
+        if not book_title or not by_chapter:
+            continue
+
+        book_slug = slugify(book_dir)
+        work_slug = f"bible_{book_slug}"
+        await _upsert_work(c, work_slug, BIBLE_AUTHOR_SLUG, book_title,
+                           None, BIBLE_SECTION, None)
+
+        total_verses = 0
+        for chapter_num in sorted(by_chapter.keys()):
+            verses = sorted(by_chapter[chapter_num].items())
+            await c.execute(
+                "DELETE FROM paragraphs WHERE work_slug=%s AND chapter_num=%s",
+                [work_slug, chapter_num],
+            )
+            await _upsert_chapter(c, work_slug, chapter_num, None,
+                                  f"Bible/{book_dir}")
+            rows = [
+                (work_slug, chapter_num, verse_num, text, 0, len(text))
+                for verse_num, text in verses
+            ]
+            async with c.cursor() as cur:
+                await cur.executemany(
+                    """
+                    INSERT INTO paragraphs
+                        (work_slug, chapter_num, para_num, text,
+                         char_offset_start, char_offset_end)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    """,
+                    rows,
+                )
+            total_verses += len(rows)
+
+        counts[work_slug] = total_verses
+
+    return counts
+
+
 async def run() -> None:
     await init_pool()
     md_files = list(settings.output_dir.rglob("*.md"))
     print(f"Found {len(md_files)} md files in {settings.output_dir}")
 
+    patristic_files = [p for p in md_files if not _is_bible_path(p, settings.output_dir)]
+    bible_files = [p for p in md_files if _is_bible_path(p, settings.output_dir)]
+    print(f"  patristic: {len(patristic_files)}, bible: {len(bible_files)}")
+
     work_para_counts: dict[str, int] = {}
 
     with Progress() as progress:
-        task = progress.add_task("Parsing md", total=len(md_files))
+        task = progress.add_task("Parsing md", total=len(patristic_files))
         async with conn() as c:
             async with c.transaction():
-                for path in md_files:
+                for path in patristic_files:
                     progress.update(task, advance=1)
                     try:
                         parsed = parse_md(path)
@@ -222,6 +344,9 @@ async def run() -> None:
 
                     work_para_counts[work_slug] = work_para_counts.get(work_slug, 0) + len(parsed.paragraphs)
 
+                bible_counts = await _ingest_bible(c, bible_files)
+                work_para_counts.update(bible_counts)
+
                 for ws, count in work_para_counts.items():
                     await c.execute(
                         "UPDATE works SET paragraph_count=%s WHERE slug=%s",
@@ -229,4 +354,5 @@ async def run() -> None:
                     )
 
     await close_pool()
-    print(f"Indexed {sum(work_para_counts.values())} paragraphs across {len(work_para_counts)} works.")
+    print(f"Indexed {sum(work_para_counts.values())} paragraphs across {len(work_para_counts)} works "
+          f"({sum(bible_counts.values()) if bible_files else 0} from Bible).")
