@@ -25,10 +25,20 @@ def paragraphs() -> None:
 
 
 @app.command()
-def embed(device: str | None = None, batch_size: int | None = None) -> None:
-    """Эмбеддит окна 1-3 абзацев и пишет в БД."""
+def embed(
+    device: str | None = None,
+    batch_size: int | None = None,
+    from_scratch: bool = False,
+    db_workers: int = 4,
+    queue_size: int = 8,
+) -> None:
+    """Эмбеддит окна 1-3 абзацев и пишет в БД. По умолчанию resume; --from-scratch для полной переиндексации."""
     from .embed import run as _run
-    asyncio.run(_run(device=device, batch_size=batch_size))
+    asyncio.run(_run(
+        device=device, batch_size=batch_size,
+        from_scratch=from_scratch,
+        db_workers=db_workers, queue_size=queue_size,
+    ))
 
 
 @app.command(name="concepts-bootstrap")
