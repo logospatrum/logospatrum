@@ -29,15 +29,26 @@ def embed(
     device: str | None = None,
     batch_size: int | None = None,
     from_scratch: bool = False,
-    db_workers: int = 4,
+    db_workers: int = 2,
     queue_size: int = 8,
+    throttle_ms: int = 0,
+    cpu_threads: int | None = None,
+    sort_buffer: int = 1024,
+    max_seq_length: int = 512,
+    fp16: bool = True,
 ) -> None:
-    """Эмбеддит окна 1-3 абзацев и пишет в БД. По умолчанию resume; --from-scratch для полной переиндексации."""
+    """Эмбеддит окна 1-3 абзацев и пишет в БД. По умолчанию resume; --from-scratch для полной переиндексации.
+
+    Для «низкоимпактного» режима (когда нужно работать параллельно):
+        --throttle-ms 100 --cpu-threads 4
+    """
     from .embed import run as _run
     asyncio.run(_run(
         device=device, batch_size=batch_size,
         from_scratch=from_scratch,
         db_workers=db_workers, queue_size=queue_size,
+        throttle_ms=throttle_ms, cpu_threads=cpu_threads,
+        sort_buffer=sort_buffer, max_seq_length=max_seq_length, fp16=fp16,
     ))
 
 
