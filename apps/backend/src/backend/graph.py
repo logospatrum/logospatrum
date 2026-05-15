@@ -30,9 +30,9 @@ search_model = ChatOpenAI(
 search_subagent = {
     "name": "search",
     "description": "Searches the patristic corpus. Delegate when you need citations.",
-    "prompt": SEARCH_AGENT_PROMPT,
-    "tools": ["lexical_search", "semantic_search",
-              "list_authors", "list_works", "expand_concept"],
+    "system_prompt": SEARCH_AGENT_PROMPT,
+    "tools": [lexical_search, semantic_search,
+              list_authors, list_works, expand_concept],
     "model": search_model,
 }
 
@@ -41,6 +41,6 @@ agent = create_deep_agent(
     model=main_model,
     tools=[read_passage, list_authors, list_works, expand_concept,
            lexical_search, semantic_search],
-    instructions=MAIN_AGENT_PROMPT,
+    system_prompt=MAIN_AGENT_PROMPT,
     subagents=[search_subagent],
 ).with_config({"recursion_limit": 50})

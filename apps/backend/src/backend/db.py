@@ -12,7 +12,17 @@ _pool: AsyncConnectionPool | None = None
 async def init_pool() -> AsyncConnectionPool:
     global _pool
     if _pool is None:
-        _pool = AsyncConnectionPool(settings.postgres_dsn, min_size=2, max_size=16, open=False)
+        # NOTE: Explicit connect_timeout kwarg is REQUIRED on Windows+Python 3.13.
+        # Without it, psycopg-pool 3.3.x's worker task hangs forever inside
+        # connection_class.connect(...) and pool.open() raises PoolTimeout with
+        # an empty underlying error. With it, connection succeeds normally.
+        _pool = AsyncConnectionPool(
+            settings.postgres_dsn,
+            min_size=2,
+            max_size=16,
+            open=False,
+            kwargs={"connect_timeout": 10},
+        )
         await _pool.open()
     return _pool
 
