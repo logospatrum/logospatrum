@@ -87,14 +87,24 @@ python -m venv .venv
 
 `deepagents` package version may differ from `>=0.0.10`. Check at install time with `pip index versions deepagents` and adjust pyproject if needed.
 
-### B4: Frontend not started (Tasks 32-37)
-Nothing in `apps/frontend/` yet beyond `.gitkeep`. Follow plan tasks 32-37:
-1. Clone `https://github.com/langchain-ai/agent-chat-ui` into `apps/frontend/`.
-2. Strip branding + add patristic welcome.
-3. Replace ThreadProvider with `localStorage` (see plan Task 34).
-4. Port `providers/Stream.tsx`, `components/thread/markdown-text.tsx`, `components/thread/index.tsx` from `trading-mcp/terminal/front` for SSE smoothness fixes.
-5. Add `CitationCard` component (renders `read_passage` tool results).
-6. Add `LibraryBrowser` modal (`use-catalog.ts`, tree + search + azbyka + 💬 ask).
+### B4: Frontend complete (Tasks 32-37) ✅
+Forked `langchain-ai/agent-chat-ui` into `apps/frontend/`, customized for patristic chat. `npm run build` passes clean (zero TS errors, only minor ESLint warnings carried over from upstream).
+
+Done:
+1. Forked upstream, removed `.git`, installed deps via `npm install` (no pnpm). Dev server boots in ~2s.
+2. Stripped LangChain/LangSmith branding (logo, GitHub link, page metadata, API-key gating form). Layout title now "Патристический помощник", `lang="ru"`, Inter with Cyrillic subset.
+3. `src/components/thread/welcome.tsx` — patristic welcome with 4 example chips that submit immediately on click.
+4. `src/lib/local-thread-store.ts` — localStorage-backed thread store (versioned key `patristic:threads`, quota-safe save, cross-tab sync via storage event). Title derived from first human message.
+5. `src/providers/Thread.tsx` — rewrote to use localStorage; exposes both `useThreads()` (compat with upstream history sidebar) and new `useThreadStore()` (saveCurrent/removeThread/refresh).
+6. `src/providers/Stream.tsx` — slimmed down, removed Agent Builder / LangSmith API-key form; added `throttle: 50` and `fetchStateHistory: { limit: 25 }` for SSE perf (per trading-mcp); `saveCurrent` is called on every message-array change so threads persist live.
+7. `src/components/thread/markdown-text.tsx` — ported smoothing perf from trading-mcp: `useSmoothText` (rAF typewriter), `splitMarkdownBlocks` (memoized fenced-code-aware block rendering), `useDeferredValue` for non-blocking re-parse. Stable plugin refs to avoid memo churn.
+8. `src/components/citation-card.tsx` — renders `read_passage` tool result with citation header (author/work/chapter/§), expandable context_before/after, azbyka external link. Wired into `ToolResult` in `messages/tool-calls.tsx` (custom branch when `message.name === "read_passage"`).
+9. `src/components/library/use-catalog.ts` + `LibraryBrowser.tsx` — modal triggered from header `BookOpen` button. Fetches `GET /catalog` (cached in sessionStorage for 1h), tree of authors → works with collapsible toggle, live filter on author/work/topics. Each work has 💬 (fires `patristic:prefill-input` CustomEvent, closes modal) and ↗ azbyka link.
+10. `src/components/thread/index.tsx` subscribes to the prefill event and writes into the input. LibraryBrowser is mounted in both header states (empty and chat-started).
+
+Env: `apps/frontend/.env.local` set to `NEXT_PUBLIC_API_URL=http://localhost:2024`, `NEXT_PUBLIC_ASSISTANT_ID=agent`, `NEXT_PUBLIC_CATALOG_API_URL=http://localhost:8001`.
+
+End-to-end: `cd apps/frontend && npm run dev` boots on `localhost:3000`, talks to LangGraph at 2024 + catalog at 8001. Click-through is not unit-tested but the build is green.
 
 ### B5: Goldset author slugs need verification
 `tests/eval/gold.yaml` uses slug guesses like `ioann_lestvichnik_prepodobnyj`. After Task 31 full index, run:
@@ -140,7 +150,7 @@ Run `git log --oneline` to see all commits. Roughly 25+ feat/fix/test commits be
 - `apps/backend/tests/integration/test_smoke.py` (Task 27)
 - `apps/backend/tests/integration/test_goldset.py` (Task 28)
 - `apps/backend/tests/unit/test_eval_runner.py`
-- All of `apps/frontend/` beyond .gitkeep (Tasks 32-37)
+- ~~All of `apps/frontend/` beyond .gitkeep (Tasks 32-37)~~ — done 2026-05-15
 - Updated `README.md` (Task 40)
 - `infra/scripts/pg_dump_restore.md` runbook (Task 40)
 - Cleanup commit removing old top-level py files (Task 41)
