@@ -24,6 +24,13 @@ def paragraphs() -> None:
     asyncio.run(_run())
 
 
+@app.command(name="bible-markdown")
+def bible_markdown() -> None:
+    """Конвертит Bible epub'ы → один-стих-один-md в output/Bible/. Skip-if-exists."""
+    from .bible_md_convert import run as _run
+    _run()
+
+
 @app.command()
 def embed(
     device: str | None = None,
