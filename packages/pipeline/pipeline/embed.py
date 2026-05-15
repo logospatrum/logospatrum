@@ -178,9 +178,12 @@ async def run(
             await encoded_q.put(None)
 
     async def db_writer(wid: int) -> None:
+        # autocommit=False + explicit commit per batch:
+        # ONE fsync per batch (not per row), order-of-magnitude faster than
+        # set_autocommit(True) which makes executemany do one transaction PER ROW.
         pool = await init_pool()
         async with pool.connection() as c:
-            await c.set_autocommit(True)
+            await c.set_autocommit(False)
             while True:
                 item = await encoded_q.get()
                 if item is None:
@@ -200,6 +203,7 @@ async def run(
                         """,
                         rows,
                     )
+                await c.commit()
                 counter["n"] += len(batch)
                 # report every ~5000 windows
                 if counter["n"] - counter["last_report"] >= 5000:
