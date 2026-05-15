@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
-import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 
-export interface ReadPassageResult {
+export interface ReadPassageSuccess {
+  found: true;
   text: string;
   context_before: string;
   context_after: string;
@@ -16,7 +17,23 @@ export interface ReadPassageResult {
   citation: string;
 }
 
+export interface ReadPassageFailure {
+  found: false;
+  error: string;
+  citation: string;
+  work_exists?: boolean;
+}
+
+export type ReadPassageResult = ReadPassageSuccess | ReadPassageFailure;
+
 export function CitationCard({ data }: { data: ReadPassageResult }) {
+  if (data.found === false) {
+    return <CitationCardError data={data} />;
+  }
+  return <CitationCardSuccess data={data} />;
+}
+
+function CitationCardSuccess({ data }: { data: ReadPassageSuccess }) {
   const [showContext, setShowContext] = useState(false);
   const paraLabel =
     data.window_size === 1
@@ -76,6 +93,40 @@ export function CitationCard({ data }: { data: ReadPassageResult }) {
           )}
         </>
       )}
+    </div>
+  );
+}
+
+function CitationCardError({ data }: { data: ReadPassageFailure }) {
+  // Diagnostic from the backend tool (read_passage.py):
+  //   work_exists === false -> agent hallucinated the work_slug
+  //   work_exists === true  -> work is there, but no paragraph at that
+  //                            (chapter_num, para_start)
+  //   undefined             -> citation didn't even parse
+  const explain =
+    data.work_exists === false
+      ? "Похоже, агент сократил slug. Попроси: «возьми citation из результатов поиска буква-в-букву»."
+      : data.work_exists === true
+        ? "Труд найден, но такого параграфа нет — глава/номер ошибочны."
+        : "Citation не разобрался — нужен формат author_slug/work_slug/NNNN/pX.";
+  return (
+    <div className="my-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
+      <div className="flex items-start gap-2">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+        <div className="min-w-0 text-sm">
+          <div className="font-medium">Цитата не найдена</div>
+          <div className="mt-1 text-xs break-all opacity-80">
+            <code>{data.citation}</code>
+          </div>
+          <div className="mt-1 text-xs">{explain}</div>
+          {data.error && (
+            <details className="mt-2 text-xs">
+              <summary className="cursor-pointer opacity-70">подробнее</summary>
+              <div className="mt-1 break-words opacity-80">{data.error}</div>
+            </details>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

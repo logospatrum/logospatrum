@@ -69,6 +69,11 @@ export function ToolCalls({
 function looksLikeReadPassage(value: unknown): value is ReadPassageResult {
   if (!value || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
+  // Failure shape: {found: false, error, citation, work_exists?}.
+  if (v.found === false && typeof v.error === "string" && typeof v.citation === "string") {
+    return true;
+  }
+  // Success shape (legacy: no `found` field; modern: found===true).
   return (
     typeof v.text === "string" &&
     typeof v.para_start === "number" &&
