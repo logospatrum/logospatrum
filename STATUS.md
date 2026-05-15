@@ -1,6 +1,6 @@
 # Patristic Chat MVP — Implementation Status
 
-**Last update:** 2026-05-15
+**Last update:** 2026-05-15 (autonomous loop)
 **Plan:** [docs/superpowers/plans/2026-05-14-patristic-chat-mvp.md](docs/superpowers/plans/2026-05-14-patristic-chat-mvp.md)
 
 ## Acceptance gate
@@ -58,10 +58,14 @@ MVP done **only when** `tests/eval/gold.yaml` (53 entries) passes through full a
 ### Task 31 — Full corpus indexing
 Started 2026-05-15 10:11. Currently:
 - ✅ **paragraphs:** 85 authors, 2020 works, **709,969 paragraphs** in 8 min
-- ⏳ **embed (bge-m3 on cuda):** running; expecting ~2-6 hours on RTX 5070 Ti
-- ⏳ **concepts-bootstrap:** glossary has 22/78 concepts; resume launched in parallel
-
-Monitoring task `b4va2in93` reports DB row counts every 60s.
+- ✅ **concepts-bootstrap:** glossary 79/79 concepts done (commit `54995e5`)
+- ⏸️ **embed (bge-m3 on cuda):** paused by user at 22,208 / ~1.94M windows.
+  - v1 was 4h with 0 commits (one giant transaction)
+  - v2 was 46 win/sec (autocommit=True caused fsync-per-row in executemany)
+  - v3 (commit `cd3a9f1`): `autocommit=False` + explicit `await c.commit()` per batch — one fsync per batch. Not yet validated at scale.
+  - Resumable: rerun `cd packages/pipeline && PYTHONUTF8=1 PYTHONUNBUFFERED=1 .venv/Scripts/python -m pipeline embed --device cuda --batch-size 64`. Skips done rows via `_load_done_keys`.
+  - `--from-scratch` flag truncates embeddings if needed.
+- ✅ **Embed window builder unit tests:** 8 new tests in `packages/pipeline/tests/test_embed_windows.py` (all pass).
 
 ## 🔜 Next (after Task 31 finishes)
 
