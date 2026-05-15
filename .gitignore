@@ -37,3 +37,8 @@ models/
 *.log
 *.dump
 *.sql.gz
+
+# Temp test subsets
+packages/pipeline/_subset/
+packages/pipeline/_subset_small/
+.claude/

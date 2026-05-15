@@ -2,6 +2,7 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     container_name: patristic-postgres-dev
+    restart: unless-stopped
     environment:
       POSTGRES_DB: patristic
       POSTGRES_USER: postgres
