@@ -1,156 +1,115 @@
 # Patristic Chat MVP — Implementation Status
 
 **Last update:** 2026-05-15
-**Mode:** Subagent-driven execution (single autonomous session)
 **Plan:** [docs/superpowers/plans/2026-05-14-patristic-chat-mvp.md](docs/superpowers/plans/2026-05-14-patristic-chat-mvp.md)
 
 ## Acceptance gate
 
-MVP is **done only when** `tests/eval/gold.yaml` (53 entries) passes through full agent with:
+MVP done **only when** `tests/eval/gold.yaml` (53 entries) passes through full agent with:
 - addressed ≥ 80%
 - thematic ≥ 60%
 - cross ≥ 70%
 - negative = 100%
 
----
-
 ## ✅ Done
 
 ### Pipeline (Tasks 1-14)
-All committed and unit-tested:
-- Monorepo skeleton, `.gitignore`, `.env.example`
-- Imported scraper/downloader/converter/enricher from sibling `orthodox_rag/` (data moved to `packages/pipeline/data/` and `output/`)
-- Postgres 16 + pgvector in WSL Docker (`infra/docker-compose.dev.yml`, container `patristic-postgres-dev`, port 5432)
-- SQL migration `infra/migrations/001_init.sql` — 7 tables (authors, works, chapters, paragraphs, embeddings, agent_runs, schema_migrations) + extensions
-- Pipeline package `packages/pipeline/`:
-  - `pyproject.toml` with all deps (typer, pydantic, psycopg, sentence-transformers, openai, pyyaml, rich)
-  - **venv installed in `.venv/`, torch 2.11.0+cu128 verified working on RTX 5070 Ti** (CUDA: True)
-  - Modules: `config.py`, `db.py`, `__main__.py` (typer CLI), `models.py`, `slugify.py`, `lexical_preprocess.py`, `paragraphs.py`, `diagnose.py`, `concepts_bootstrap.py`, `embed.py`, `enrich.py`
-  - `cs_dict.json` (30 ЦС-substitutions), `seed_concepts.json` (78 seed concepts)
-  - **Tests: 20+3+5+3 = 31 unit tests pass** (`slugify`, `lexical_preprocess`, `paragraphs`, `diagnose`)
-- Fixed Windows asyncio: `WindowsSelectorEventLoopPolicy` in `__main__.py` (psycopg-pool needs Selector, not Proactor)
+- Monorepo skeleton, .gitignore, .env.example
+- `packages/pipeline/` — full CLI: scrape/download/markdown_convert/diagnose/paragraphs/concepts_bootstrap/embed/enrich
+- Postgres 16 + pgvector in WSL Docker (`infra/docker-compose.dev.yml`), schema migrated
+- 31 unit tests (slugify, lexical_preprocess, paragraphs, diagnose)
+- torch 2.11.0+cu128 on RTX 5070 Ti (CUDA verified)
+- Windows fixes: `WindowsSelectorEventLoopPolicy`, `connect_timeout` for AsyncConnectionPool
 
-### Backend code (Tasks 16-29, partial)
-Written and committed, **NOT TESTED** (no backend venv, no tests run):
-- `apps/backend/pyproject.toml`, `langgraph.json`, `Dockerfile`
-- `src/backend/config.py`, `db.py`, `__init__.py` (with Windows asyncio policy fix)
-- `src/backend/embeddings/service.py` — async queue-batching worker
-- `src/backend/tools/` — 6 tools: `list_authors`, `list_works`, `expand_concept`, `lexical_search`, `semantic_search`, `read_passage`, `_citation` (helper)
-- `src/backend/catalog.py` — FastAPI app with `GET /catalog`
-- `src/backend/observability.py` — `agent_runs` writer
-- `src/backend/prompts.py` — main + search agent prompts (Russian)
-- `src/backend/graph.py` — deepagents `create_deep_agent` with Sonnet+Haiku via Timeweb proxy
-- `src/backend/eval_runner.py` — goldset eval logic (pure, testable)
-- `tests/eval/gold.yaml` — **53 entries** (18 addressed + 22 thematic + 8 cross + 5 negative)
+### Task 15 — Pipeline e2e validated
+- On Augustine subset (10 chapters): lexical + semantic search work; canonical citation format right
+- Author slug = `avrelij_avgustin_blazhennyj`, work slug = `avrelij_avgustin_blazhennyj_ispoved`
 
-### Infra niceties
-- Postgres `restart: unless-stopped` (auto-recovers when WSL up)
-- LM Studio config in `.env`: `LMSTUDIO_BASE_URL=http://localhost:1234/v1`, `LMSTUDIO_MODEL=qwen/qwen3.5-9b`, `ENRICH_PROVIDER=timeweb` (switch to `local` for Task 42)
+### Tasks 16-26 — Backend
+- `apps/backend/` — pyproject (deepagents 0.6), langgraph.json (mounts FastAPI /catalog), Dockerfile
+- 6 agent tools + embedding queue worker + catalog + observability + prompts + graph + eval_runner
+- **32 unit tests all pass** (`pytest tests/unit/ -v` in 18:43)
+- Graph imports cleanly (`CompiledStateGraph`)
 
----
+### Tasks 28-29 — Goldset infrastructure
+- `tests/eval/gold.yaml` — 53 entries (18 addressed + 22 thematic + 8 cross + 5 negative)
+- `apps/backend/src/backend/eval_runner.py` — pure eval logic
+- `apps/backend/tests/integration/test_goldset.py` — live runner with threshold gate
+- `apps/backend/tests/integration/test_smoke.py` — citation discipline + negative case smoke
 
-## 🟡 Blockers / known issues
+### Tasks 32-37 — Frontend
+- Forked `langchain-ai/agent-chat-ui` → `apps/frontend/`
+- Russian welcome with 4 example chips
+- localStorage thread provider (cross-tab sync via storage event)
+- SSE perf fixes ported from trading-mcp (throttle 50ms, smooth markdown via rAF + useDeferredValue)
+- `<CitationCard>` for `read_passage` tool results (collapsible context, azbyka link)
+- `<LibraryBrowser>` modal: tree of authors → works, instant client-side search, 💬 ask + ↗ azbyka per work
+- `npm run build` green (zero TS errors)
 
-### B1: WSL VM stops between commands
-WSL2 Ubuntu auto-suspends when idle. The Docker daemon and postgres container die with it.
+### Task 40 — Documentation
+- `README.md` — production quick-start, env quirks, deployment runbook reference
+- `infra/scripts/pg_dump_restore.md` — Postgres dump/restore for VPS deployment
 
-**Mitigation:** Keep a persistent background process inside WSL — `wsl -e bash -c "sleep infinity"` running in background. Or run `wsl --` interactively before starting work.
+### Task 41 — Cleanup of old top-level files
+- Removed: `main.py`, `rag_service.py`, `repository.py`, `embedding_service.py`, `text_service.py`, `models.py`, `database.py`, `migrations.py`, `config.py`, `books.json`, `Dockerfile`, `docker-compose.yml`, `docker-compose.prod.yml`, `requirements.txt`, `HTTPS_SETUP_GUIDE.md`, `templates/`, `nginx/`, `scripts/`, `texts/`
 
-When you restart work: `wsl -e bash -c "cd '/mnt/c/Users/79819/PycharmProjects/christian_rag' && docker compose -f infra/docker-compose.dev.yml up -d postgres"`.
+## 🟡 In progress
 
-### B2: Pipeline e2e on subset not validated
-Task 15 should run `paragraphs` on a 1-3 author subset and verify rows in DB. **Attempted but stuck** — Windows-side bash output buffering masked real progress; tried with project-local `_subset/` dir. Did not complete a clean run end-to-end before stopping.
+### Task 31 — Full corpus indexing
+Started 2026-05-15 10:11. Currently:
+- ✅ **paragraphs:** 85 authors, 2020 works, **709,969 paragraphs** in 8 min
+- ⏳ **embed (bge-m3 on cuda):** running; expecting ~2-6 hours on RTX 5070 Ti
+- ⏳ **concepts-bootstrap:** glossary has 22/78 concepts; resume launched in parallel
 
-**Probable cause:** Python on Windows + async psycopg pool may be slow when iterating ~2596 md files. The unit tests for `paragraphs.parse_md / split_paragraphs` pass (5/5), so the parsing logic is correct. The DB ingest path is untested live.
+Monitoring task `b4va2in93` reports DB row counts every 60s.
 
-**Verify next:**
+## 🔜 Next (after Task 31 finishes)
+
+### Task 39 — Goldset acceptance gate
 ```bash
-# In Git Bash (with WSL VM running)
-cd packages/pipeline
-# Use absolute Windows path or project-local subset for OUTPUT_DIR
-SUBSET="$(pwd)/_subset"   # already populated with Augustine; delete and recreate smaller if needed
-OUTPUT_DIR="$SUBSET" PYTHONUTF8=1 .venv/Scripts/python -m pipeline paragraphs
-# Then:
-wsl -e bash -c "docker exec patristic-postgres-dev psql -U postgres -d patristic -c 'SELECT slug, paragraph_count FROM works ORDER BY paragraph_count DESC LIMIT 5'"
+# Terminal A
+cd apps/backend && PYTHONUTF8=1 .venv/Scripts/langgraph dev --port 2024 --no-browser
+
+# Terminal B (after server says "Ready"):
+cd apps/backend && PYTHONUTF8=1 .venv/Scripts/python -m pytest tests/integration/test_goldset.py -v -s
 ```
 
-If still slow: smaller subset (just 1 work, ~5-10 md files). The unit tests prove parsing works.
+Per-iteration tuning loop (max 10):
+- If addressed < 80% → check author slugs in `gold.yaml` match real `SELECT slug FROM authors`
+- If thematic < 60% → expand `glossary.json` with terms from failed queries; adjust SEARCH_AGENT_PROMPT
+- If cross < 70% → indexing of philosophy / Bible may be incomplete
+- If negative < 100% → tighten "ничего не найдено" rule in MAIN_AGENT_PROMPT
 
-### B3: Backend python venv not created, tests not written/run
-Files at `apps/backend/` are scaffold only. Need:
+Each iteration commits.
+
+### Task 38 — Manual UI smoke (requires human eyes)
 ```bash
-cd apps/backend
-python -m venv .venv
-.venv/Scripts/pip install -e ".[dev]"
-# Then write tests at tests/unit/test_*.py per plan Tasks 17-24 and run.
+# Three terminals
+wsl -e bash -c "cd ... && docker compose ... up -d postgres"   # if not running
+cd apps/backend && PYTHONUTF8=1 .venv/Scripts/langgraph dev --port 2024
+cd apps/frontend && npm run dev
+```
+Open http://localhost:3000. Walk through: welcome → submit → see CitationCard → click azbyka → open Library → search → click 💬 → preset in input.
+
+### Task 42 — Enrich via LM Studio (post-MVP)
+After goldset passes. User starts LM Studio with qwen3.5-9b on :1234, then:
+```bash
+ENRICH_PROVIDER=local PYTHONUTF8=1 .venv/Scripts/python -m pipeline enrich
+```
+Populates `works.topics` for richer library search. No corpus reindex needed.
+
+## Git log
+
+```
+aca3e32 test(backend): goldset integration test (acceptance gate runner)
+abc3fdd docs: production README + pg_dump/restore runbook
+46bdedf chore: postgres restart policy + ignore temp subsets
+fa3071e chore: remove obsolete top-level files
+1077d65 test(backend): 32 unit tests all pass
+8d6087e feat(frontend): patristic chat UI — fork agent-chat-ui + localStorage + library + citations
+45a7e0e fix(backend): explicit connect_timeout + deepagents 0.6 API
+6c08e44 fix(pipeline): explicit connect_timeout for AsyncConnectionPool
+...
 ```
 
-`deepagents` package version may differ from `>=0.0.10`. Check at install time with `pip index versions deepagents` and adjust pyproject if needed.
-
-### B4: Frontend complete (Tasks 32-37) ✅
-Forked `langchain-ai/agent-chat-ui` into `apps/frontend/`, customized for patristic chat. `npm run build` passes clean (zero TS errors, only minor ESLint warnings carried over from upstream).
-
-Done:
-1. Forked upstream, removed `.git`, installed deps via `npm install` (no pnpm). Dev server boots in ~2s.
-2. Stripped LangChain/LangSmith branding (logo, GitHub link, page metadata, API-key gating form). Layout title now "Патристический помощник", `lang="ru"`, Inter with Cyrillic subset.
-3. `src/components/thread/welcome.tsx` — patristic welcome with 4 example chips that submit immediately on click.
-4. `src/lib/local-thread-store.ts` — localStorage-backed thread store (versioned key `patristic:threads`, quota-safe save, cross-tab sync via storage event). Title derived from first human message.
-5. `src/providers/Thread.tsx` — rewrote to use localStorage; exposes both `useThreads()` (compat with upstream history sidebar) and new `useThreadStore()` (saveCurrent/removeThread/refresh).
-6. `src/providers/Stream.tsx` — slimmed down, removed Agent Builder / LangSmith API-key form; added `throttle: 50` and `fetchStateHistory: { limit: 25 }` for SSE perf (per trading-mcp); `saveCurrent` is called on every message-array change so threads persist live.
-7. `src/components/thread/markdown-text.tsx` — ported smoothing perf from trading-mcp: `useSmoothText` (rAF typewriter), `splitMarkdownBlocks` (memoized fenced-code-aware block rendering), `useDeferredValue` for non-blocking re-parse. Stable plugin refs to avoid memo churn.
-8. `src/components/citation-card.tsx` — renders `read_passage` tool result with citation header (author/work/chapter/§), expandable context_before/after, azbyka external link. Wired into `ToolResult` in `messages/tool-calls.tsx` (custom branch when `message.name === "read_passage"`).
-9. `src/components/library/use-catalog.ts` + `LibraryBrowser.tsx` — modal triggered from header `BookOpen` button. Fetches `GET /catalog` (cached in sessionStorage for 1h), tree of authors → works with collapsible toggle, live filter on author/work/topics. Each work has 💬 (fires `patristic:prefill-input` CustomEvent, closes modal) and ↗ azbyka link.
-10. `src/components/thread/index.tsx` subscribes to the prefill event and writes into the input. LibraryBrowser is mounted in both header states (empty and chat-started).
-
-Env: `apps/frontend/.env.local` set to `NEXT_PUBLIC_API_URL=http://localhost:2024`, `NEXT_PUBLIC_ASSISTANT_ID=agent`, `NEXT_PUBLIC_CATALOG_API_URL=http://localhost:8001`.
-
-End-to-end: `cd apps/frontend && npm run dev` boots on `localhost:3000`, talks to LangGraph at 2024 + catalog at 8001. Click-through is not unit-tested but the build is green.
-
-### B5: Goldset author slugs need verification
-`tests/eval/gold.yaml` uses slug guesses like `ioann_lestvichnik_prepodobnyj`. After Task 31 full index, run:
-```sql
-SELECT slug FROM authors ORDER BY slug;
-```
-and align `expected_authors` in gold.yaml to actual slugs.
-
-### B6: Bash output file buffering
-Claude's bash tool buffers command output to file; rich.Progress and similar TUI tools don't render until process exits. Avoid `rich.Progress` for long-running scripts during this debugging phase, or set `PYTHONUNBUFFERED=1` and use plain `print(..., flush=True)`.
-
----
-
-## 📋 Next steps (ordered)
-
-1. **Validate pipeline e2e on subset (B2 above).** Single author, run `paragraphs`, verify DB rows. Then run `concepts-bootstrap` (Timeweb, ~78 calls), then `embed --device cuda` (subset = minutes on GPU).
-2. **Backend venv + tests.** `cd apps/backend && python -m venv .venv && .venv/Scripts/pip install -e ".[dev]"`. Write tests at `tests/unit/test_*.py` per plan (Tasks 17-24). Note: backend tests need same `WindowsSelectorEventLoopPolicy` — already set in `__init__.py`. Tests assume real Postgres + seeded fixtures.
-3. **Smoke run.** `cd apps/backend && .venv/Scripts/langgraph dev --port 2024`. In another terminal: `curl -X POST http://localhost:2024/threads`. Validate model strings (Timeweb may use different model id format than `anthropic/claude-sonnet-4-7`).
-4. **Full corpus index (Task 31).** `cd packages/pipeline && PYTHONUTF8=1 .venv/Scripts/python -m pipeline paragraphs` (~30-60 min). Then `python -m pipeline concepts-bootstrap`. Then `python -m pipeline embed --device cuda --batch-size 64` (~2-6h GPU). pg_dump optional checkpoint.
-5. **Frontend (Tasks 32-37).** See B4.
-6. **Goldset baseline + iteration (Tasks 30, 39).** Run, fix author slugs, tune prompts/glossary. Up to 10 iterations.
-7. **MVP closeout (Tasks 40-41).** Update README, cleanup old `main.py`/`rag_service.py`/etc.
-8. **Enrich via LM Studio (Task 42, post-MVP).** Set `ENRICH_PROVIDER=local` in `.env`, run `python -m pipeline enrich`.
-
----
-
-## Decisions log
-
-- 2026-05-15: Subset paths must be project-local (Git Bash `/tmp` ≠ Python on Windows `/tmp`). Use `packages/pipeline/_subset/` or absolute Windows paths.
-- 2026-05-15: Skip `enrich` in initial MVP run (no impact on goldset). Will run via LM Studio after goldset passes (Task 42). Provider switch already in `enrich.py`.
-- 2026-05-15: Goldset stuck policy = 10 iterations max; better → next, worse → revert + retry. Configured but not yet exercised.
-- 2026-05-15: Postgres 16 (pgvector/pgvector:pg16) on port 5432 — separate from existing pg11 on 5433. `restart: unless-stopped` added.
-- 2026-05-15: torch 2.11.0+cu128 (Blackwell-compatible) in pipeline venv. CUDA verified.
-- 2026-05-15: Subagent-driven execution shifted to direct-execution for mechanical scaffolding tasks (1-15) and code-with-spec tasks (16-29) to conserve session context. Subagent dispatches reserved for tricky tasks.
-
-## Git log summary
-
-Run `git log --oneline` to see all commits. Roughly 25+ feat/fix/test commits between `b17e6d0` (plan added) and the head.
-
-## Files NOT YET written (deferred for user resume)
-
-- `apps/backend/tests/conftest.py` and all `tests/unit/test_*.py` (Tasks 17-24)
-- `apps/backend/tests/integration/test_smoke.py` (Task 27)
-- `apps/backend/tests/integration/test_goldset.py` (Task 28)
-- `apps/backend/tests/unit/test_eval_runner.py`
-- ~~All of `apps/frontend/` beyond .gitkeep (Tasks 32-37)~~ — done 2026-05-15
-- Updated `README.md` (Task 40)
-- `infra/scripts/pg_dump_restore.md` runbook (Task 40)
-- Cleanup commit removing old top-level py files (Task 41)
+Total: 40+ commits in this MVP development.
