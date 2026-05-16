@@ -34,7 +34,7 @@ def test_apostolic_index_skips_top_recent_widget():
 
 def test_grouped_index_vselenskih_has_six_groups():
     html = (FIX / "index_vselenskih.html").read_text(encoding="utf-8")
-    entries = parse_grouped_index(html)
+    entries = parse_grouped_index(html, collection="vselenskih-soborov")
     groups = sorted({e.group_title for e in entries})
     # I, II, III, IV, V-VI, VII — 6 councils
     assert len(groups) == 6
@@ -44,21 +44,31 @@ def test_grouped_index_vselenskih_has_six_groups():
 
 def test_grouped_index_vselenskih_total_189_rules():
     html = (FIX / "index_vselenskih.html").read_text(encoding="utf-8")
-    entries = parse_grouped_index(html)
+    entries = parse_grouped_index(html, collection="vselenskih-soborov")
     assert len(entries) == 189
 
 
 def test_grouped_index_carries_group_url():
     html = (FIX / "index_vselenskih.html").read_text(encoding="utf-8")
-    entries = parse_grouped_index(html)
+    entries = parse_grouped_index(html, collection="vselenskih-soborov")
     nikejskij = [e for e in entries if e.group_title.startswith("I Вселенский Собор – Никейский")]
     assert all(e.group_url == "https://azbyka.ru/pravo/pervyj-vselenskij-sobor-nikejskij/"
                for e in nikejskij)
 
 
+def test_collection_field_stamped_on_every_entry():
+    ap_html = (FIX / "index_apostolskie.html").read_text(encoding="utf-8")
+    ap_entries = parse_apostolic_index(ap_html)
+    assert all(e.collection == "apostolskie" for e in ap_entries)
+
+    vs_html = (FIX / "index_vselenskih.html").read_text(encoding="utf-8")
+    vs_entries = parse_grouped_index(vs_html, collection="vselenskih-soborov")
+    assert all(e.collection == "vselenskih-soborov" for e in vs_entries)
+
+
 def test_grouped_index_svyatootecheskie_13_groups():
     html = (FIX / "index_svyatootecheskie.html").read_text(encoding="utf-8")
-    entries = parse_grouped_index(html)
+    entries = parse_grouped_index(html, collection="svyatootecheskie")
     groups = {e.group_title for e in entries}
     assert len(groups) == 13
     assert "Правила свт. Василия Великого (†379)" in groups

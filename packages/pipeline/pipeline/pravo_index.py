@@ -69,7 +69,7 @@ def parse_apostolic_index(html: str, collection: str = "apostolskie") -> list[In
     return sorted(entries, key=lambda e: e.rule_num)
 
 
-def parse_grouped_index(html: str, collection: str = "") -> list[IndexEntry]:
+def parse_grouped_index(html: str, collection: str) -> list[IndexEntry]:
     soup = BeautifulSoup(html, "lxml")
     main = _main_content(soup)
     cat_list = main.find("ul", class_="cat-list")
@@ -82,7 +82,8 @@ def parse_grouped_index(html: str, collection: str = "") -> list[IndexEntry]:
         if not a:
             continue
         group_title = a.get_text(strip=True)
-        group_url = urljoin(BASE_URL, a.get("href", "")) or None
+        href = a.get("href", "").strip()
+        group_url = urljoin(BASE_URL, href) if href else None
         post_list = li.find("ul", class_="post-list", recursive=False)
         if not post_list:
             continue
