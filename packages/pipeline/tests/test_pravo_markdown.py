@@ -1,4 +1,5 @@
 from pathlib import Path
+import pytest
 from pipeline.pravo_authors import KANONICHESKOE_PRAVO, FATHER_GROUP_TO_AUTHOR
 from pipeline.pravo_markdown import WorkMeta, render_rule, build_work_meta
 from pipeline.pravo_rule import ParsedRule, Commentary
@@ -33,13 +34,29 @@ def test_build_work_meta_vselensky_iv_halkidonskij():
     assert meta.work_title == "Правила IV Вселенского собора (Халкидонского)"
 
 
-def test_build_work_meta_pomestny_strips_year():
-    meta = build_work_meta(
-        collection="pomestnyh-soborov",
-        group_title="Константинопольский Двукратный Собор (861г.)",
-    )
+@pytest.mark.parametrize("group_title,expected_work_title", [
+    ("Анкирский Собор (314г.)", "Правила Анкирского собора"),
+    ("Неокесарийский Собор (315г.)", "Правила Неокесарийского собора"),
+    ("Гангрский Собор (340г.)", "Правила Гангрского собора"),
+    ("Антиохийский Собор (341г.)", "Правила Антиохийского собора"),
+    ("Сардикийский Собор (347г.)", "Правила Сардикийского собора"),
+    ("Лаодикийский Собор (360г.)", "Правила Лаодикийского собора"),
+    ("Карфагенский Собор (393-419 гг.)", "Правила Карфагенского собора"),
+    ("Константинопольский (394г.)", "Правила Константинопольского собора (394 г.)"),
+    ("Константинопольский Двукратный Собор (861г.)", "Правила Константинопольского Двукратного собора"),
+    ("Константинопольский Собор, во храме Св. Софии - Премудрости Божией (879г.)",
+     "Правила Константинопольского собора в храме Святой Софии (879 г.)"),
+])
+def test_build_work_meta_pomestny_covers_all_ten_councils(group_title, expected_work_title):
+    meta = build_work_meta(collection="pomestnyh-soborov", group_title=group_title)
     assert meta.author == KANONICHESKOE_PRAVO
-    assert meta.work_title == "Правила Константинопольского Двукратного собора"
+    assert meta.work_title == expected_work_title
+
+
+def test_build_work_meta_pomestny_unknown_raises():
+    with pytest.raises(KeyError):
+        build_work_meta(collection="pomestnyh-soborov",
+                        group_title="Какой-то Несуществующий Собор (1234г.)")
 
 
 def test_build_work_meta_father_uses_existing_author():

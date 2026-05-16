@@ -29,26 +29,21 @@ _VSELENSKY_TITLES = {
     "VII Вселенский Собор – Никейский (787г.)":          "Правила VII Вселенского собора (Никейского)",
 }
 
-_YEAR_SUFFIX_RE = re.compile(r"\s*\([^)]*\)\s*$")
-
-# Decline a masculine nominative adjective to its genitive form.
-# -ский → -ского, -цкий → -цкого, -ный → -ного, -ой → -ого (рare for these names).
-_ADJ_GENITIVE_SUFFIXES = (
-    ("ский", "ского"),
-    ("цкий", "цкого"),
-    ("ный",  "ного"),
-    ("ной",  "ного"),
-    ("ой",   "ого"),
-)
-
-
-def _decline_adj_to_genitive(word: str) -> str:
-    """Best-effort masculine nominative → genitive transform for the
-    pomestny council adjectives. Returns word unchanged if no rule matches."""
-    for src, dst in _ADJ_GENITIVE_SUFFIXES:
-        if word.endswith(src):
-            return word[:-len(src)] + dst
-    return word
+# Group title → display work title, for local council collection.
+# All 10 historical councils; new entries require human review (build_work_meta
+# raises KeyError on miss).
+_POMESTNY_TITLES = {
+    "Анкирский Собор (314г.)":                  "Правила Анкирского собора",
+    "Неокесарийский Собор (315г.)":             "Правила Неокесарийского собора",
+    "Гангрский Собор (340г.)":                  "Правила Гангрского собора",
+    "Антиохийский Собор (341г.)":               "Правила Антиохийского собора",
+    "Сардикийский Собор (347г.)":               "Правила Сардикийского собора",
+    "Лаодикийский Собор (360г.)":               "Правила Лаодикийского собора",
+    "Карфагенский Собор (393-419 гг.)":         "Правила Карфагенского собора",
+    "Константинопольский (394г.)":              "Правила Константинопольского собора (394 г.)",
+    "Константинопольский Двукратный Собор (861г.)": "Правила Константинопольского Двукратного собора",
+    "Константинопольский Собор, во храме Св. Софии - Премудрости Божией (879г.)": "Правила Константинопольского собора в храме Святой Софии (879 г.)",
+}
 
 
 def _safe_filename(name: str) -> str:
@@ -72,19 +67,9 @@ def build_work_meta(collection: str, group_title: str) -> WorkMeta:
             raise KeyError(f"unknown vselensky group: {group_title!r}")
         return WorkMeta(author=KANONICHESKOE_PRAVO, work_title=title)
     if collection == "pomestnyh-soborov":
-        # "Анкирский Собор (314г.)" → "Правила Анкирского собора"
-        # "Константинопольский Двукратный Собор (861г.)" → "Правила Константинопольского Двукратного собора"
-        stripped = _YEAR_SUFFIX_RE.sub("", group_title).strip()
-        # The source uses "Собор" exclusively at end of string in pomestnyh
-        # titles. Decline the trailing "Собор" → "собора" (genitive) and
-        # decline preceding adjectives ("Константинопольский" → "Константинопольского").
-        if stripped.endswith("Собор"):
-            head = stripped[:-len("Собор")].strip()
-            words = head.split()
-            declined = [_decline_adj_to_genitive(w) for w in words]
-            head_decl = " ".join(declined)
-            stripped = f"{head_decl} собора" if head_decl else "собора"
-        title = f"Правила {stripped}"
+        title = _POMESTNY_TITLES.get(group_title)
+        if title is None:
+            raise KeyError(f"unknown pomestny group: {group_title!r}")
         return WorkMeta(author=KANONICHESKOE_PRAVO, work_title=title)
     if collection == "svyatootecheskie":
         return WorkMeta(author=resolve_father(group_title), work_title="Канонические правила")
