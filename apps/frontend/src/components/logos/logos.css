@@ -338,3 +338,8 @@ button:focus-visible, textarea:focus-visible, a:focus-visible {
   color: #ece6d6;
   background: rgba(255, 255, 255, 0.05);
 }
+
+/* HumanLine edit button only appears on hover/focus-within (Phase 7). */
+.logos-human .logos-human-edit { opacity: 0; }
+.logos-human:hover .logos-human-edit,
+.logos-human:focus-within .logos-human-edit { opacity: 1; }

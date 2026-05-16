@@ -47,6 +47,10 @@ export const STRINGS = {
       you:         "Вы —",
       regenerate: "Перегенерировать",
       regenerateAria: "Перегенерировать ответ",
+      edit: "Изменить",
+      editAria: "Изменить и переотправить",
+      cancelEdit: "Отмена",
+      saveEdit: "Сохранить",
     },
     starters: [
       "Сущность и энергия у свт. Григория Паламы",
@@ -111,6 +115,10 @@ export const STRINGS = {
       you:         "You —",
       regenerate: "Regenerate",
       regenerateAria: "Regenerate the answer",
+      edit: "Edit",
+      editAria: "Edit and resubmit",
+      cancelEdit: "Cancel",
+      saveEdit: "Save",
     },
     starters: [
       "Essence and energies in St. Gregory Palamas",

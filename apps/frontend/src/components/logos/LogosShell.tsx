@@ -171,6 +171,37 @@ function LogosInner() {
     });
   }, [stream]);
 
+  // Edit a previous human message: forks the conversation at the parent
+  // checkpoint of that human and submits a new content.
+  const handleEditHuman = useCallback(
+    (humanId: string | undefined, newText: string) => {
+      if (!humanId) return;
+      const target = stream.messages.find((m) => m.id === humanId);
+      if (!target) return;
+      const meta = stream.getMessagesMetadata(target);
+      const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
+      if (!parentCheckpoint) return;
+      const newMessage: Message = {
+        type: "human",
+        content: [{ type: "text", text: newText }] as Message["content"],
+      };
+      stream.submit(
+        { messages: [newMessage] },
+        {
+          checkpoint: parentCheckpoint,
+          streamMode: ["values"],
+          streamSubgraphs: true,
+          streamResumable: true,
+          optimisticValues: (prev) => ({
+            ...prev,
+            messages: [...(prev.messages ?? []), newMessage],
+          }),
+        },
+      );
+    },
+    [stream],
+  );
+
   const goHome = useCallback(() => {
     setThreadId(null);
   }, [setThreadId]);
@@ -321,6 +352,7 @@ function LogosInner() {
                   turn={turn}
                   isLastTurn={i === turns.length - 1}
                   onRegenerate={handleRegenerate}
+                  onEditHuman={(newText) => handleEditHuman(turn.human?.id, newText)}
                 />
               ))}
             </div>
@@ -349,10 +381,12 @@ function ChatTurn({
   turn,
   isLastTurn,
   onRegenerate,
+  onEditHuman,
 }: {
   turn: ReturnType<typeof groupMessagesIntoTurns>[number];
   isLastTurn: boolean;
   onRegenerate: () => void;
+  onEditHuman: (newText: string) => void;
 }) {
   const humanText = turn.human ? humanMessageText(turn.human) : "";
   const showAssistant =
@@ -361,7 +395,7 @@ function ChatTurn({
     turn.inProgress;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-      {humanText && <HumanLine text={humanText} />}
+      {humanText && <HumanLine text={humanText} onEdit={onEditHuman} />}
       {showAssistant && (
         <AssistantTurn
           turn={turn}
