@@ -1,36 +1,21 @@
+// apps/frontend/src/components/logos/CitationsList.tsx
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { palette, type } from "./tokens";
 import { useStrings } from "./i18n";
+import { useCitationContext } from "./CitationContext";
+import { PassageModal } from "./PassageModal";
 import type {
   ReadPassageFailure,
-  ReadPassageResult,
   ReadPassageSuccess,
 } from "@/components/citation-card";
 import type { DesignToolCall } from "./turns";
+import type { CitationMarker } from "@/lib/citation-marker";
 
-// Mirrors the type guard in `components/thread/messages/tool-calls.tsx` so
-// the same payload shape rules apply here. Kept private to this file —
-// the guard's logic is small and inlined where used.
-function looksLikeReadPassage(value: unknown): value is ReadPassageResult {
-  if (!value || typeof value !== "object") return false;
-  const v = value as Record<string, unknown>;
-  if (
-    v.found === false &&
-    typeof v.error === "string" &&
-    typeof v.citation === "string"
-  ) {
-    return true;
-  }
-  return (
-    typeof v.text === "string" &&
-    typeof v.para_start === "number" &&
-    typeof v.window_size === "number" &&
-    "author" in v &&
-    "work_title" in v
-  );
-}
+type RowKind =
+  | { kind: "success"; marker: CitationMarker; rich: ReadPassageSuccess }
+  | { kind: "error"; marker: CitationMarker; err: ReadPassageFailure };
 
 function paraLabel(d: ReadPassageSuccess): string {
   return d.window_size === 1
@@ -44,19 +29,58 @@ function chapterLabel(d: ReadPassageSuccess): string | null {
   return null;
 }
 
-function CitationRowSuccess({
-  d,
-  idx,
-}: {
-  d: ReadPassageSuccess;
-  idx: number;
-}) {
+function matchToolCall(
+  toolCalls: DesignToolCall[],
+  slug: string,
+): DesignToolCall | undefined {
+  return toolCalls.find(
+    (tc) =>
+      tc.name === "read_passage" &&
+      typeof tc.args.citation === "string" &&
+      tc.args.citation === slug,
+  );
+}
+
+function buildRows(
+  markers: CitationMarker[],
+  toolCalls: DesignToolCall[],
+): RowKind[] {
+  return markers.map((m) => {
+    const tc = matchToolCall(toolCalls, m.slug);
+    if (!tc || tc.jsonResult == null) {
+      return {
+        kind: "error",
+        marker: m,
+        err: {
+          found: false,
+          error: "no matching read_passage call for this slug",
+          citation: m.slug,
+        } as ReadPassageFailure,
+      };
+    }
+    const r = tc.jsonResult as ReadPassageSuccess | ReadPassageFailure;
+    if (r.found === false) {
+      return { kind: "error", marker: m, err: r };
+    }
+    return { kind: "success", marker: m, rich: r };
+  });
+}
+
+function CitationRowSuccess({ row }: { row: Extract<RowKind, { kind: "success" }> }) {
   const { s } = useStrings();
-  const [open, setOpen] = useState(false);
-  const ref = [chapterLabel(d), paraLabel(d)].filter(Boolean).join(" · ");
+  const { hoveredN, setHoveredN, turnKey } = useCitationContext();
+  const [modalOpen, setModalOpen] = useState(false);
+  const { marker, rich } = row;
+  const ref = [chapterLabel(rich), paraLabel(rich)].filter(Boolean).join(" · ");
+  const active = hoveredN === marker.n;
 
   return (
     <div
+      id={`${turnKey}-cite-${marker.n}`}
+      className="citation-row"
+      data-active={active ? "true" : undefined}
+      onMouseEnter={() => setHoveredN(marker.n)}
+      onMouseLeave={() => setHoveredN(null)}
       style={{
         display: "grid",
         gridTemplateColumns: "32px 1fr 220px",
@@ -66,7 +90,7 @@ function CitationRowSuccess({
         borderBottom: `0.5px solid ${palette.hairline}`,
         alignItems: "baseline",
         animation: "logos-rise 700ms cubic-bezier(.22,.61,.36,1) both",
-        animationDelay: `${idx * 80}ms`,
+        animationDelay: `${(marker.n - 1) * 80}ms`,
       }}
     >
       <div
@@ -78,7 +102,7 @@ function CitationRowSuccess({
           fontVariantNumeric: "tabular-nums",
         }}
       >
-        [{idx + 1}]
+        [{marker.n}]
       </div>
       <div>
         <div
@@ -93,7 +117,7 @@ function CitationRowSuccess({
             whiteSpace: "pre-wrap",
           }}
         >
-          «{d.text}»
+          «{marker.quote}»
         </div>
         <div
           style={{
@@ -103,59 +127,40 @@ function CitationRowSuccess({
             color: palette.muted,
           }}
         >
-          {d.author && <span style={{ color: palette.text }}>{d.author}</span>}
-          {d.author && d.work_title && " · "}
-          {d.work_title}
+          {rich.author && (
+            <span style={{ color: palette.text }}>{rich.author}</span>
+          )}
+          {rich.author && rich.work_title && " · "}
+          {rich.work_title}
         </div>
-        {(d.context_before || d.context_after) && (
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            style={{
-              appearance: "none",
-              border: 0,
-              background: "transparent",
-              cursor: "default",
-              padding: "8px 0 0",
-              color: palette.faint,
-              fontFamily: type.mono,
-              fontSize: 9.5,
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              transition: "color 200ms ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = palette.text;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = palette.faint;
-            }}
-          >
-            <span>{open ? s.citation.contextHide : s.citation.contextShow}</span>
-          </button>
-        )}
-        {open && (
-          <div
-            style={{
-              borderLeft: `1px solid ${palette.hairline}`,
-              paddingLeft: 12,
-              marginTop: 8,
-              fontFamily: type.quote,
-              fontStyle: "italic",
-              fontSize: 13,
-              lineHeight: 1.55,
-              color: palette.muted,
-              whiteSpace: "pre-wrap",
-            }}
-          >
-            {d.context_before && <div>{d.context_before}</div>}
-            {d.context_before && d.context_after && <div style={{ height: 6 }} />}
-            {d.context_after && <div>{d.context_after}</div>}
-          </div>
-        )}
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          style={{
+            appearance: "none",
+            border: 0,
+            background: "transparent",
+            cursor: "pointer",
+            padding: "8px 0 0",
+            color: palette.faint,
+            fontFamily: type.mono,
+            fontSize: 9.5,
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            transition: "color 200ms ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = palette.text;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = palette.faint;
+          }}
+        >
+          <span>▾ {s.citation.showPassage}</span>
+        </button>
       </div>
       <div
         style={{
@@ -169,10 +174,10 @@ function CitationRowSuccess({
         }}
       >
         {ref && <div>{ref}</div>}
-        {d.source_url && (
+        {rich.source_url && (
           <div style={{ marginTop: 6 }}>
             <a
-              href={d.source_url}
+              href={rich.source_url}
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -192,23 +197,34 @@ function CitationRowSuccess({
           </div>
         )}
       </div>
+      <PassageModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        passage={rich}
+        highlightQuote={marker.quote}
+      />
     </div>
   );
 }
 
-function CitationRowError({ d, idx }: { d: ReadPassageFailure; idx: number }) {
+function CitationRowError({ row }: { row: Extract<RowKind, { kind: "error" }> }) {
   const { s } = useStrings();
-  // Same diagnostic phrasing as the existing CitationCardError — keeps the
-  // agent-feedback message stable so backend changes in `read_passage`
-  // need only be updated in one place semantically.
+  const { hoveredN, setHoveredN, turnKey } = useCitationContext();
+  const { marker, err } = row;
+  const active = hoveredN === marker.n;
   const explain =
-    d.work_exists === false
+    err.work_exists === false
       ? "Похоже, агент сократил slug. Попроси: «возьми citation из результатов поиска буква-в-букву»."
-      : d.work_exists === true
+      : err.work_exists === true
         ? "Труд найден, но такого параграфа нет — глава/номер ошибочны."
         : "Citation не разобрался — нужен формат author_slug/work_slug/NNNN/pX.";
   return (
     <div
+      id={`${turnKey}-cite-${marker.n}`}
+      className="citation-row"
+      data-active={active ? "true" : undefined}
+      onMouseEnter={() => setHoveredN(marker.n)}
+      onMouseLeave={() => setHoveredN(null)}
       style={{
         display: "grid",
         gridTemplateColumns: "32px 1fr 220px",
@@ -218,7 +234,7 @@ function CitationRowError({ d, idx }: { d: ReadPassageFailure; idx: number }) {
         borderBottom: `0.5px solid ${palette.hairline}`,
         alignItems: "baseline",
         animation: "logos-rise 700ms cubic-bezier(.22,.61,.36,1) both",
-        animationDelay: `${idx * 80}ms`,
+        animationDelay: `${(marker.n - 1) * 80}ms`,
         opacity: 0.85,
       }}
     >
@@ -231,7 +247,7 @@ function CitationRowError({ d, idx }: { d: ReadPassageFailure; idx: number }) {
           fontVariantNumeric: "tabular-nums",
         }}
       >
-        [{idx + 1}]
+        [{marker.n}]
       </div>
       <div>
         <div
@@ -254,7 +270,7 @@ function CitationRowError({ d, idx }: { d: ReadPassageFailure; idx: number }) {
             marginBottom: 6,
           }}
         >
-          {d.citation}
+          {err.citation}
         </div>
         <div
           style={{
@@ -272,16 +288,15 @@ function CitationRowError({ d, idx }: { d: ReadPassageFailure; idx: number }) {
   );
 }
 
-export function CitationsList({ toolCalls }: { toolCalls: DesignToolCall[] }) {
-  // Collect every read_passage result we can recognize. We accept whatever
-  // tool name the backend actually uses ("read_passage") but also fall
-  // through to the shape-check so renames don't silently break the list.
-  const passages = toolCalls
-    .filter((tc) => tc.name === "read_passage" || looksLikeReadPassage(tc.jsonResult))
-    .map((tc) => tc.jsonResult as ReadPassageResult)
-    .filter((d): d is ReadPassageResult => looksLikeReadPassage(d));
-
-  if (passages.length === 0) return null;
+export function CitationsList({
+  markers,
+  toolCalls,
+}: {
+  markers: CitationMarker[];
+  toolCalls: DesignToolCall[];
+}) {
+  const rows = useMemo(() => buildRows(markers, toolCalls), [markers, toolCalls]);
+  if (rows.length === 0) return null;
   return (
     <div
       style={{
@@ -292,11 +307,11 @@ export function CitationsList({ toolCalls }: { toolCalls: DesignToolCall[] }) {
         animationDelay: "120ms",
       }}
     >
-      {passages.map((p, i) =>
-        p.found === false ? (
-          <CitationRowError key={`c-${i}`} d={p} idx={i} />
+      {rows.map((row) =>
+        row.kind === "success" ? (
+          <CitationRowSuccess key={`c-${row.marker.n}`} row={row} />
         ) : (
-          <CitationRowSuccess key={`c-${i}`} d={p} idx={i} />
+          <CitationRowError key={`c-${row.marker.n}`} row={row} />
         ),
       )}
     </div>
