@@ -59,6 +59,7 @@ describe("useStatelessStream", () => {
   it("optimistically sets messages to input.messages before the first chunk", async () => {
     // Stream that never yields — verifies the optimistic state without races.
     streamMock.mockReturnValue({
+      // eslint-disable-next-line require-yield
       async *[Symbol.asyncIterator]() {
         // Hang forever (will be aborted on unmount via test cleanup).
         await new Promise(() => {});
@@ -121,6 +122,7 @@ describe("useStatelessStream", () => {
   it("stop aborts the current run and clears isLoading", async () => {
     let aborted = false;
     streamMock.mockImplementation((_t, _a, opts) => ({
+      // eslint-disable-next-line require-yield
       async *[Symbol.asyncIterator]() {
         opts.signal?.addEventListener("abort", () => {
           aborted = true;
