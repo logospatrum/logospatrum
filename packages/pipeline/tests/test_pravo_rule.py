@@ -63,8 +63,27 @@ def test_parse_father_rule_vasilij_17():
     assert rule.rule_num == 17
     assert rule.h1 == "Правило 17"
     assert len(rule.ru_text) > 50
-    # Some commentaries always appear; if test fixture has none, this test is too weak
-    assert isinstance(rule.commentaries, list)
+    authors = [c.author for c in rule.commentaries]
+    # Expected inline commentators present on Vasily's 17th rule. Adjust
+    # the set if azbyka rearranges the page — but the fixture is committed
+    # so this set is stable for our purposes.
+    expected_present = {"Зонара", "Синопсис", "Аристен", "Вальсамон", "Славянская кормчая"}
+    missing = expected_present - set(authors)
+    assert not missing, f"expected commentators not parsed: {missing}; got {authors}"
+
+
+def test_continuation_paragraphs_after_kormchaya_are_dropped():
+    """Rules with a <p> right after Слав. кормчая that has no interp-title
+    (e.g. <em>Толкование</em>. Сей пресвитер...) are intentionally dropped
+    in v1. This test guards against accidental policy drift."""
+    html = (FIX / "rule_vasilij17.html").read_text(encoding="utf-8")
+    rule = parse_rule_html(html)
+    kormchaya = next(c for c in rule.commentaries if c.author == "Славянская кормчая")
+    # The continuation paragraph text shouldn't get absorbed into kormchaya
+    # (only matters if the fixture has one — confirm by inspecting fixture).
+    # If your fixture doesn't have "Сей пресвитер" as a continuation, replace
+    # with whatever text the continuation paragraph actually contains.
+    assert "Сей пресвитер" not in kormchaya.text
 
 
 def test_parse_rule_greek_dropped():

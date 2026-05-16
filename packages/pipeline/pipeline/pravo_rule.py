@@ -39,21 +39,6 @@ def _join_paragraphs(parent: Tag) -> str:
     return "\n\n".join(p for p in parts if p)
 
 
-def _interp_title_text(p: Tag) -> str | None:
-    """If <p> starts with <b class="interp-title">, return commentator name; else None."""
-    b = p.find("b", class_="interp-title", recursive=False)
-    if b is None:
-        # Sometimes the <b> is wrapped slightly differently (e.g. first child is
-        # whitespace, then <b>). Fall back to children scan.
-        for child in p.children:
-            if getattr(child, "name", None) == "b" and "interp-title" in (child.get("class") or []):
-                b = child
-                break
-    if b is None:
-        return None
-    return b.get_text(strip=True)
-
-
 def _paragraph_text_without(p: Tag, b: Tag | None) -> str:
     """Return the <p> text content with the leading <b class=interp-title> stripped."""
     parts: list[str] = []
@@ -107,6 +92,11 @@ def parse_rule_html(html: str) -> ParsedRule:
             continue
         b = p.find("b", class_="interp-title", recursive=False)
         if b is None:
+            # Some rules have continuation <p> blocks after a commentator
+            # (e.g. Slavonic kormchaya with a follow-on <em>Толкование</em>
+            # paragraph). We drop these in v1 — attaching them to the
+            # previous commentator risks attribution errors. Revisit if
+            # retrieval quality suffers.
             continue
         author = b.get_text(strip=True)
         text = _paragraph_text_without(p, b)
