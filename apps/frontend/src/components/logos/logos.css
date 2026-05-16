@@ -123,6 +123,28 @@ button:focus-visible, textarea:focus-visible, a:focus-visible {
   border-top: 0.5px solid rgba(238, 232, 218, 0.08);
   margin: 1.2em 0;
 }
+/* Upstream markdown-styles.css ships a light-theme table (border #ddd,
+   header #f2f2f2, even rows #f9f9f9 on the tr) that fights the dark
+   palette. Override the tr-level zebra and repaint borders + header to
+   the Logos palette so cells stay legible against #ece6d6 text. */
+.logos-answer .markdown-content tr {
+  background: transparent;
+}
+.logos-answer .markdown-content tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+.logos-answer .markdown-content th,
+.logos-answer .markdown-content td {
+  border: 0.5px solid rgba(238, 232, 218, 0.08);
+  padding: 10px 14px;
+  color: #ece6d6;
+  text-align: left;
+}
+.logos-answer .markdown-content th {
+  background: rgba(255, 255, 255, 0.02);
+  font-family: var(--font-cormorant), "Cormorant Garamond", "EB Garamond", Georgia, serif;
+  font-weight: 400;
+}
 
 /* ─── Library dialog (LibraryBrowser) ──────────────────────────────────────
    Restyles the catalog modal so it matches the ΛΟΓΟΣ palette. Trigger
