@@ -3,8 +3,11 @@
 import { MarkdownText } from "./markdown/markdown-text";
 import { ThinkingTrace } from "./ThinkingTrace";
 import { CitationsList } from "./CitationsList";
+import { CitationProvider } from "./CitationContext";
+import { extractMarkers, numberMarkers } from "@/lib/citation-marker";
 import { palette, type } from "./tokens";
 import { useStrings } from "./i18n";
+import { useMemo } from "react";
 import type { DesignTurn } from "./turns";
 
 // Styles for `.logos-answer` (markdown body palette overrides) live in
@@ -23,7 +26,13 @@ export function AssistantTurn({ turn, showRegenerate, onRegenerate }: Props) {
   const { s } = useStrings();
   const showTrace = turn.toolCalls.length > 0;
   const showAnswer = turn.answerText.trim().length > 0;
+  const markers = useMemo(() => extractMarkers(turn.answerText), [turn.answerText]);
+  const numberedAnswer = useMemo(
+    () => numberMarkers(turn.answerText),
+    [turn.answerText],
+  );
   return (
+    <CitationProvider turnKey={turn.key}>
     <div
       style={{
         display: "flex",
@@ -41,11 +50,11 @@ export function AssistantTurn({ turn, showRegenerate, onRegenerate }: Props) {
 
       {showAnswer && (
         <div className="logos-answer">
-          <MarkdownText>{turn.answerText}</MarkdownText>
+          <MarkdownText>{numberedAnswer}</MarkdownText>
         </div>
       )}
 
-      <CitationsList toolCalls={turn.toolCalls} />
+      <CitationsList markers={markers} toolCalls={turn.toolCalls} />
 
       {showRegenerate && onRegenerate && (
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -97,5 +106,6 @@ export function AssistantTurn({ turn, showRegenerate, onRegenerate }: Props) {
         </div>
       )}
     </div>
+    </CitationProvider>
   );
 }

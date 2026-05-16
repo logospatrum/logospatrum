@@ -6,6 +6,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
+import { remarkCitation } from "@/lib/remark-citation";
+import { CitationPill } from "@/components/logos/CitationPill";
 import {
   FC,
   memo,
@@ -69,6 +71,17 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
 };
 
 const defaultComponents: any = {
+  "citation-marker": ({
+    n,
+    slug,
+    quote,
+  }: {
+    n?: string;
+    slug?: string;
+    quote?: string;
+  }) => (
+    <CitationPill n={n ?? "0"} slug={slug} quote={quote} />
+  ),
   h1: ({ className, ...props }: { className?: string }) => (
     <h1
       className={cx(
@@ -253,7 +266,7 @@ const defaultComponents: any = {
 
 // Stable plugin refs — inline arrays would create new identities every render
 // and defeat memoization downstream.
-const remarkPlugins = [remarkGfm, remarkMath];
+const remarkPlugins = [remarkGfm, remarkMath, remarkCitation];
 const rehypePlugins = [rehypeKatex];
 
 /**
