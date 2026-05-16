@@ -39,6 +39,17 @@ interface Props {
 const VBW = 1600;
 const VBH = 1000;
 
+// Cadence at which we invalidate the SVG filter (via setAttribute on
+// fePointLight/feDiffuseLighting). The filter graph is the perf
+// bottleneck — every attribute change triggers a full re-render of
+// turbulence + displacement + N lighting passes + N blends. On a 144Hz
+// monitor we used to invalidate 144×/sec, which the GPU compositor
+// can't sustain (median frame dt would settle at ~14ms — half-vsync).
+// Rate-limiting writes to 60Hz keeps motion smooth to the eye, lets
+// the compositor reuse the previous filter output on most vsyncs, and
+// drops the filter's GPU duty cycle by ~2.4× on high-refresh displays.
+const FRAME_INTERVAL_MS = 16.6;
+
 // Peak values used when the flame envelope reaches 1. We modulate the
 // element's diffuseConstant / specularConstant via setAttribute each frame
 // — NOT through React — so we don't re-render 60 times/sec and we don't
@@ -179,7 +190,13 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
     window.addEventListener("pointerup", onUp, true);
     window.addEventListener("pointercancel", onUp, true);
 
-    const tick = () => {
+    let lastWrite = 0;
+    const tick = (now: number) => {
+      if (now - lastWrite < FRAME_INTERVAL_MS) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+      lastWrite = now;
       // Slow follow — heavy, monumental.
       cx += (tx - cx) * 0.06;
       cy += (ty - cy) * 0.06;
@@ -213,6 +230,7 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
     const baseLX = VBW * 0.30, baseRX = VBW * 0.70;
     const baseY = VBH * 1.15;
     let raf = 0;
+    let lastWrite = 0;
     const t0 = performance.now();
     const flicker = (t: number, seed: number) =>
       0.50 +
@@ -221,6 +239,11 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
       0.08 * Math.sin(t * 0.0181 + seed * 2.3);
 
     const tick = (now: number) => {
+      if (now - lastWrite < FRAME_INTERVAL_MS) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+      lastWrite = now;
       const target =
         lightSource === "thinking" && lightOnRef.current ? 1 : 0;
       let env = flameEnvRef.current;
