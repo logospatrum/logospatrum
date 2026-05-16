@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
@@ -45,6 +45,8 @@ export const STRINGS = {
       enterHint:   "↵  Отправить  ·  ⇧ ↵ Новая строка",
       safety:      "Цитаты приводятся с указанием источника",
       you:         "Вы —",
+      regenerate: "Перегенерировать",
+      regenerateAria: "Перегенерировать ответ",
     },
     starters: [
       "Сущность и энергия у свт. Григория Паламы",
@@ -107,6 +109,8 @@ export const STRINGS = {
       enterHint:   "↵  Send  ·  ⇧ ↵ Newline",
       safety:      "Quotations are given with their sources",
       you:         "You —",
+      regenerate: "Regenerate",
+      regenerateAria: "Regenerate the answer",
     },
     starters: [
       "Essence and energies in St. Gregory Palamas",

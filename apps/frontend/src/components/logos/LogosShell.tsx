@@ -149,6 +149,28 @@ function LogosInner() {
     [stream],
   );
 
+  // Regenerate the last assistant turn. Uses the parent checkpoint from
+  // the last *human* message in the stream so the new generation forks
+  // off the same input.
+  const handleRegenerate = useCallback(() => {
+    // Find the last human message to fork from
+    const reversedIdx = [...stream.messages]
+      .reverse()
+      .findIndex((m) => m.type === "human");
+    if (reversedIdx < 0) return;
+    const lastHuman =
+      stream.messages[stream.messages.length - 1 - reversedIdx];
+    const meta = stream.getMessagesMetadata(lastHuman);
+    const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
+    if (!parentCheckpoint) return;
+    stream.submit(undefined, {
+      checkpoint: parentCheckpoint,
+      streamMode: ["values"],
+      streamSubgraphs: true,
+      streamResumable: true,
+    });
+  }, [stream]);
+
   const goHome = useCallback(() => {
     setThreadId(null);
   }, [setThreadId]);
@@ -293,8 +315,13 @@ function LogosInner() {
                   {s.sidebar.empty}
                 </div>
               )}
-              {turns.map((turn) => (
-                <ChatTurn key={turn.key} turn={turn} />
+              {turns.map((turn, i) => (
+                <ChatTurn
+                  key={turn.key}
+                  turn={turn}
+                  isLastTurn={i === turns.length - 1}
+                  onRegenerate={handleRegenerate}
+                />
               ))}
             </div>
           </div>
@@ -318,7 +345,15 @@ function LogosInner() {
   );
 }
 
-function ChatTurn({ turn }: { turn: ReturnType<typeof groupMessagesIntoTurns>[number] }) {
+function ChatTurn({
+  turn,
+  isLastTurn,
+  onRegenerate,
+}: {
+  turn: ReturnType<typeof groupMessagesIntoTurns>[number];
+  isLastTurn: boolean;
+  onRegenerate: () => void;
+}) {
   const humanText = turn.human ? humanMessageText(turn.human) : "";
   const showAssistant =
     turn.toolCalls.length > 0 ||
@@ -327,7 +362,13 @@ function ChatTurn({ turn }: { turn: ReturnType<typeof groupMessagesIntoTurns>[nu
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
       {humanText && <HumanLine text={humanText} />}
-      {showAssistant && <AssistantTurn turn={turn} />}
+      {showAssistant && (
+        <AssistantTurn
+          turn={turn}
+          showRegenerate={isLastTurn && !turn.inProgress}
+          onRegenerate={onRegenerate}
+        />
+      )}
     </div>
   );
 }
