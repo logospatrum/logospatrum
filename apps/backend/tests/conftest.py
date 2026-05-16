@@ -57,10 +57,17 @@ async def db_clean():
 async def db_with_seed_authors(db_clean):
     """Seed 3 authors with works."""
     async with await psycopg.AsyncConnection.connect(DB_DSN_TEST, connect_timeout=10) as c:
+        # NOTE: global_section MUST match the prod values (set by
+        # pipeline.paragraphs from md frontmatter) so section-filter tests
+        # in lexical_search/semantic_search find matches via aliases:
+        #   "Православная библиотека Святых отцов и церковных писателей"
+        #   "Священное Писание"  (Bible)
         await c.execute("""
             INSERT INTO authors (slug, name_display, years, century, global_section) VALUES
-            ('avgustin', 'Аврелий Августин, блаженный', '(354–430)', 5, 'Православная библиотека'),
-            ('lestvichnik', 'Иоанн Лествичник, преподобный', '(~579–~649)', 7, 'Православная библиотека'),
+            ('avgustin', 'Аврелий Августин, блаженный', '(354–430)', 5,
+             'Православная библиотека Святых отцов и церковных писателей'),
+            ('lestvichnik', 'Иоанн Лествичник, преподобный', '(~579–~649)', 7,
+             'Православная библиотека Святых отцов и церковных писателей'),
             ('platon', 'Платон', '(427–347 до н.э.)', -4, 'Философия')
         """)
         await c.execute("""

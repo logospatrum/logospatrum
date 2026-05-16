@@ -4,6 +4,7 @@ from langchain_core.tools import tool
 from ..db import conn
 from ..embeddings import get_service
 from ._citation import make_citation
+from ._filters import resolve_section, slug_filter_sql
 
 
 def _get_service():
@@ -13,16 +14,24 @@ def _get_service():
 @tool
 async def semantic_search(
     query: str,
-    author_slug: str | None = None,
-    work_slug: str | None = None,
+    author_slug: str | list[str] | None = None,
+    work_slug: str | list[str] | None = None,
+    section: str | None = None,
     limit: int = 10,
 ) -> list[dict]:
-    """Семантический поиск через эмбеддинги.
+    """Семантический поиск через эмбеддинги (bge-m3 + pgvector HNSW).
 
     Args:
         query: текст запроса.
-        author_slug: фильтр по автору.
-        work_slug: фильтр по труду.
+        author_slug: один slug или список slug'ов — ищет у указанного(ых) автора(ов).
+            Передавай list[str], если хочешь искать у нескольких авторов сразу:
+            **один эмбеддинг запроса** + один SQL-проход. Это драматически дешевле,
+            чем N отдельных вызовов с одним автором.
+        work_slug: один slug или список slug'ов — фильтр по труду(ам).
+        section: фильтр по корпусу: "bible" / "scripture" → только Писание;
+            "patristic" / "fathers" → только патристика. Алиасы кириллические тоже
+            работают ("писание", "патристика"). Точное значение global_section
+            тоже принимается.
         limit: максимум результатов.
 
     Возвращает [{citation, work_slug, chapter_num, para_num, window_size, snippet, score}].
@@ -34,14 +43,23 @@ async def semantic_search(
     await svc.start()
     vec = await svc.embed(query)
 
-    filters = []
+    filters: list[str] = []
     where_params: list = []
-    if author_slug:
-        filters.append("w.author_slug = %s")
-        where_params.append(author_slug)
-    if work_slug:
-        filters.append("e.work_slug = %s")
-        where_params.append(work_slug)
+
+    a_sql, a_params = slug_filter_sql("w.author_slug", author_slug)
+    if a_sql:
+        filters.append(a_sql)
+        where_params.extend(a_params)
+
+    w_sql, w_params = slug_filter_sql("e.work_slug", work_slug)
+    if w_sql:
+        filters.append(w_sql)
+        where_params.extend(w_params)
+
+    if section:
+        filters.append("a.global_section = %s")
+        where_params.append(resolve_section(section))
+
     where = ("WHERE " + " AND ".join(filters)) if filters else ""
 
     sql = f"""
@@ -50,6 +68,7 @@ async def semantic_search(
                1 - (e.vector <=> %s::vector) AS score
         FROM embeddings e
         JOIN works w ON w.slug = e.work_slug
+        JOIN authors a ON a.slug = w.author_slug
         JOIN paragraphs p ON p.work_slug=e.work_slug AND p.chapter_num=e.chapter_num AND p.para_num=e.para_num
         {where}
         ORDER BY e.vector <=> %s::vector

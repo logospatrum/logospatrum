@@ -9,6 +9,7 @@ from langchain_core.tools import tool
 from ..config import settings
 from ..db import conn
 from ._citation import make_citation
+from ._filters import resolve_section, slug_filter_sql
 
 
 _PUNCT = re.compile(r"[^\w\s]", re.UNICODE)
@@ -37,16 +38,24 @@ def _preprocess(text: str) -> str:
 @tool
 async def lexical_search(
     query: str,
-    author_slug: str | None = None,
-    work_slug: str | None = None,
+    author_slug: str | list[str] | None = None,
+    work_slug: str | list[str] | None = None,
+    section: str | None = None,
     limit: int = 10,
 ) -> list[dict]:
     """Лексический поиск (tsvector + ts_rank) с опциональными фильтрами.
 
     Args:
         query: текст запроса.
-        author_slug: фильтр по автору.
-        work_slug: фильтр по труду.
+        author_slug: один slug или список slug'ов — ищет у указанного(ых) автора(ов).
+            Передавай list[str], если хочешь искать у нескольких авторов сразу
+            (один SQL-проход вместо N — экономит круговой обход к БД).
+        work_slug: один slug или список slug'ов — фильтр по труду(ам).
+        section: фильтр по корпусу: "bible" / "scripture" → только Писание;
+            "patristic" / "fathers" → только патристика. Алиасы кириллические тоже
+            работают ("писание", "патристика"). Точное значение global_section
+            тоже принимается. Используй, например, в negative-сценарии: чтобы
+            подтвердить, что термин «вне Писания», ищи только в section="bible".
         limit: максимум результатов.
 
     Возвращает [{citation, work_slug, chapter_num, para_num, window_size, snippet, score}].
@@ -55,14 +64,23 @@ async def lexical_search(
     if not q:
         return []
 
-    filters = []
+    filters: list[str] = []
     params: list = [q, q]
-    if author_slug:
-        filters.append("w.author_slug = %s")
-        params.append(author_slug)
-    if work_slug:
-        filters.append("e.work_slug = %s")
-        params.append(work_slug)
+
+    a_sql, a_params = slug_filter_sql("w.author_slug", author_slug)
+    if a_sql:
+        filters.append(a_sql)
+        params.extend(a_params)
+
+    w_sql, w_params = slug_filter_sql("e.work_slug", work_slug)
+    if w_sql:
+        filters.append(w_sql)
+        params.extend(w_params)
+
+    if section:
+        filters.append("a.global_section = %s")
+        params.append(resolve_section(section))
+
     where_extra = (" AND " + " AND ".join(filters)) if filters else ""
     params.append(limit)
 
@@ -72,6 +90,7 @@ async def lexical_search(
                ts_rank(e.text_for_lexical, plainto_tsquery('russian', %s)) AS score
         FROM embeddings e
         JOIN works w ON w.slug = e.work_slug
+        JOIN authors a ON a.slug = w.author_slug
         JOIN paragraphs p ON p.work_slug = e.work_slug
             AND p.chapter_num = e.chapter_num
             AND p.para_num = e.para_num

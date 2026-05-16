@@ -75,6 +75,14 @@ SEARCH_AGENT_PROMPT = """Ты — search-субагент, который ище
 - `list_authors(q?, limit=20)` — **поиск** автора по подстроке имени или slug'а. Используй `q`, не дёргай без аргумента.
 - `list_works(author_slug, q?, limit=30)` — труды по author_slug. У крупных авторов (Златоуст 154, Феофан 81, Кирилл 76) **обязательно** передавай `q` если знаешь хотя бы часть названия — без него вернётся 16-32 KB JSON.
 - `expand_concept(term)`
-- `lexical_search(query, author_slug?, work_slug?, limit=10)`
-- `semantic_search(query, author_slug?, work_slug?, limit=10)`
+- `lexical_search(query, author_slug?, work_slug?, section?, limit=10)`
+- `semantic_search(query, author_slug?, work_slug?, section?, limit=10)`
+
+## Эффективные вызовы поиска
+
+`author_slug` и `work_slug` принимают **список** строк. Используй это:
+- ❌ Дорого (4 вызова, 4 эмбеддинга запроса): 4 раздельных `semantic_search(query="X", author_slug="A1")`, `("X", "A2")`, `("X", "A3")`, `("X", "A4")`.
+- ✅ Дёшево (1 вызов, 1 эмбеддинг): `semantic_search(query="X", author_slug=["A1","A2","A3","A4"])`.
+
+`section` — двухзначный фильтр: `"bible"` (или `"писание"`) или `"patristic"` (или `"патристика"`). Используй в cross-запросах когда нужны **только** библейские цитаты или **только** патристика. Пример: чтобы подтвердить, что термин «вне Писания», ищи `section="bible"` и если пусто — отказывайся.
 """
