@@ -29,19 +29,27 @@ The Claude Design "ΛΟΓΟΣ — Theological Research Assistant" prototype (`Lo
 - `ChatBackdrop.tsx` — vertical dark column behind chat. Full-width under `(max-width: 720px)`.
 - `Chevron.tsx`, `ScrollToBottom.tsx` — leaf UI primitives.
 - `ThinkingTrace.tsx` — two-level collapse over `DesignToolCall[]`.
-- `CitationsList.tsx` — compact rendering of `read_passage` tool results in the design's column grid. Handles both `ReadPassageSuccess` and `ReadPassageFailure` shapes.
+- `CitationsList.tsx` — citations panel below the answer. Driven by agent-emitted markers (`CitationMarker[]` from `extractMarkers(turn.answerText)`), joined to `read_passage` tool calls by exact slug for rich metadata. One row per marker; shows the agent's short `«quote»` + author/work + chapter §-ref + azbyka link + "ПОЛНЫЙ ПАРАГРАФ" button that opens `PassageModal`. Returns null when no markers.
+- `CitationPill.tsx` — inline `[N]` rendered by react-markdown for each `citation-marker` MDAST node (emitted by `remarkCitation`). Click → smooth scroll to the matching panel row via `CitationContext.scrollToN`; hover toggles `data-active` on both the pill and the row through `CitationContext.hoveredN`. Href is `#${turnKey}-cite-${n}` so middle-click also lands correctly.
+- `CitationContext.tsx` — per-turn `<CitationProvider turnKey={turn.key}>` carrying `{hoveredN, setHoveredN, scrollToN, turnKey}`. Row IDs are namespaced (`${turnKey}-cite-${n}`), so multiple turns in the page don't collide. `useCitationContext()` throws if used outside the provider.
+- `PassageModal.tsx` — Radix Dialog. Shows full `read_passage.text` with the agent's short quote highlighted via `<mark>` (soft-fails to plain text + `s.citation.highlightNotFound` if `text.indexOf(quote) < 0`). Renders `context_before`/`context_after` if present plus the source URL link.
 - `HumanLine.tsx` — human message with hover-revealed inline Edit (textarea + Cancel/Save).
-- `AssistantTurn.tsx` — wraps `ThinkingTrace` + `MarkdownText` (`.logos-answer` palette overrides) + `CitationsList` + optional Regenerate pill.
+- `AssistantTurn.tsx` — wraps `ThinkingTrace` + `MarkdownText` (`.logos-answer` palette overrides) + `CitationsList` + optional Regenerate pill. Pre-numbers markers in `turn.answerText` via `numberMarkers(text)` before handing to `MarkdownText` (so the per-block ReactMarkdown calls share a stable N counter), extracts `CitationMarker[]` via `extractMarkers(text)` to feed `CitationsList`, and wraps everything in `<CitationProvider turnKey={turn.key}>`.
 - `turns.ts` — `groupMessagesIntoTurns(Message[], isLoading)` → `DesignTurn[]`. Pairs `tool_call.id` to its matching tool result; handles Anthropic-streamed `tool_use` blocks inside content arrays.
-- `markdown/markdown-text.tsx`, `markdown-styles.css`, `syntax-highlighter.tsx`, `content.ts` — relocated from `components/thread/` (commit `f15e08f`). `MarkdownText` has smooth-typewriter + react-markdown + react-syntax-highlighter + katex.
+- `markdown/markdown-text.tsx`, `markdown-styles.css`, `syntax-highlighter.tsx`, `content.ts` — relocated from `components/thread/` (commit `f15e08f`). `MarkdownText` has smooth-typewriter + react-markdown + react-syntax-highlighter + katex. The plugin chain is `[remarkGfm, remarkMath, remarkCitation]`; the `citation-marker` element maps to `<CitationPill>`.
 - `__tests__/{turns,i18n,humanMessageText}.test.ts` — 21 vitest cases pinning pure-logic behavior.
+
+The agent-marker pipeline lives in `src/lib/`:
+
+- `citation-marker.ts` — `AGENT_MARKER_RE` (matches `[[slug|«quote»]]`), `INTERNAL_MARKER_RE` (post-numbering `[[#N|slug|«quote»]]`), `extractMarkers(text)` → `{n, slug, quote}[]`, `numberMarkers(text)` → text with `[[#N|…]]` substituted in left-to-right order.
+- `remark-citation.ts` — unified/remark plugin. Walks `parent.children` manually (no `unist-util-visit` dep), replaces matched text spans with `citationMarker` MDAST nodes mapped to the custom `citation-marker` element. Consumes pre-numbered markers (so per-block ReactMarkdown calls keep a coherent N sequence).
 
 ## Backend integration touchpoints
 
 - `useStreamContext()` (from `providers/Stream.tsx`) — `messages`, `isLoading`, `error`, `submit({messages}, {checkpoint?, …})`, `stop()`, `getMessagesMetadata(msg)` for fork-from-checkpoint flows.
 - `useThreads()` (from `providers/Thread.tsx`) — localStorage thread list, `useThreadStore.saveCurrent` writes on every message change. Sidebar reads `threads.map(t => ({id: t.thread_id, title: t.metadata.title}))`.
 - `LibraryBrowser` — fetches `${NEXT_PUBLIC_CATALOG_API_URL}/catalog`. "Ask about this work" dispatches a `patristic:prefill-input` custom event; `LogosShell` listens and pushes the text into `Monolith.prefill`.
-- `read_passage` tool results — surfaced into `CitationsList` if they match `looksLikeReadPassage` (`text` + `para_start` + `window_size` + `author` + `work_title`, OR the `{found:false,error,citation}` failure shape).
+- Agent citations — main agent emits `[[<citation_slug>|«<short quote>»]]` inline in answers (see `apps/backend/src/backend/prompts.py` rule 4). Frontend `extractMarkers` pulls them out for the panel; `remarkCitation` turns them into inline `[N]` pills. The panel matches each marker's slug to a `read_passage` tool call's `args.citation` for rich data (author, work, chapter, §, source URL). No marker → no panel row; no matching `read_passage` → error row with diagnostic.
 
 ## Environment
 
@@ -93,7 +101,8 @@ Manual QA — run `SMOKE.md` after any PR touching `src/components/logos/*`, `sr
 - TS strict mode is on. Run `npm run lint` (and ideally `npm run format`) before committing.
 - Clearing browser storage drops all chat history. `langgraph dev` is in-memory in dev too — no recovery.
 - `LibraryBrowser` filter is pure client-side over the full catalog. Fine at current scale; reconsider past ~10K works.
-- `read_passage` tool-result shape is consumed by `CitationsList` via the `looksLikeReadPassage` guard. Backend changes to the return shape must keep `text`, `para_start`, `window_size`, `author`, `work_title` (success) or `{found:false, error, citation, work_exists?}` (failure) — or update `src/components/logos/CitationsList.tsx` in lockstep.
+- `read_passage` tool-result shape is consumed by `CitationsList` (via slug-matching) and by `PassageModal` (via the `ReadPassageSuccess` type). Backend changes to the return shape must keep `text`, `para_start`, `window_size`, `author`, `work_title`, `source_url`, `chapter_num`/`chapter_title`, `context_before`/`context_after` (success) or `{found:false, error, citation, work_exists?}` (failure) — or update `src/components/logos/CitationsList.tsx` and `PassageModal.tsx` in lockstep.
+- The agent's `[[slug|«quote»]]` marker syntax is a load-bearing contract between `prompts.py` rule 4 and `src/lib/citation-marker.ts` (`AGENT_MARKER_RE`). Don't change the regex on one side without the other.
 
 ## Intentionally NOT shipped
 
@@ -104,6 +113,5 @@ These were in the upstream `agent-chat-ui` Thread shell, deleted during the Logo
 - Branch switcher (alternative response trees)
 - agent-inbox interrupt UI — backend doesn't currently use `interrupt()`. If it does, this needs to be rebuilt on top of the Logos shell.
 - The hide-tool-calls toggle — ThinkingTrace is always present and individually collapsible.
-- "Hide" footnote markers `[1][2][3]` — would require a backend prompt-tuning step that emits markers in the answer text.
 
 If any of those become required, add them on top of `LogosShell` in a focused plan rather than re-importing the old Thread tree.

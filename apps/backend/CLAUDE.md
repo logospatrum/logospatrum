@@ -9,6 +9,7 @@ Two-tier agent in `src/backend/graph.py`:
 - **Main agent** (`anthropic/claude-sonnet-4-6`) — orchestrator. Tools: `read_passage`, `list_authors`, `list_works`, `expand_concept`, `lexical_search`, `semantic_search`, plus the deepagents `task` tool to delegate.
 - **Search subagent** named `search` (`anthropic/claude-haiku-4-5`) — invoked via `task`. Same tools minus `read_passage`. Returns 3–8 candidates with citations + snippets capped at 200 chars.
 - Rule: main MUST call `read_passage` before quoting (anti-hallucination); search NEVER quotes directly.
+- Citation markup: main agent emits `[[<citation_slug>|«<short verbatim quote>»]]` inline in answers (rule 4 in `MAIN_AGENT_PROMPT`). The slug is the exact `citation` it passed to `read_passage`; the `«»`-wrapped quote is a verbatim substring of `read_passage.text`. The frontend parses these markers into `[N]` pills + a citations panel (see `apps/frontend/CLAUDE.md`). Author/work/§/azbyka URL are resolved on the frontend by joining slug to the matching `read_passage` result — agents don't repeat that metadata in prose.
 
 `recursion_limit` is bumped to 50 via `.with_config(...)` in `graph.py`.
 
