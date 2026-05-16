@@ -70,61 +70,61 @@ export function LibraryBrowser({ onAskAboutWork }: Props) {
       <Dialog.Trigger asChild>
         <button
           type="button"
-          className="hover:bg-muted rounded p-2 transition"
           aria-label="Открыть библиотеку"
           title="Библиотека"
+          className="logos-library-trigger"
         >
-          <BookOpen className="h-5 w-5" />
+          <BookOpen
+            className="h-3.5 w-3.5"
+            aria-hidden="true"
+          />
+          <span>Корпус</span>
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
-        <Dialog.Content className="bg-background fixed top-1/2 left-1/2 z-50 flex max-h-[80vh] w-[min(720px,90vw)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-md border shadow-lg">
-          <div className="flex items-center justify-between border-b p-3">
-            <Dialog.Title className="font-semibold">Библиотека</Dialog.Title>
+        <Dialog.Overlay className="logos-library-overlay" />
+        <Dialog.Content className="logos-library-content">
+          <div className="logos-library-header">
+            <Dialog.Title className="logos-library-title">Корпус</Dialog.Title>
             <Dialog.Description className="sr-only">
               Каталог авторов и трудов
             </Dialog.Description>
             <Dialog.Close asChild>
               <button
                 type="button"
-                className="hover:bg-muted rounded p-1"
+                className="logos-library-close"
                 aria-label="Закрыть"
               >
                 <X className="h-4 w-4" />
               </button>
             </Dialog.Close>
           </div>
-          <div className="border-b p-3">
+          <div className="logos-library-search">
             <input
               type="text"
               placeholder="Поиск по авторам, трудам, темам..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-background w-full rounded border px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
+              className="logos-library-input"
             />
           </div>
-          <div className="flex-1 overflow-auto p-2">
+          <div className="logos-library-list">
             {loading && (
-              <div className="text-muted-foreground py-8 text-center">
-                Загрузка...
-              </div>
+              <div className="logos-library-info">Загрузка…</div>
             )}
             {error && (
-              <div className="py-8 text-center text-red-500">
-                Ошибка: {error}
-              </div>
+              <div className="logos-library-error">Ошибка: {error}</div>
             )}
             {matches.map((a) => {
               const isOpen = effectiveExpanded.has(a.slug);
               return (
                 <div
                   key={a.slug}
-                  className="mb-1"
+                  className="logos-library-author"
                 >
                   <button
                     type="button"
-                    className="hover:bg-muted flex w-full items-center gap-1 rounded p-1 text-left"
+                    className="logos-library-author-btn"
                     onClick={() => toggle(a.slug)}
                   >
                     {isOpen ? (
@@ -132,18 +132,14 @@ export function LibraryBrowser({ onAskAboutWork }: Props) {
                     ) : (
                       <ChevronRight className="h-4 w-4 shrink-0" />
                     )}
-                    <span className="font-medium">{a.name}</span>
+                    <span className="logos-library-author-name">{a.name}</span>
                     {a.years && (
-                      <span className="text-muted-foreground ml-1 text-xs">
-                        {a.years}
-                      </span>
+                      <span className="logos-library-meta">{a.years}</span>
                     )}
-                    <span className="text-muted-foreground ml-auto text-xs">
-                      {a.works.length} тр.
-                    </span>
+                    <span className="logos-library-count">{a.works.length} тр.</span>
                   </button>
                   {isOpen && (
-                    <div className="mt-1 ml-6">
+                    <div className="logos-library-works">
                       {a.works.map((w) => (
                         <WorkRow
                           key={w.slug}
@@ -160,9 +156,7 @@ export function LibraryBrowser({ onAskAboutWork }: Props) {
               );
             })}
             {!loading && !error && matches.length === 0 && (
-              <div className="text-muted-foreground py-8 text-center">
-                Ничего не найдено
-              </div>
+              <div className="logos-library-info">Ничего не найдено</div>
             )}
           </div>
         </Dialog.Content>
@@ -173,25 +167,21 @@ export function LibraryBrowser({ onAskAboutWork }: Props) {
 
 function WorkRow({ work, onAsk }: { work: CatalogWork; onAsk: () => void }) {
   return (
-    <div className="group hover:bg-muted/50 flex items-center justify-between rounded px-2 py-1 text-sm">
-      <div className="min-w-0 flex-1">
+    <div className="logos-library-work">
+      <div className="logos-library-work-title">
         <span className="truncate">{work.title}</span>
         {work.creation_date && (
-          <span className="text-muted-foreground ml-1 text-xs">
-            ({work.creation_date})
-          </span>
+          <span className="logos-library-meta">({work.creation_date})</span>
         )}
         {work.paragraph_count > 0 && (
-          <span className="text-muted-foreground ml-1 text-xs">
-            · {work.paragraph_count} §
-          </span>
+          <span className="logos-library-meta">· {work.paragraph_count} §</span>
         )}
       </div>
-      <div className="flex gap-1 opacity-60 group-hover:opacity-100">
+      <div className="logos-library-work-actions">
         <button
           type="button"
           onClick={onAsk}
-          className="hover:bg-background rounded p-1"
+          className="logos-library-work-action"
           title="Спросить агента про этот труд"
           aria-label="Спросить агента про этот труд"
         >
@@ -202,7 +192,7 @@ function WorkRow({ work, onAsk }: { work: CatalogWork; onAsk: () => void }) {
             href={work.source_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:bg-background rounded p-1"
+            className="logos-library-work-action"
             title="Открыть на azbyka.ru"
             onClick={(e) => e.stopPropagation()}
           >

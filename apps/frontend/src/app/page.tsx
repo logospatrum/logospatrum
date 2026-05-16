@@ -1,20 +1,24 @@
 "use client";
 
-import { Thread } from "@/components/thread";
+import { LogosShell } from "@/components/logos/LogosShell";
 import { StreamProvider } from "@/providers/Stream";
 import { ThreadProvider } from "@/providers/Thread";
 import { ArtifactProvider } from "@/components/thread/artifact";
 import { Toaster } from "@/components/ui/sonner";
 import React from "react";
 
-export default function DemoPage(): React.ReactNode {
+// LogosShell replaces the original `Thread` component from agent-chat-ui.
+// We keep StreamProvider / ThreadProvider / ArtifactProvider intact so the
+// real LangGraph stream, localStorage thread history, and artifact panel
+// continue to work — only the visual shell changes.
+export default function HomePage(): React.ReactNode {
   return (
-    <React.Suspense fallback={<div>Loading (layout)...</div>}>
-      <Toaster />
+    <React.Suspense fallback={null}>
+      <Toaster theme="dark" />
       <ThreadProvider>
         <StreamProvider>
           <ArtifactProvider>
-            <Thread />
+            <LogosShell />
           </ArtifactProvider>
         </StreamProvider>
       </ThreadProvider>
