@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { palette, type } from "./tokens";
 import { useStrings } from "./i18n";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export interface SidebarThread {
   id: string;
@@ -19,16 +20,18 @@ interface Props {
 export function Sidebar({ threads, activeId, onPick, onNew }: Props) {
   const { s } = useStrings();
   const [hover, setHover] = useState(false);
+  const isTouch = useMediaQuery("(hover: none)");
 
   // Reveal the sidebar when the cursor approaches the left edge of the
   // viewport — a 24px "hot zone" wide enough to grab even on a trackpad.
   useEffect(() => {
+    if (isTouch) return undefined;
     const onMove = (e: PointerEvent) => {
       if (e.clientX <= 24) setHover(true);
     };
     window.addEventListener("pointermove", onMove);
     return () => window.removeEventListener("pointermove", onMove);
-  }, []);
+  }, [isTouch]);
 
   return (
     <>

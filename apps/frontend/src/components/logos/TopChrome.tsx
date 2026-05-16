@@ -2,6 +2,7 @@
 
 import { palette, type } from "./tokens";
 import { useStrings, type Lang } from "./i18n";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 interface Props {
   inChat: boolean;
@@ -26,6 +27,7 @@ export function TopChrome({
   librarySlot,
 }: Props) {
   const { s } = useStrings();
+  const isNarrow = useMediaQuery("(max-width: 640px)");
   return (
     <header
       style={{
@@ -38,7 +40,7 @@ export function TopChrome({
         justifyContent: "space-between",
         alignItems: "center",
         // Extra left pad — the sidebar trigger sits there.
-        padding: "26px 36px 26px 76px",
+        padding: isNarrow ? "16px 16px 16px 60px" : "26px 36px 26px 76px",
         fontFamily: type.mono,
         fontSize: 11,
         letterSpacing: "0.18em",
@@ -47,27 +49,29 @@ export function TopChrome({
         pointerEvents: "none",
       }}
     >
+      {!isNarrow && (
+        <div
+          style={{ display: "flex", alignItems: "center", gap: 14, pointerEvents: "auto" }}
+        >
+          <span
+            aria-hidden="true"
+            style={{
+              display: "inline-block",
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: palette.accent,
+              boxShadow: `0 0 12px ${palette.accent}`,
+              opacity: 0.7,
+            }}
+          />
+          <span>{s.brand}</span>
+        </div>
+      )}
       <div
-        style={{ display: "flex", alignItems: "center", gap: 14, pointerEvents: "auto" }}
+        style={{ display: "flex", alignItems: "center", gap: 8, pointerEvents: "auto", marginLeft: isNarrow ? "auto" : 0 }}
       >
-        <span
-          aria-hidden="true"
-          style={{
-            display: "inline-block",
-            width: 8,
-            height: 8,
-            borderRadius: "50%",
-            background: palette.accent,
-            boxShadow: `0 0 12px ${palette.accent}`,
-            opacity: 0.7,
-          }}
-        />
-        <span>{s.brand}</span>
-      </div>
-      <div
-        style={{ display: "flex", alignItems: "center", gap: 8, pointerEvents: "auto" }}
-      >
-        {librarySlot}
+        {!isNarrow && librarySlot}
 
         {inChat && (
           <button

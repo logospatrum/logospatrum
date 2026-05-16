@@ -2,9 +2,11 @@
 
 import { palette, type } from "./tokens";
 import { useStrings } from "./i18n";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export function Quote({ show }: { show: boolean }) {
   const { s } = useStrings();
+  const isNarrow = useMediaQuery("(max-width: 640px)");
   return (
     <figure
       style={{
@@ -12,7 +14,7 @@ export function Quote({ show }: { show: boolean }) {
         margin: 0,
         textAlign: "center",
         // Padding leaves room for the dark halo to extend past the glyphs.
-        padding: "72px 140px",
+        padding: isNarrow ? "32px 20px" : "72px 140px",
         opacity: show ? 1 : 0,
         transform: show ? "translateY(0)" : "translateY(-6px)",
         transition: "opacity 800ms ease, transform 800ms ease",

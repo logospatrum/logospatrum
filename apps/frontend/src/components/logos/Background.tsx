@@ -1,7 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { palette, tweaks } from "./tokens";
+
+function useReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const onChange = () => setReduced(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return reduced;
+}
 
 // Three-state machine for the whole stage's lighting:
 //   "cursor"   — landing. Cursor drives a moving point-light on the rock.
@@ -37,6 +50,7 @@ const FLAME_COLOR = "#ff9a4a";
 const FLAME_SPEC = "#ffd28a";
 
 export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props) {
+  const reducedMotion = useReducedMotion();
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   // We hold every fePointLight in this array so JS can swing them in
@@ -121,6 +135,7 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
   // ── Cursor follow ── only runs while lightSource === "cursor".
   useEffect(() => {
     if (lightSource !== "cursor") return undefined;
+    if (reducedMotion) return undefined;
     let raf = 0;
     let tx = VBW * 0.5, ty = VBH * 0.4;
     let cx = tx, cy = ty;
@@ -168,11 +183,12 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
       window.removeEventListener("pointercancel", onUp, true);
       cancelAnimationFrame(raf);
     };
-  }, [lightSource]);
+  }, [lightSource, reducedMotion]);
 
   // ── Flame + cross-shadow + cursor envelope ── runs always so fades
   // don't snap on mode transitions.
   useEffect(() => {
+    if (reducedMotion) return undefined;
     const baseLX = VBW * 0.30, baseRX = VBW * 0.70;
     const baseY = VBH * 1.15;
     let raf = 0;
@@ -262,7 +278,7 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [lightSource, cursorIntensity, specConstant]);
+  }, [lightSource, cursorIntensity, specConstant, reducedMotion]);
 
   return (
     <>
