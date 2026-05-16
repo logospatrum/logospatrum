@@ -4,8 +4,8 @@ Resumable by filesystem: skips a rule if the target md file already exists.
 """
 from __future__ import annotations
 import time
+from dataclasses import replace
 from pathlib import Path
-from typing import Iterable
 
 import httpx
 
@@ -16,7 +16,7 @@ from .pravo_index import (
     parse_grouped_index,
 )
 from .pravo_markdown import CANON_ROOT_DIR, build_work_meta, render_rule
-from .pravo_rule import parse_rule_html
+from .pravo_rule import ParsedRule, parse_rule_html
 
 # (collection_id, index_url, parser)
 _INDEXES: list[tuple[str, str, callable]] = [
@@ -61,7 +61,6 @@ class PravoCollector:
         # Pre-compute the target path so we can skip without fetching.
         # Use rule_num + a placeholder title — final md path doesn't depend
         # on parsed content, only on (author, work, rule_num).
-        from .pravo_rule import ParsedRule
         stub = ParsedRule(rule_num=entry.rule_num, h1="", short_content="", ru_text="")
         rel_path_preview, _ = render_rule(stub, meta, entry.rule_url)
         target = self.output_dir / rel_path_preview
@@ -73,7 +72,8 @@ class PravoCollector:
         rule = parse_rule_html(html)
         if rule.rule_num != entry.rule_num:
             # Defensive: if h1 misparse, force the number from the index.
-            from dataclasses import replace
+            print(f"  [warn] {entry.rule_url}: h1 parsed rule_num={rule.rule_num}, "
+                  f"index says {entry.rule_num}; using index")
             rule = replace(rule, rule_num=entry.rule_num)
         rel_path, content = render_rule(rule, meta, entry.rule_url)
         out = self.output_dir / rel_path
@@ -99,9 +99,16 @@ class PravoCollector:
                     time.sleep(self.throttle_s)
             except httpx.HTTPStatusError as e:
                 stats["errors"] += 1
-                print(f"  [{i}/{len(entries)}] ERR   {label}: HTTP {e.response.status_code}")
+                code = e.response.status_code
+                print(f"  [{i}/{len(entries)}] ERR   {label}: HTTP {code}")
+                if code == 429:
+                    # Soft rate-limit cooldown; we don't retry the current rule (it'll
+                    # be picked up on the next run by the resume-by-Path.exists() check),
+                    # but we slow the rest of the loop.
+                    print(f"  [warn] 429 received — sleeping 60s to respect rate limit")
+                    time.sleep(60)
             except Exception as e:
                 stats["errors"] += 1
-                print(f"  [{i}/{len(entries)}] ERR   {label}: {e!r}")
+                print(f"  [{i}/{len(entries)}] ERR   {label}: {type(e).__name__}: {e}")
         print(f"[done] written={stats['written']} skipped={stats['skipped']} errors={stats['errors']}")
         return stats
