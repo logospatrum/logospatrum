@@ -136,7 +136,8 @@ export type Strings = (typeof STRINGS)[Lang];
 const LANG_STORAGE_KEY = "logos:lang";
 
 // Anything that doesn't unambiguously look Russian falls through to English.
-function detectLang(): Lang {
+// Exported for unit tests. In runtime code go through `useLangState` instead.
+export function detectLang(): Lang {
   if (typeof navigator === "undefined") return "ru";
   const tag = (navigator.language || (navigator as { userLanguage?: string }).userLanguage || "").toLowerCase();
   return /^ru\b/.test(tag) ? "ru" : "en";
