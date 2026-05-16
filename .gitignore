@@ -42,3 +42,7 @@ models/
 packages/pipeline/_subset/
 packages/pipeline/_subset_small/
 .claude/
+
+# Local dev artefacts
+apps/backend/.langgraph_api/
+apps/backend/_smoke/
