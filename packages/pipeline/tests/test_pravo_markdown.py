@@ -1,9 +1,18 @@
 from pathlib import Path
 import pytest
 from pipeline.pravo_authors import KANONICHESKOE_PRAVO, FATHER_GROUP_TO_AUTHOR
-from pipeline.pravo_markdown import WorkMeta, render_rule, build_work_meta
+from pipeline.pravo_index import parse_grouped_index
+from pipeline.pravo_markdown import (
+    WorkMeta,
+    _POMESTNY_TITLES,
+    _VSELENSKY_TITLES,
+    build_work_meta,
+    render_rule,
+)
 from pipeline.pravo_rule import ParsedRule, Commentary
 from pipeline.paragraphs import parse_md
+
+FIX = Path(__file__).parent / "fixtures" / "pravo"
 
 
 def _sample_rule() -> ParsedRule:
@@ -132,3 +141,30 @@ def test_render_rule_for_pseudo_author_dir():
     fm_block = content.split("---")[1]
     yol_line = next(l for l in fm_block.splitlines() if l.startswith("author_years_of_life"))
     assert yol_line.split(":", 1)[1].strip() == ""
+
+
+def test_pomestny_dict_covers_every_group_in_index_fixture():
+    """Every group_title parsed from the live /pravo/pomestnyh-soborov/ HTML
+    must be a key in _POMESTNY_TITLES; otherwise the Task 6 collector will
+    raise KeyError on a real council. This is the dict's contract: it must
+    match azbyka byte-for-byte (hyphen vs en-dash, narrow space, etc.).
+    """
+    html = (FIX / "index_pomestnyh.html").read_text(encoding="utf-8")
+    entries = parse_grouped_index(html, collection="pomestnyh-soborov")
+    fixture_groups = {e.group_title for e in entries}
+    missing = fixture_groups - set(_POMESTNY_TITLES)
+    assert not missing, f"_POMESTNY_TITLES is missing keys: {missing}"
+    # And the reverse — no orphan dict entries
+    orphans = set(_POMESTNY_TITLES) - fixture_groups
+    assert not orphans, f"_POMESTNY_TITLES has unused keys: {orphans}"
+
+
+def test_vselensky_dict_covers_every_group_in_index_fixture():
+    """Same contract as the pomestny check, for the Vselensky index."""
+    html = (FIX / "index_vselenskih.html").read_text(encoding="utf-8")
+    entries = parse_grouped_index(html, collection="vselenskih-soborov")
+    fixture_groups = {e.group_title for e in entries}
+    missing = fixture_groups - set(_VSELENSKY_TITLES)
+    assert not missing, f"_VSELENSKY_TITLES is missing keys: {missing}"
+    orphans = set(_VSELENSKY_TITLES) - fixture_groups
+    assert not orphans, f"_VSELENSKY_TITLES has unused keys: {orphans}"

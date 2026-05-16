@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="ru-RU" prefix="og: https://ogp.me/ns#" class="sidebar-toggle">
+<head>
+		<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="google" content="notranslate">
+	<!-- Favicons -->
+	<link rel="icon" type="image/svg+xml" href="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/favicon.svg?ver=1.14">
+	<link rel="icon" type="image/ico" href="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/favicon.ico?ver=1.14">
+	<link rel="apple-touch-icon" sizes="57x57" href="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/apple-icon-57x57.png?ver=1.14">
+	<link rel="apple-touch-icon" sizes="60x60" href="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/apple-icon-60x60.png?ver=1.14">
+	<link rel="apple-touch-icon" sizes="72x72" href="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/apple-icon-72x72.png?ver=1.14">
+	<link rel="apple-touch-icon" sizes="76x76" href="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/apple-icon-76x76.png?ver=1.14">
+	<link rel="apple-touch-icon" sizes="114x114" href="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/apple-icon-114x114.png?ver=1.14">
+	<link rel="apple-touch-icon" sizes="120x120" href="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/apple-icon-120x120.png?ver=1.14">
+	<link rel="apple-touch-icon" sizes="144x144" href="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/apple-icon-144x144.png?ver=1.14">
+	<link rel="apple-touch-icon" sizes="152x152" href="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/apple-icon-152x152.png?ver=1.14">
+	<link rel="apple-touch-icon" sizes="180x180" href="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/apple-icon-180x180.png?ver=1.14">
+	<link rel="icon" type="image/png" sizes="192x192"  href="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/android-icon-192x192.png?ver=1.14">
+	<link rel="icon" type="image/png" sizes="32x32" href="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/favicon-32x32.png?ver=1.14">
+	<link rel="icon" type="image/png" sizes="96x96" href="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/favicon-96x96.png?ver=1.14">
+	<link rel="icon" type="image/png" sizes="16x16" href="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/favicon-16x16.png?ver=1.14">
+	<link rel="manifest" href="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/manifest.json?ver=1.14">
+	<meta name="msapplication-TileColor" content="#da532c">
+	<meta name="msapplication-TileImage" content="https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo/assets/images/favicons/ms-icon-144x144.png?ver=1.14">
+	<meta name="theme-color" content="#f1e9d6">
+	
+	<link rel="alternate" type="application/rss+xml" title="Церковное право RSS Feed" href="https://azbyka.ru/pravo/feed/rss/">
+	<link rel="alternate" type="application/atom+xml" title="Церковное право Atom Feed" href="https://azbyka.ru/pravo/feed/atom/">
+	<link rel="pingback" href="https://azbyka.ru/pravo/xmlrpc.php">
+		<script id="az_settings_js">
+		var AZ = window.AZ || {};
+		AZ.theme_path = 'https://azbyka.ru/pravo/wp-content/themes/azbyka-pravo';
+		AZ.ajax_path = 'https://azbyka.ru/pravo/wp-admin/admin-ajax.php';
+		AZ.post_id = '2155';
+		AZ.logged_in = false;
+		AZ.sso_logged_in = !!localStorage.getItem('az_sso_email');
+		AZ.tooltip_selector = '.az-tip, abbr, [data-tip-text]';
+					localStorage.setItem('az_sso_reflink', location.href);
+				/*
+		if(localStorage.getItem('az_sso_email') && !AZ.logged_in){
+			let tries = parseInt(localStorage.getItem('login_refresh_tries'));
+			if(isNaN(tries)) tries = 0;
+			if(tries < 2){
+				tries++;
+				localStorage.setItem('login_refresh_tries', tries);
+				location.reload();
+			}else
+				console.log('tried to login too much');
+		}else{
+			localStorage.removeItem('login_refresh_tries');
+		}
+		*/
+		
+		AZ.project = 'pravo';
+		AZ.settingVars = { "theme" : 0, "body-bg": 0, "side-bg" : 0, "widget-bg" : 0, "text-color" : 0, "link-color" : 0, "accent-color" : 0, "backdrop-color":0, "font-base-size" : 0, "text-font" : 0, "title-font" : 0, "text-align" : 0, "pagination-autoload" : 0 }; //0 - cross-site; 1 - local
+		AZ.sessionToggles = ["sidebar-hide"];
+		AZ.settings = {};
+		
+		AZ.nameSetting = name => 'az_' + (AZ.settingVars[name] ? AZ.project + '_' : '' ) + name;
+		AZ.getSetting = name => localStorage.getItem(AZ.nameSetting(name));
+		AZ.setSetting = (name, val) => {localStorage.setItem(AZ.nameSetting(name), val); AZ.applySettings();};
+		
+		AZ.applySettings = ()=>{
+			let docStyle = '', docClasses = document.documentElement.classList;
+
+			if(!AZ.settings.length){
+				docClasses.remove('sidebar-show');
+				docClasses.remove('sidebar-hide');
+			}
+
+			let gf_loaded = false;
+
+			for(let name in AZ.settingVars){
+				let val = AZ.getSetting(name);
+				if(val && val !== 'undefined'){
+					//google fonts
+					if (name.includes('-font') && !val.includes(',')) {
+						let head = document.getElementsByTagName('head')[0];
+						if (!gf_loaded) {
+							let pre_lnk = document.createElement('link');
+							pre_lnk.rel = 'preconnect';
+							pre_lnk.href = 'https://fonts.gstatic.com';
+							head.appendChild(pre_lnk);
+							gf_loaded = true;
+							console.log(pre_lnk);
+						}
+						let link = document.createElement('link');
+						link.href = 'https://fonts.googleapis.com/css2?family=' + val.replace(' ', '+') + ':wght@400;700&display=swap';
+						link.rel = 'stylesheet';
+						link.type = 'text/css';
+						head.appendChild(link);
+						console.log(link);
+					}
+
+					AZ.settings[name] = val;
+					docStyle+='--'+name+':'+ val+';';
+					
+					if(name === 'theme')	//todo: other?
+						document.documentElement.setAttribute('data-'+name.replace('--',''), val);
+				}
+			}
+			
+			for(let name of AZ.sessionToggles){
+				if(sessionStorage.getItem(name) === 'true')
+					document.documentElement.classList.add(name);
+			}
+
+			document.documentElement.style.cssText = docStyle;
+		};
+
+		AZ.applySettings();
+	</script>
+	
+<!-- SEO от Rank Math - https://rankmath.com/ -->
+<title>Правила Поместных соборов - Церковное право</title>
+<link data-rocket-prefetch href="https://cdn.jsdelivr.net" rel="dns-prefetch"><link rel="preload" data-rocket-preload as="image" href="https://azbyka.ru/wp-content/themes/azbyka-av/assets/images/favicons/favicon.svg" fetchpriority="high">
+<meta name="description" content="Трулльский собор признал общую законодательную силу правил ряда поместных соборов, проходивших в разное время и в разных странах. Таких соборов – одиннадцать, также отдельно упомянут Карфагенский собор при свт. Киприане (255 г.) о крещении еретиков. Правила всех этих одиннадцати соборов находятся в Афинской Синтагме и греческом Пидалионе. В славянских и румынских канонических сборниках находятся правила только десяти соборов, но в них нет правил Карфагенского собора, бывшего при Киприане. Главное основание, по которому в последних сборниках опущен данный Карфагенский собор, то, что его постановление о необходимости крестить всякого еретика или раскольника, обращающегося к Церкви, никогда не имело обязательного значения для всей Церкви. Согласно 2-му правилу Трулльского собора, оно имело значение, применительно к обстоятельствам места и времени, только для Африканской церкви."/>
+<meta name="robots" content="follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large"/>
+<link rel="canonical" href="https://azbyka.ru/pravo/pomestnyh-soborov/" />
+<meta property="og:locale" content="ru_RU" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Правила Поместных соборов - Церковное право" />
+<meta property="og:description" content="Трулльский собор признал общую законодательную силу правил ряда поместных соборов, проходивших в разное время и в разных странах. Таких соборов – одиннадцать, также отдельно упомянут Карфагенский собор при свт. Киприане (255 г.) о крещении еретиков. Правила всех этих одиннадцати соборов находятся в Афинской Синтагме и греческом Пидалионе. В славянских и румынских канонических сборниках находятся правила только десяти соборов, но в них нет правил Карфагенского собора, бывшего при Киприане. Главное основание, по которому в последних сборниках опущен данный Карфагенский собор, то, что его постановление о необходимости крестить всякого еретика или раскольника, обращающегося к Церкви, никогда не имело обязательного значения для всей Церкви. Согласно 2-му правилу Трулльского собора, оно имело значение, применительно к обстоятельствам места и времени, только для Африканской церкви." />
+<meta property="og:url" content="https://azbyka.ru/pravo/pomestnyh-soborov/" />
+<meta property="og:site_name" content="Азбука канонов" />
+<meta property="og:image" content="https://azbyka.ru/pravo/wp-content/uploads/2023/02/pravo.png" />
+<meta property="og:image:secure_url" content="https://azbyka.ru/pravo/wp-content/uploads/2023/02/pravo.png" />
+<meta property="og:image:width" content="1209" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:type" content="image/png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Правила Поместных соборов - Церковное право" />
+<meta name="twitter:description" content="Трулльский собор признал общую законодательную силу правил ряда поместных соборов, проходивших в разное время и в разных странах. Таких соборов – одиннадцать, также отдельно упомянут Карфагенский собор при свт. Киприане (255 г.) о крещении еретиков. Правила всех этих одиннадцати соборов находятся в Афинской Синтагме и греческом Пидалионе. В славянских и румынских канонических сборниках находятся правила только десяти соборов, но в них нет правил Карфагенского собора, бывшего при Киприане. Главное основание, по которому в последних сборниках опущен данный Карфагенский собор, то, что его постановление о необходимости крестить всякого еретика или раскольника, обращающегося к Церкви, никогда не имело обязательного значения для всей Церкви. Согласно 2-му правилу Трулльского собора, оно имело значение, применительно к обстоятельствам места и времени, только для Африканской церкви." />
+<meta name="twitter:image" content="https://azbyka.ru/pravo/wp-content/uploads/2023/02/pravo.png" />
+<script type="application/ld+json" class="rank-math-schema">{"@context":"https://schema.org","@graph":[{"@type":"EducationalOrganization","@id":"https://azbyka.ru/pravo/#organization","name":"\u0410\u0437\u0431\u0443\u043a\u0430 \u043a\u0430\u043d\u043e\u043d\u043e\u0432","url":"https://azbyka.ru/pravo"},{"@type":"WebSite","@id":"https://azbyka.ru/pravo/#website","url":"https://azbyka.ru/pravo","name":"\u0410\u0437\u0431\u0443\u043a\u0430 \u043a\u0430\u043d\u043e\u043d\u043e\u0432","publisher":{"@id":"https://azbyka.ru/pravo/#organization"},"inLanguage":"ru-RU"},{"@type":"CollectionPage","@id":"https://azbyka.ru/pravo/pomestnyh-soborov/#webpage","url":"https://azbyka.ru/pravo/pomestnyh-soborov/","name":"\u041f\u0440\u0430\u0432\u0438\u043b\u0430 \u041f\u043e\u043c\u0435\u0441\u0442\u043d\u044b\u0445 \u0441\u043e\u0431\u043e\u0440\u043e\u0432 - \u0426\u0435\u0440\u043a\u043e\u0432\u043d\u043e\u0435 \u043f\u0440\u0430\u0432\u043e","isPartOf":{"@id":"https://azbyka.ru/pravo/#website"},"inLanguage":"ru-RU"}]}</script>
+<!-- /Rank Math WordPress SEO плагин -->
+
+
+<link rel="alternate" type="application/rss+xml" title="Церковное право &raquo; Лента" href="https://azbyka.ru/pravo/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Церковное право &raquo; Лента комментариев" href="https://azbyka.ru/pravo/comments/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Церковное право &raquo; Лента рубрики Правила Поместных соборов" href="https://azbyka.ru/pravo/pomestnyh-soborov/feed/" />
+<style id='wp-img-auto-sizes-contain-inline-css' type='text/css'>
+img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+</style>
+<style id='classic-theme-styles-inline-css' type='text/css'>
+/*! This file is auto-generated */
+.wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.wp-block-file__button{background:#32373c;color:#fff;text-decoration:none}
+/*# sourceURL=/wp-includes/css/classic-themes.min.css */
+</style>
+<style id='global-styles-inline-css' type='text/css'>
+:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgb(6,147,227) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgb(252,185,0) 0%,rgb(255,105,0) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgb(255,105,0) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgb(255, 255, 255), 6px 6px rgb(0, 0, 0);--wp--preset--shadow--crisp: 6px 6px 0px rgb(0, 0, 0);}:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}:where(.wp-block-columns.is-layout-flex){gap: 2em;}:where(.wp-block-columns.is-layout-grid){gap: 2em;}:where(.wp-block-post-template.is-layout-flex){gap: 1.25em;}:where(.wp-block-post-template.is-layout-grid){gap: 1.25em;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+/*# sourceURL=global-styles-inline-css */
+</style>
+
+
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/plugins/Bg-Az-Counter-GitHub/css/styles.css?ver=1770901869'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='bg_counter_styles'  href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/plugins/Bg-Az-Counter-GitHub/css/styles.css?ver=1770901869'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/plugins/Bg-Personal/css/myBooks.css?ver=1770901869'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='myBooks'  href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/plugins/Bg-Personal/css/myBooks.css?ver=1770901869'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/plugins/Bg-ReTypos/css/styles.css?ver=1770901869'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='retypos_styles'  href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/plugins/Bg-ReTypos/css/styles.css?ver=1770901869'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/plugins/bg-biblie-references/css/styles.css?ver=1770901869'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='bg_bibrefs_styles'  href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/plugins/bg-biblie-references/css/styles.css?ver=1770901869'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/assets/css/styles.css?ver=1770901869'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='azbyka-styles'  href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/assets/css/styles.css?ver=1770901869'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka-pravo/style.css?ver=1770901869'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='azbyka-style'  href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka-pravo/style.css?ver=1770901869'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/assets/css/archive.css?ver=1770901885'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='az-archive'  href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/assets/css/archive.css?ver=1770901885'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/assets/css/top-menu.css?ver=1770901869'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='top-menu'  href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/assets/css/top-menu.css?ver=1770901869'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/assets/font-awesome/css/font-awesome.min.css?ver=1770901869'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='font-awesome'  href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/assets/font-awesome/css/font-awesome.min.css?ver=1770901869'  media='all' />
+			
+			<link data-minify="1" rel='preload' as='style' href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/inc/youtube-optimizer/youtube.optimizer.css?ver=1770901869'  media='all' />
+			<link data-minify="1" rel='stylesheet' id='youtube-optimizer'  href='https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/inc/youtube-optimizer/youtube.optimizer.css?ver=1770901869'  media='all' />
+			<script data-minify="1"  src="https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/assets/js/vendor/azjeycuery.js?ver=1770901869" id="jquery-js"></script>
+<script data-minify="1"  defer="defer" src="https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/inc/youtube-optimizer/youtube.optimizer.js?ver=1770901869" id="youtube-optimizer-js"></script>
+<link rel="https://api.w.org/" href="https://azbyka.ru/pravo/wp-json/" /><link rel="alternate" title="JSON" type="application/json" href="https://azbyka.ru/pravo/wp-json/wp/v2/categories/6" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://azbyka.ru/pravo/xmlrpc.php?rsd" />
+<noscript><style id="rocket-lazyload-nojs-css">.rll-youtube-player, [data-lazy-src]{display:none !important;}</style></noscript>
+	<script type="text/javascript">
+	    var templateURI = 'https://azbyka.ru/pravo/wp-content/themes/azbyka';
+	</script>
+<meta name="generator" content="WP Rocket 3.21.3" data-wpr-features="wpr_minify_js wpr_lazyload_images wpr_lazyload_iframes wpr_preconnect_external_domains wpr_oci wpr_minify_css wpr_desktop" /></head>
+
+<body class="archive category category-pomestnyh-soborov category-6 wp-theme-azbyka wp-child-theme-azbyka-pravo" id="main-body">
+	
+	<noscript><div><img src="https://mc.yandex.ru/watch/5565880" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+	<!-- Mobile Top menu -->
+		<div  class="main-nav-list">
+			<ul>
+			<li><span id="main-nav-0" data-target="#nav-box"><img fetchpriority="high" src="https://azbyka.ru/wp-content/themes/azbyka-av/assets/images/favicons/favicon.svg" ></span></li><li><a id="main-nav-1" href="https://azbyka.ru/pravo"><i class="fa fa-bars" aria-hidden="true"></i></a></li><li><span id="main-nav-3" data-target="#widgets"><i class="fa fa-info-circle" aria-hidden="true"></i></span></li><li><span id="main-nav-2" data-target="#header_search"><i class="fa fa-search" aria-hidden="true"></i></span></li><li><a id="main-nav-6" href="https://azbyka.ru/pravo/personal/"><i class="fa fa-user user-only" aria-hidden="true"></i><i class="fa fa-sign-in guest-only" aria-hidden="true"></i></a></li>			</ul>
+		</div>
+		<!-- End of Mobile Top menu -->
+			
+	<nav id="nav-box" class="top-panel">
+		<div class=main-box>
+			<div class="pre-header-nav m-show">Разделы портала «Азбука&nbsp;веры»</div>
+			<ul id="main-nav" class="nav">
+			<li class="menu-item"><a  href='https://azbyka.ru/'><img class="nav-logo" src="https://azbyka.ru/wp-content/themes/azbyka-av/assets/images/favicons/favicon.svg" ><span class="nav-home-label"> Главная</span></a></li><li class="menu-item menu-item-has-children"><span  class='link'>Гид <i class="fa fa-angle-down"></i></span><ul class="sub-menu"><li class="menu-item"><a  href='https://azbyka.ru/gid'><i class="fa fa-question-circle-o" aria-hidden="true"></i> Гид по порталу</a></li><li class="menu-item"><a  href='https://azbyka.ru/drevo-sajta'><i class="fa fa-sitemap" aria-hidden="true"></i> Древо портала</a></li><li class="menu-item"><a  href='https://azbyka.ru/s-chego-nachat'><i class="fa fa-user-plus" aria-hidden="true"></i> С чего начать</a></li><li class="menu-item"><a  href='https://t.me/AzbykaruBot'><i class="fa fa-search" aria-hidden="true"></i> TG бот</a></li></ul></li><li class="menu-item menu-item-has-children"><span  class='link'>Библиотеки <i class="fa fa-angle-down"></i></span><ul class="sub-menu"><li class="menu-item"><a  href='https://azbyka.ru/biblia/'><i class="fa fa-book" aria-hidden="true"></i> Библия</a></li><li class="menu-item"><a  href='https://azbyka.ru/otechnik/'><i class="fa fa-files-o" aria-hidden="true"></i> «Отечник»</a></li><li class="menu-item"><a  href='https://azbyka.ru/fiction/'><i class="fa fa-copyright" aria-hidden="true"></i> Художественная литература</a></li><li class="menu-item"><a  href='https://azbyka.ru/dictionary'><i class="fa fa-graduation-cap" aria-hidden="true"></i> Энциклопедия</a></li></ul></li><li class="menu-item menu-item-has-children"><span  class='link'>Календарь <i class="fa fa-angle-down"></i></span><ul class="sub-menu"><li class="menu-item"><a  href='https://azbyka.ru/days/'><i class="fa fa-calendar" aria-hidden="true"></i> Церковный календарь</a></li><li class="menu-item"><a  href='https://azbyka.ru/days/p-audio-calendar'><i class="fa fa-headphones" aria-hidden="true"></i> Аудиокалендарь</a></li><li class="menu-item m-hide"><a  href='https://azbyka.ru/extension'><i class="fa fa-chrome" aria-hidden="true"></i> Расширение Chrome</a></li></ul></li><li class="menu-item menu-item-has-children"><span  class='link'>Молитва <i class="fa fa-angle-down"></i></span><ul class="sub-menu"><li class="menu-item"><a  href='https://azbyka.ru/palomnik/'><i class="fa fa-globe" aria-hidden="true"></i> Азбука паломника</a></li><li class="menu-item"><a  href='https://azbyka.ru/kliros/'><i class="fa fa-music" aria-hidden="true"></i> Азбука певческая</a></li><li class="menu-item"><a  href='https://azbyka.ru/worships/'><i class="fa fa-file-text" aria-hidden="true"></i> Богослужение сегодня</a></li><li class="menu-item"><a  href='https://azbyka.ru/chaso-slov/'><i class="fa fa-clock-o" aria-hidden="true"></i> Молимся по часам</a></li><li class="menu-item"><a  href='https://azbyka.ru/molitvoslov/'><i class="fa fa-fire" aria-hidden="true"></i> Молитвослов</a></li><li class="menu-item"><a  href='https://azbyka.ru/bogosluzhenie/'><i class="fa fa-bell" aria-hidden="true"></i> Переводы Богослужений</a></li><li class="menu-item"><a  href='https://azbyka.ru/psalms/'><i class="fa fa-group" aria-hidden="true"></i> Читаем Псалтирь</a></li></ul></li><li class="menu-item menu-item-has-children"><span  class='link'>Медиа <i class="fa fa-angle-down"></i></span><ul class="sub-menu"><li class="menu-item"><a  href='https://azbyka.ru/news'><i class="fa fa-newspaper-o" aria-hidden="true"></i> Азбука новостей</a></li><li class="menu-item"><a  href='https://azbyka.ru/foto/'><i class="fa fa-camera-retro" aria-hidden="true"></i> Азбука фото</a></li><li class="menu-item"><a  href='https://azbyka.ru/audio/'><i class="fa fa-volume-up" aria-hidden="true"></i> Аудио</a></li><li class="menu-item"><a  href='https://azbyka.ru/video/'><i class="fa fa-video-camera" aria-hidden="true"></i> Видео</a></li><li class="menu-item"><a  href='https://azbyka.ru/bozhestvennaja-liturgija'><i class="fa fa-bell" aria-hidden="true"></i> Литургия</a></li><li class="menu-item"><a  href='https://azbyka.ru/audio/radio.html'><i class="fa fa-volume-up" aria-hidden="true"></i> Радио</a></li><li class="menu-item"><a  href='https://azbyka.ru/bogosluzhenie-online'><i class="fa fa-video-camera" aria-hidden="true"></i> Трансляция из храма</a></li><li class="menu-item"><a  href='https://azbyka.ru/parkhomenko/foto/'><i class="fa fa-camera" aria-hidden="true"></i> Фоторассказы</a></li><li class="menu-item"><a  href='https://azbyka.ru/life/'><i class="fa fa-road" aria-hidden="true"></i> Христианская жизнь</a></li><li class="menu-item"><a  href='https://azbyka.ru/telegram-kanaly'><i class="fa fa-telegram" aria-hidden="true"></i> TG-каналы</a></li></ul></li><li class="menu-item menu-item-has-children"><span  class='link'>Проверь себя <i class="fa fa-angle-down"></i></span><ul class="sub-menu"><li class="menu-item"><a  href='https://azbyka.ru/quiz/'><i class="fa fa-code-fork" aria-hidden="true"></i> Квизы</a></li><li class="menu-item"><a  href='https://azbyka.ru/crosswords/'><i class="fa fa-pencil" aria-hidden="true"></i> Кроссворды</a></li><li class="menu-item"><a  href='https://azbyka.ru/test/'><i class="fa fa-check-square-o" aria-hidden="true"></i> Тесты</a></li><li class="menu-item"><a  href='https://azbyka.ru/viktorina/'><i class="fa fa-image" aria-hidden="true"></i> Фотовикторины</a></li><li class="menu-item"><a  href='https://azbyka.ru/games/'><i class="fa fa-gamepad" aria-hidden="true"></i> Игры</a></li><li class="menu-item"><a  href='https://azbyka.ru/memo/'><i class="fa fa-refresh" aria-hidden="true"></i> Учим Писания</a></li></ul></li><li class="menu-item menu-item-has-children"><span  class='link'>Тематическое <i class="fa fa-angle-down"></i></span><ul class="sub-menu"><li class="menu-item"><a  href='https://azbyka.ru/death/'><i class="fa fa-cloud-upload" aria-hidden="true"></i> Азбука бессмертия</a></li><li class="menu-item"><a  href='https://azbyka.ru/art/'><i class="fa fa-paint-brush" aria-hidden="true"></i> Азбука искусства</a></li><li class="menu-item"><a  href='https://azbyka.ru/apokalipsis/'><i class="fa fa-font" aria-hidden="true"></i> Апокалипсис</a></li><li class="menu-item"><a  href='https://azbyka.ru/vopros/'><i class="fa fa-question-circle" aria-hidden="true"></i> Вопросы и ответы</a></li><li class="menu-item"><a  href='https://azbyka.ru/ikona/'><i class="fa fa-plus-square" aria-hidden="true"></i> Иконы</a></li><li class="menu-item"><a  href='https://azbyka.ru/katehizacija/'><i class="fa fa-bullhorn" aria-hidden="true"></i> Катехизация</a></li><li class="menu-item"><a  href='https://azbyka.ru/way/'><i class="fa fa-location-arrow" aria-hidden="true"></i> Мой путь к Богу</a></li><li class="menu-item"><a  href='https://azbyka.ru/opros/'><i class="fa fa-bar-chart" aria-hidden="true"></i> Опросы</a></li><li class="menu-item"><a  href='https://azbyka.ru/shemy/'><i class="fa fa-table" aria-hidden="true"></i> Пособия</a></li><li class="menu-item"><a  href='https://azbyka.ru/propovedi/'><i class="fa fa-pencil" aria-hidden="true"></i> Проповеди</a></li><li class="menu-item"><a  href='https://azbyka.ru/sueverie/'><i class="fa fa-street-view" aria-hidden="true"></i> Суевериям.нет</a></li><li class="menu-item"><a  href='https://azbyka.ru/forum/'><i class="fa fa-comments-o" aria-hidden="true"></i> Форум</a></li><li class="menu-item"><a  href='https://azbyka.ru/quotes'><i class="fa fa-bookmark" aria-hidden="true"></i> Цитаты Св. отцов</a></li><li class="menu-item"><a  href='https://azbyka.ru/chinaorthodox/'><i class="fa fa-handshake-o" aria-hidden="true"></i> 东正教信仰入门</a></li><li class="menu-item"><a  href='https://azbyka.ru/japanorthodox/'><i class="fa fa-circle" aria-hidden="true"></i> 正教の本</a></li></ul></li><li class="menu-item menu-item-has-children"><span  class='link'>Семья и здоровье <i class="fa fa-angle-down"></i></span><ul class="sub-menu"><li class="menu-item"><a  href='https://azbyka.ru/znakomstva/'><i class="fa fa-link" aria-hidden="true"></i> Азбука верности</a></li><li class="menu-item"><a  href='https://azbyka.ru/deti/'><i class="fa fa-child" aria-hidden="true"></i> Азбука воспитания</a></li><li class="menu-item"><a  href='https://azbyka.ru/zdorovie/'><i class="fa fa-medkit" aria-hidden="true"></i> Азбука здоровья</a></li><li class="menu-item"><a  href='https://azbyka.ru/recept/'><i class="fa fa-cutlery" aria-hidden="true"></i> Азбука рецептов</a></li><li class="menu-item"><a  href='https://azbyka.ru/garden/'><i class="fa fa-envira" aria-hidden="true"></i> Азбука садовода</a></li><li class="menu-item"><a  href='https://azbyka.ru/semya/'><i class="fa fa-home" aria-hidden="true"></i> Азбука супружества</a></li></ul></li>			</ul>
+		</div>
+	</nav>
+
+<!-- Header -->
+<div  class="main-box">
+	<header  class="header" id="header"> 
+		<div  class="header-top">
+			<div class="header-breadcrumbs"><ul class="breadcrumbs" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop='itemListElement' itemscope itemtype='https://schema.org/ListItem'>
+				<a itemprop='item' href='https://azbyka.ru/' title='Азбука веры'>
+					<span itemprop='name'>Азбука веры</span>
+				</a>
+				<meta itemprop='position' content='1'>
+			</li><li itemprop='itemListElement' itemscope itemtype='https://schema.org/ListItem'>
+				<a itemprop='item' href='https://azbyka.ru/pravo/' title='Церковное право'>
+					<span itemprop='name'>Церковное право</span>
+				</a>
+				<meta itemprop='position' content='2'>
+			</li></ul></div>		<!-- Вход в личный кабинет, если установлен плагин Profile Builder --> 
+						<div class="header-login m-hide">
+				<a href="https://azbyka.ru/pravo/personal" rel="nofollow" title="Войти в личный кабинет" class=user-only title="Личное"><i class="fa fa-user" aria-hidden="true"></i></a>
+				<a href="//azbyka.ru/auth" rel="nofollow" title="Войти в личный кабинет" class=guest-only>Вход <i class="fa fa-sign-in"></i></a>
+			</div>
+						<!-- End ¬ход в личный кабинет -->
+	<!-- Settings -->
+<!--noindex-->
+<div class="settings" id="settings" data-nosnippet>
+<a class="settings-button btn-settings" id="settings-button" title="Настройки">
+		<i class="fa fa-gear"></i>
+	</a>
+</div>
+<!--/noindex-->
+<!-- End Settings -->
+<div class="header-search" id="header_search">	
+	<form id="labnol" action="https://azbyka.ru/pravo/yandex_search" method="get" target="_self" accept-charset="utf-8" class="search-form">
+		<input type="hidden" name="searchid" value="2756471">
+		<input type="hidden" name="l10n" value="ru">
+		<input type="hidden" name="reqenc" value="">
+		<input type="search" name="text" id="transcript" value="" class="search-form-field">
+		<div class="speech start-dictation"><i class="fa fa-microphone"></i></div>
+		<button type="submit" class="search-form-button"><i class="fa fa-search"></i></button>
+	</form>
+	</div>		</div>
+		<div  class="header-main header-wrap"> 	
+			<div class="logo"><div class="main-title"><a href="https://azbyka.ru/pravo/" title="Церковное право">Церковное право</a></div><p class="header-subtitle">Каноны (правила) церковные</p></div><a class="button header-help-btn" href="//azbyka.ru/kak-pomoch">Пожертвовать</a>		</div>
+
+		
+	</header>
+</div>
+<!-- End Header -->
+<!-- Main area -->
+<div  class="main-box">
+	<main  class="main-area" id="main-area">
+		<!-- Sidebar -->
+		<section  class="main-area-sidebar main-area-item-mobile-last">
+				<span class="btn-sidebar-toggle"><i class="fa fa-chevron-left"></i></span>
+<div class="sidebar-header header-wrap"><div class="logo"><div class="main-title"><a href="https://azbyka.ru/pravo/" title="Церковное право">Церковное право</a></div><p class="header-subtitle">Каноны (правила) церковные</p></div><a class="button header-help-btn" href="//azbyka.ru/kak-pomoch">Пожертвовать</a></div><!-- Main sidebar area-->
+<aside class="widgets-area">
+<!-- Специальный блок -->
+	<!-- End Специальный блок -->
+
+<!-- Left menu -->
+	<div class="widget-navi">
+				<!-- Специальное меню -->
+					<!-- End Специальное меню -->
+		
+					<div class="widget">
+						<div class="widget-item  opened_child"><div class="menu-glavnoe-container"><ul id="left-navigation" class="left-nav"><li id="menu-item-32" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-32"><a href="https://azbyka.ru/pravo/apostolskie/">Апостольские <span class="menu-counter">85</span></a></li>
+<li id="menu-item-33" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-33"><a href="https://azbyka.ru/pravo/vselenskih-soborov/">Вселенских соборов <span class="menu-counter">189</span></a></li>
+<li id="menu-item-34" class="menu-item menu-item-type-taxonomy menu-item-object-category current-menu-item menu-item-34"><a href="https://azbyka.ru/pravo/pomestnyh-soborov/" aria-current="page">Поместных соборов <span class="menu-counter">334</span></a></li>
+<li id="menu-item-35" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-35"><a href="https://azbyka.ru/pravo/svyatootecheskie/">Святых отцов <span class="menu-counter">175</span></a></li>
+</ul></div></div>
+			</div>
+		<div id="custom_html-3" class="widget_text widget widget_custom_html"><div class="textwidget custom-html-widget"><ul>
+	<li><a href="https://azbyka.ru/pravo/instrukcziya/">Инструкция</a>
+	</li>
+	<li><a href="https://azbyka.ru/pravo/slovar-terminov-po-czerkovnomu-pravu/">Словарь терминов</a></li>
+	<li><a href="https://azbyka.ru/pravo/subject/">Субъекты канонов</a>
+	</li>
+	<li><a href="https://azbyka.ru/pravo/object/">Области канонов</a>
+	</li>
+</ul></div></div>
+<div id="custom_html-2" class="widget_text widget widget_custom_html"><p class="widget-title">Полезные ссылки</p>
+<div class="textwidget custom-html-widget"><ul>
+	<li><a href="https://azbyka.ru/otechnik/pravila/dejanija-vselenskikh-soborov-tom1/">Деяния Вселенских Соборов</a></li>
+	<li><a href="https://azbyka.ru/otechnik/pravila/kanony-ili-kniga-pravil/">Каноны или Книга Правил</a></li>
+	<li><a href="https://azbyka.ru/otechnik/Nikodim_Svjatogorets/pidalion-pravila-pravoslavnoj-tserkvi-s-tolkovanijami-tom-1-pravila-svjatyh-apostolov/">Пидалион</a></li>
+	<li><a href="https://azbyka.ru/otechnik/Matfej_Vlastar/Alfavitnaia_Sintagma/">Алфавитная Синтагма</a></li>
+	<li><a href="https://azbyka.ru/pravo/articles/">Книги и статьи</a></li>
+	<li><a href="https://azbyka.ru/test/category/kanonicheskoe-pravo">Тесты</a></li>
+	<li><a href="https://azbyka.ru/shemy/1/kanonicheskoe-pravo">Схемы и таблицы</a>
+		<ul>
+			<li><a href="https://azbyka.ru/shemy/kanony-pravila-pravoslavnoj-cerkvi.shtml">Краткий список канонов</a></li>
+		</ul></li>
+	<li><a href="https://azbyka.ru/vopros/questions/tags/cerkovnye-kanony/">Вопросы и ответы</a></li>
+</ul></div></div>
+<div id="azbyka_tags_cloud-3" class="widget widget_azbyka_tags_cloud"><p class="widget-title">Облако тегов</p>
+
+		<div class="widget-item">
+			<div class="widget-inner">
+				<div class="tags-cloud">
+					<a href="https://azbyka.ru/pravo/metka/agapa/" class="tag-cloud-link tag-link-132 tag-link-position-1" style="font-size: 11.04347826087pt;" aria-label="Агапа (4 элемента)">Агапа</a>
+<a href="https://azbyka.ru/pravo/metka/altar/" class="tag-cloud-link tag-link-196 tag-link-position-2" style="font-size: 13.630434782609pt;" aria-label="Алтарь (10 элементов)">Алтарь</a>
+<a href="https://azbyka.ru/pravo/metka/apostol/" class="tag-cloud-link tag-link-133 tag-link-position-3" style="font-size: 11.04347826087pt;" aria-label="Апостол (4 элемента)">Апостол</a>
+<a href="https://azbyka.ru/pravo/metka/ariane/" class="tag-cloud-link tag-link-134 tag-link-position-4" style="font-size: 11.04347826087pt;" aria-label="Ариане (4 элемента)">Ариане</a>
+<a href="https://azbyka.ru/pravo/metka/banya/" class="tag-cloud-link tag-link-103 tag-link-position-5" style="font-size: 9.3695652173913pt;" aria-label="Баня (2 элемента)">Баня</a>
+<a href="https://azbyka.ru/pravo/metka/besnovanie/" class="tag-cloud-link tag-link-136 tag-link-position-6" style="font-size: 12.184782608696pt;" aria-label="Беснование (6 элементов)">Беснование</a>
+<a href="https://azbyka.ru/pravo/metka/blagodat/" class="tag-cloud-link tag-link-125 tag-link-position-7" style="font-size: 10.282608695652pt;" aria-label="Благодать (3 элемента)">Благодать</a>
+<a href="https://azbyka.ru/pravo/metka/blagoslovenie/" class="tag-cloud-link tag-link-135 tag-link-position-8" style="font-size: 9.3695652173913pt;" aria-label="Благословение (2 элемента)">Благословение</a>
+<a href="https://azbyka.ru/pravo/metka/blud/" class="tag-cloud-link tag-link-124 tag-link-position-9" style="font-size: 17.815217391304pt;" aria-label="Блуд (38 элементов)">Блуд</a>
+<a href="https://azbyka.ru/pravo/metka/brak/" class="tag-cloud-link tag-link-123 tag-link-position-10" style="font-size: 20.402173913043pt;" aria-label="Брак (84 элемента)">Брак</a>
+<a href="https://azbyka.ru/pravo/metka/vera/" class="tag-cloud-link tag-link-137 tag-link-position-11" style="font-size: 11.04347826087pt;" aria-label="Вера (4 элемента)">Вера</a>
+<a href="https://azbyka.ru/pravo/metka/vino/" class="tag-cloud-link tag-link-121 tag-link-position-12" style="font-size: 11.652173913043pt;" aria-label="Вино (5 элементов)">Вино</a>
+<a href="https://azbyka.ru/pravo/metka/vinograd/" class="tag-cloud-link tag-link-122 tag-link-position-13" style="font-size: 9.3695652173913pt;" aria-label="Виноград (2 элемента)">Виноград</a>
+<a href="https://azbyka.ru/pravo/metka/vlasti/" class="tag-cloud-link tag-link-138 tag-link-position-14" style="font-size: 22pt;" aria-label="Власти (137 элементов)">Власти</a>
+<a href="https://azbyka.ru/pravo/metka/vozderzhanie/" class="tag-cloud-link tag-link-139 tag-link-position-15" style="font-size: 13.934782608696pt;" aria-label="Воздержание (11 элементов)">Воздержание</a>
+<a href="https://azbyka.ru/pravo/metka/volosy/" class="tag-cloud-link tag-link-101 tag-link-position-16" style="font-size: 11.04347826087pt;" aria-label="Волосы (4 элемента)">Волосы</a>
+<a href="https://azbyka.ru/pravo/metka/vorovstvo/" class="tag-cloud-link tag-link-140 tag-link-position-17" style="font-size: 13.326086956522pt;" aria-label="Воровство (9 элементов)">Воровство</a>
+<a href="https://azbyka.ru/pravo/metka/voskresene/" class="tag-cloud-link tag-link-119 tag-link-position-18" style="font-size: 14.163043478261pt;" aria-label="Воскресенье (12 элементов)">Воскресенье</a>
+<a href="https://azbyka.ru/pravo/metka/gonenie/" class="tag-cloud-link tag-link-141 tag-link-position-19" style="font-size: 12.184782608696pt;" aria-label="Гонение (6 элементов)">Гонение</a>
+<a href="https://azbyka.ru/pravo/metka/gramota/" class="tag-cloud-link tag-link-142 tag-link-position-20" style="font-size: 17.20652173913pt;" aria-label="Грамота (31 элемент)">Грамота</a>
+<a href="https://azbyka.ru/pravo/metka/greh/" class="tag-cloud-link tag-link-118 tag-link-position-21" style="font-size: 17.054347826087pt;" aria-label="Грех (30 элементов)">Грех</a>
+<a href="https://azbyka.ru/pravo/metka/devstvo/" class="tag-cloud-link tag-link-116 tag-link-position-22" style="font-size: 11.652173913043pt;" aria-label="Девство (5 элементов)">Девство</a>
+<a href="https://azbyka.ru/pravo/metka/donatisty/" class="tag-cloud-link tag-link-143 tag-link-position-23" style="font-size: 15.45652173913pt;" aria-label="Донатисты (18 элементов)">Донатисты</a>
+<a href="https://azbyka.ru/pravo/metka/dosazhdenie/" class="tag-cloud-link tag-link-117 tag-link-position-24" style="font-size: 10.282608695652pt;" aria-label="Досаждение (3 элемента)">Досаждение</a>
+<a href="https://azbyka.ru/pravo/metka/dusha/" class="tag-cloud-link tag-link-100 tag-link-position-25" style="font-size: 8pt;" aria-label="Душа (1 элемент)">Душа</a>
+<a href="https://azbyka.ru/pravo/metka/evnomiane/" class="tag-cloud-link tag-link-144 tag-link-position-26" style="font-size: 10.282608695652pt;" aria-label="Евномиане (3 элемента)">Евномиане</a>
+<a href="https://azbyka.ru/pravo/metka/epitimiya/" class="tag-cloud-link tag-link-115 tag-link-position-27" style="font-size: 21.391304347826pt;" aria-label="Епитимия (113 элементов)">Епитимия</a>
+<a href="https://azbyka.ru/pravo/metka/eres/" class="tag-cloud-link tag-link-145 tag-link-position-28" style="font-size: 20.782608695652pt;" aria-label="Ересь (95 элементов)">Ересь</a>
+<a href="https://azbyka.ru/pravo/metka/zrelishha/" class="tag-cloud-link tag-link-113 tag-link-position-29" style="font-size: 14.847826086957pt;" aria-label="Зрелища (15 элементов)">Зрелища</a>
+<a href="https://azbyka.ru/pravo/metka/igra/" class="tag-cloud-link tag-link-114 tag-link-position-30" style="font-size: 11.652173913043pt;" aria-label="Игра (5 элементов)">Игра</a>
+<a href="https://azbyka.ru/pravo/metka/idol/" class="tag-cloud-link tag-link-149 tag-link-position-31" style="font-size: 15.760869565217pt;" aria-label="Идол (20 элементов)">Идол</a>
+<a href="https://azbyka.ru/pravo/metka/izverzhenie/" class="tag-cloud-link tag-link-151 tag-link-position-32" style="font-size: 19.489130434783pt;" aria-label="Извержение (64 элемента)">Извержение</a>
+<a href="https://azbyka.ru/pravo/metka/ikony/" class="tag-cloud-link tag-link-104 tag-link-position-33" style="font-size: 9.3695652173913pt;" aria-label="Иконы (2 элемента)">Иконы</a>
+<a href="https://azbyka.ru/pravo/metka/ispovednik/" class="tag-cloud-link tag-link-153 tag-link-position-34" style="font-size: 9.3695652173913pt;" aria-label="Исповедник (2 элемента)">Исповедник</a>
+<a href="https://azbyka.ru/pravo/metka/istechenie/" class="tag-cloud-link tag-link-154 tag-link-position-35" style="font-size: 10.282608695652pt;" aria-label="Истечение (3 элемента)">Истечение</a>
+<a href="https://azbyka.ru/pravo/metka/kanony/" class="tag-cloud-link tag-link-200 tag-link-position-36" style="font-size: 12.565217391304pt;" aria-label="Каноны (7 элементов)">Каноны</a>
+<a href="https://azbyka.ru/pravo/metka/klyatva/" class="tag-cloud-link tag-link-112 tag-link-position-37" style="font-size: 12.565217391304pt;" aria-label="Клятва (7 элементов)">Клятва</a>
+<a href="https://azbyka.ru/pravo/metka/kniga/" class="tag-cloud-link tag-link-155 tag-link-position-38" style="font-size: 12.565217391304pt;" aria-label="Книга (7 элементов)">Книга</a>
+<a href="https://azbyka.ru/pravo/metka/konstantinopol/" class="tag-cloud-link tag-link-207 tag-link-position-39" style="font-size: 10.282608695652pt;" aria-label="Константинополь (3 элемента)">Константинополь</a>
+<a href="https://azbyka.ru/pravo/metka/korchma/" class="tag-cloud-link tag-link-111 tag-link-position-40" style="font-size: 11.652173913043pt;" aria-label="Корчма (5 элементов)">Корчма</a>
+<a href="https://azbyka.ru/pravo/metka/kreshhenie/" class="tag-cloud-link tag-link-90 tag-link-position-41" style="font-size: 17.967391304348pt;" aria-label="Крещение (40 элементов)">Крещение</a>
+<a href="https://azbyka.ru/pravo/metka/liturgiya/" class="tag-cloud-link tag-link-110 tag-link-position-42" style="font-size: 14.847826086957pt;" aria-label="Литургия (15 элементов)">Литургия</a>
+<a href="https://azbyka.ru/pravo/metka/miro/" class="tag-cloud-link tag-link-192 tag-link-position-43" style="font-size: 11.652173913043pt;" aria-label="Миро (5 элементов)">Миро</a>
+<a href="https://azbyka.ru/pravo/metka/molitva/" class="tag-cloud-link tag-link-109 tag-link-position-44" style="font-size: 15.45652173913pt;" aria-label="Молитва (18 элементов)">Молитва</a>
+<a href="https://azbyka.ru/pravo/metka/monastyr/" class="tag-cloud-link tag-link-157 tag-link-position-45" style="font-size: 14.163043478261pt;" aria-label="Монастырь (12 элементов)">Монастырь</a>
+<a href="https://azbyka.ru/pravo/metka/monah/" class="tag-cloud-link tag-link-190 tag-link-position-46" style="font-size: 9.3695652173913pt;" aria-label="Монах (2 элемента)">Монах</a>
+<a href="https://azbyka.ru/pravo/metka/monashestvo/" class="tag-cloud-link tag-link-148 tag-link-position-47" style="font-size: 17.282608695652pt;" aria-label="Монашество (32 элемента)">Монашество</a>
+<a href="https://azbyka.ru/pravo/metka/muchenichestvo/" class="tag-cloud-link tag-link-108 tag-link-position-48" style="font-size: 14.695652173913pt;" aria-label="Мученичество (14 элементов)">Мученичество</a>
+<a href="https://azbyka.ru/pravo/metka/myaso/" class="tag-cloud-link tag-link-146 tag-link-position-49" style="font-size: 12.945652173913pt;" aria-label="Мясо (8 элементов)">Мясо</a>
+<a href="https://azbyka.ru/pravo/metka/obet/" class="tag-cloud-link tag-link-98 tag-link-position-50" style="font-size: 13.326086956522pt;" aria-label="Обет (9 элементов)">Обет</a>
+<a href="https://azbyka.ru/pravo/metka/obshhenie/" class="tag-cloud-link tag-link-193 tag-link-position-51" style="font-size: 15.45652173913pt;" aria-label="Общение (18 элементов)">Общение</a>
+<a href="https://azbyka.ru/pravo/metka/oglashenie/" class="tag-cloud-link tag-link-93 tag-link-position-52" style="font-size: 14.163043478261pt;" aria-label="Оглашение (12 элементов)">Оглашение</a>
+<a href="https://azbyka.ru/pravo/metka/odezhda/" class="tag-cloud-link tag-link-107 tag-link-position-53" style="font-size: 12.184782608696pt;" aria-label="Одежда (6 элементов)">Одежда</a>
+<a href="https://azbyka.ru/pravo/metka/okkultizm/" class="tag-cloud-link tag-link-120 tag-link-position-54" style="font-size: 13.326086956522pt;" aria-label="Оккультизм (9 элементов)">Оккультизм</a>
+<a href="https://azbyka.ru/pravo/metka/otluchenie/" class="tag-cloud-link tag-link-195 tag-link-position-55" style="font-size: 21.391304347826pt;" aria-label="Отлучение (115 элементов)">Отлучение</a>
+<a href="https://azbyka.ru/pravo/metka/otravitel/" class="tag-cloud-link tag-link-204 tag-link-position-56" style="font-size: 9.3695652173913pt;" aria-label="Отравитель (2 элемента)">Отравитель</a>
+<a href="https://azbyka.ru/pravo/metka/otrechenie/" class="tag-cloud-link tag-link-205 tag-link-position-57" style="font-size: 16.217391304348pt;" aria-label="Отречение (23 элемента)">Отречение</a>
+<a href="https://azbyka.ru/pravo/metka/parasinagoga/" class="tag-cloud-link tag-link-147 tag-link-position-58" style="font-size: 12.184782608696pt;" aria-label="Парасинагога (6 элементов)">Парасинагога</a>
+<a href="https://azbyka.ru/pravo/metka/pasha/" class="tag-cloud-link tag-link-197 tag-link-position-59" style="font-size: 13.326086956522pt;" aria-label="Пасха (9 элементов)">Пасха</a>
+<a href="https://azbyka.ru/pravo/metka/penie/" class="tag-cloud-link tag-link-188 tag-link-position-60" style="font-size: 12.565217391304pt;" aria-label="Пение (7 элементов)">Пение</a>
+<a href="https://azbyka.ru/pravo/metka/pirshestvo/" class="tag-cloud-link tag-link-198 tag-link-position-61" style="font-size: 11.652173913043pt;" aria-label="Пиршество (5 элементов)">Пиршество</a>
+<a href="https://azbyka.ru/pravo/metka/poklon/" class="tag-cloud-link tag-link-95 tag-link-position-62" style="font-size: 10.282608695652pt;" aria-label="Поклон (3 элемента)">Поклон</a>
+<a href="https://azbyka.ru/pravo/metka/porno/" class="tag-cloud-link tag-link-152 tag-link-position-63" style="font-size: 8pt;" aria-label="Порно (1 элемент)">Порно</a>
+<a href="https://azbyka.ru/pravo/metka/post/" class="tag-cloud-link tag-link-94 tag-link-position-64" style="font-size: 15.304347826087pt;" aria-label="Пост (17 элементов)">Пост</a>
+<a href="https://azbyka.ru/pravo/metka/prinoshenie/" class="tag-cloud-link tag-link-203 tag-link-position-65" style="font-size: 16.217391304348pt;" aria-label="Приношение (23 элемента)">Приношение</a>
+<a href="https://azbyka.ru/pravo/metka/prisoedinenie/" class="tag-cloud-link tag-link-202 tag-link-position-66" style="font-size: 12.565217391304pt;" aria-label="Присоединение (7 элементов)">Присоединение</a>
+<a href="https://azbyka.ru/pravo/metka/prihod/" class="tag-cloud-link tag-link-201 tag-link-position-67" style="font-size: 10.282608695652pt;" aria-label="Приход (3 элемента)">Приход</a>
+<a href="https://azbyka.ru/pravo/metka/prichastie/" class="tag-cloud-link tag-link-89 tag-link-position-68" style="font-size: 17.891304347826pt;" aria-label="Причастие (39 элементов)">Причастие</a>
+<a href="https://azbyka.ru/pravo/metka/propoved/" class="tag-cloud-link tag-link-211 tag-link-position-69" style="font-size: 9.3695652173913pt;" aria-label="Проповедь (2 элемента)">Проповедь</a>
+<a href="https://azbyka.ru/pravo/metka/psalom/" class="tag-cloud-link tag-link-191 tag-link-position-70" style="font-size: 9.3695652173913pt;" aria-label="Псалом (2 элемента)">Псалом</a>
+<a href="https://azbyka.ru/pravo/metka/pyanstvo/" class="tag-cloud-link tag-link-189 tag-link-position-71" style="font-size: 10.282608695652pt;" aria-label="Пьянство (3 элемента)">Пьянство</a>
+<a href="https://azbyka.ru/pravo/metka/pyatnicza/" class="tag-cloud-link tag-link-187 tag-link-position-72" style="font-size: 8pt;" aria-label="Пятница (1 элемент)">Пятница</a>
+<a href="https://azbyka.ru/pravo/metka/razbojnik/" class="tag-cloud-link tag-link-179 tag-link-position-73" style="font-size: 12.184782608696pt;" aria-label="Разбойник (6 элементов)">Разбойник</a>
+<a href="https://azbyka.ru/pravo/metka/razvod/" class="tag-cloud-link tag-link-96 tag-link-position-74" style="font-size: 11.04347826087pt;" aria-label="Развод (4 элемента)">Развод</a>
+<a href="https://azbyka.ru/pravo/metka/raskol/" class="tag-cloud-link tag-link-181 tag-link-position-75" style="font-size: 12.945652173913pt;" aria-label="Раскол (8 элементов)">Раскол</a>
+<a href="https://azbyka.ru/pravo/metka/reshenie/" class="tag-cloud-link tag-link-164 tag-link-position-76" style="font-size: 12.565217391304pt;" aria-label="Решение (7 элементов)">Решение</a>
+<a href="https://azbyka.ru/pravo/metka/rim/" class="tag-cloud-link tag-link-182 tag-link-position-77" style="font-size: 10.282608695652pt;" aria-label="Рим (3 элемента)">Рим</a>
+<a href="https://azbyka.ru/pravo/metka/rodstvo/" class="tag-cloud-link tag-link-183 tag-link-position-78" style="font-size: 14.847826086957pt;" aria-label="Родство (15 элементов)">Родство</a>
+<a href="https://azbyka.ru/pravo/metka/rostovshhichestvo/" class="tag-cloud-link tag-link-185 tag-link-position-79" style="font-size: 12.945652173913pt;" aria-label="Ростовщичество (8 элементов)">Ростовщичество</a>
+<a href="https://azbyka.ru/pravo/metka/rukopolozhenie/" class="tag-cloud-link tag-link-184 tag-link-position-80" style="font-size: 18.804347826087pt;" aria-label="Рукоположение (52 элемента)">Рукоположение</a>
+<a href="https://azbyka.ru/pravo/metka/samoubijcza/" class="tag-cloud-link tag-link-163 tag-link-position-81" style="font-size: 8pt;" aria-label="Самоубийца (1 элемент)">Самоубийца</a>
+<a href="https://azbyka.ru/pravo/metka/sv-pisanie/" class="tag-cloud-link tag-link-97 tag-link-position-82" style="font-size: 13.934782608696pt;" aria-label="Св.Писание (11 элементов)">Св.Писание</a>
+<a href="https://azbyka.ru/pravo/metka/svidetel/" class="tag-cloud-link tag-link-162 tag-link-position-83" style="font-size: 12.945652173913pt;" aria-label="Свидетель (8 элементов)">Свидетель</a>
+<a href="https://azbyka.ru/pravo/metka/svyatotatstvo/" class="tag-cloud-link tag-link-161 tag-link-position-84" style="font-size: 12.945652173913pt;" aria-label="Святотатство (8 элементов)">Святотатство</a>
+<a href="https://azbyka.ru/pravo/metka/svyashhenstvo/" class="tag-cloud-link tag-link-160 tag-link-position-85" style="font-size: 12.565217391304pt;" aria-label="Священство (7 элементов)">Священство</a>
+<a href="https://azbyka.ru/pravo/metka/simoniya/" class="tag-cloud-link tag-link-131 tag-link-position-86" style="font-size: 13.934782608696pt;" aria-label="Симония (11 элементов)">Симония</a>
+<a href="https://azbyka.ru/pravo/metka/skopecz/" class="tag-cloud-link tag-link-159 tag-link-position-87" style="font-size: 12.945652173913pt;" aria-label="Скопец (8 элементов)">Скопец</a>
+<a href="https://azbyka.ru/pravo/metka/smeh/" class="tag-cloud-link tag-link-156 tag-link-position-88" style="font-size: 10.282608695652pt;" aria-label="Смех (3 элемента)">Смех</a>
+<a href="https://azbyka.ru/pravo/metka/sobor/" class="tag-cloud-link tag-link-208 tag-link-position-89" style="font-size: 19.565217391304pt;" aria-label="Собор (65 элементов)">Собор</a>
+<a href="https://azbyka.ru/pravo/metka/sodomiya/" class="tag-cloud-link tag-link-158 tag-link-position-90" style="font-size: 13.630434782609pt;" aria-label="Содомия (10 элементов)">Содомия</a>
+<a href="https://azbyka.ru/pravo/metka/stepen/" class="tag-cloud-link tag-link-175 tag-link-position-91" style="font-size: 16.597826086957pt;" aria-label="Степень (26 элементов)">Степень</a>
+<a href="https://azbyka.ru/pravo/metka/subbota/" class="tag-cloud-link tag-link-177 tag-link-position-92" style="font-size: 13.630434782609pt;" aria-label="Суббота (10 элементов)">Суббота</a>
+<a href="https://azbyka.ru/pravo/metka/sud/" class="tag-cloud-link tag-link-206 tag-link-position-93" style="font-size: 19.108695652174pt;" aria-label="Суд (56 элементов)">Суд</a>
+<a href="https://azbyka.ru/pravo/metka/ubijstvo/" class="tag-cloud-link tag-link-178 tag-link-position-94" style="font-size: 15.076086956522pt;" aria-label="Убийство (16 элементов)">Убийство</a>
+<a href="https://azbyka.ru/pravo/metka/umychka/" class="tag-cloud-link tag-link-199 tag-link-position-95" style="font-size: 11.652173913043pt;" aria-label="Умычка (5 элементов)">Умычка</a>
+<a href="https://azbyka.ru/pravo/metka/hishhenie/" class="tag-cloud-link tag-link-174 tag-link-position-96" style="font-size: 13.630434782609pt;" aria-label="Хищение (10 элементов)">Хищение</a>
+<a href="https://azbyka.ru/pravo/metka/hram/" class="tag-cloud-link tag-link-171 tag-link-position-97" style="font-size: 18.728260869565pt;" aria-label="Храм (50 элементов)">Храм</a>
+<a href="https://azbyka.ru/pravo/metka/czerkov/" class="tag-cloud-link tag-link-172 tag-link-position-98" style="font-size: 18.652173913043pt;" aria-label="Церковь (49 элементов)">Церковь</a>
+<a href="https://azbyka.ru/pravo/metka/chest/" class="tag-cloud-link tag-link-168 tag-link-position-99" style="font-size: 13.934782608696pt;" aria-label="Честь (11 элементов)">Честь</a>
+<a href="https://azbyka.ru/pravo/metka/chetyredesyatnicza/" class="tag-cloud-link tag-link-169 tag-link-position-100" style="font-size: 14.695652173913pt;" aria-label="Четыредесятница (14 элементов)">Четыредесятница</a>
+<a href="https://azbyka.ru/pravo/metka/yazychnik/" class="tag-cloud-link tag-link-165 tag-link-position-101" style="font-size: 14.695652173913pt;" aria-label="Язычник (14 элементов)">Язычник</a>				</div>
+			</div>
+		</div>
+
+		</div>
+		
+		<p class="btn-more-widgets-wrap m-show">
+			<button id="widgets_more" class="btn-more-widgets"><i class="fa fa-info-circle" aria-hidden="true"></i> ещё</button>
+		</p>
+	</div>
+<!-- End Left menu -->
+	
+	<div class="widgets" id="widgets">
+		
+<!-- Dynamic menus -->
+		<div class="widgets-sidebar" id="widgets-sidebar">
+			<div id="bg_counter_top_widget-2" class="widget widget_bg_counter_top_widget"><p class="widget-title">Популярное</p>
+	<div class="widget-item">
+		<div class="widget-inner">
+			<ul class="bg-az-top-posts">
+<li><a href="https://azbyka.ru/pravo/1-apostolskoe-pravilo/" title="Правило 1" data-ID="17" data-type="post" data-value="16691" data-status="publish">Правило 1,  Ап.</a> <span class="bg-az-count">17<span class=bg-counter-multiplier>K</span></span></li>
+<li><a href="https://azbyka.ru/pravo/9-apostolskoe-pravilo/" title="Правило 9" data-ID="247" data-type="post" data-value="13596" data-status="publish">Правило 9,  Ап.</a> <span class="bg-az-count">14<span class=bg-counter-multiplier>K</span></span></li>
+<li><a href="https://azbyka.ru/pravo/articles/rostovshhichestvo-i-sovremennye-banki/" title="Ростовщичество и современные банки" data-ID="13572" data-type="post" data-value="10838" data-status="publish">Ростовщичество и современные банки</a> <span class="bg-az-count">11<span class=bg-counter-multiplier>K</span></span></li>
+<li><a href="https://azbyka.ru/pravo/51-apostolskoe-pravilo/" title="Правило 51" data-ID="373" data-type="post" data-value="10043" data-status="publish">Правило 51,  Ап.</a> <span class="bg-az-count">10<span class=bg-counter-multiplier>K</span></span></li>
+<li><a href="https://azbyka.ru/pravo/25-apostolskoe-pravilo/" title="Правило 25" data-ID="294" data-type="post" data-value="9156" data-status="publish">Правило 25,  Ап.</a> <span class="bg-az-count">9.2<span class=bg-counter-multiplier>K</span></span></li>
+<li><a href="https://azbyka.ru/pravo/64-apostolskoe-pravilo/" title="Правило 64" data-ID="1283" data-type="post" data-value="9116" data-status="publish">Правило 64,  Ап.</a> <span class="bg-az-count">9.1<span class=bg-counter-multiplier>K</span></span></li>
+<li><a href="https://azbyka.ru/pravo/dvukratnyj-sobor-15/" title="Правило 15" data-ID="2135" data-type="post" data-value="8895" data-status="publish">Правило 15,  Двукр.</a> <span class="bg-az-count">8.9<span class=bg-counter-multiplier>K</span></span></li>
+<li><a href="https://azbyka.ru/pravo/dionisiya-aleksandrijskogo-2/" title="Правило 2" data-ID="4796" data-type="post" data-value="8299" data-status="publish">Правило 2,  Дион.</a> <span class="bg-az-count">8.3<span class=bg-counter-multiplier>K</span></span></li>
+<li><a href="https://azbyka.ru/pravo/3-apostolskoe-pravilo/" title="Правило 3" data-ID="229" data-type="post" data-value="8171" data-status="publish">Правило 3,  Ап.</a> <span class="bg-az-count">8.2<span class=bg-counter-multiplier>K</span></span></li>
+<li><a href="https://azbyka.ru/pravo/2-apostolskoe-pravilo/" title="Правило 2" data-ID="226" data-type="post" data-value="8049" data-status="publish">Правило 2,  Ап.</a> <span class="bg-az-count">8<span class=bg-counter-multiplier>K</span></span></li>
+</ul>
+		</div>
+	</div>
+</div>
+<div id="bg_counter_online_widget-2" class="widget widget_bg_counter_online_widget">	<div class="widget-item">
+		<div class="widget-inner">
+			<span class="bg-az-counter">
+				<p><span class="bg-az-counter-title">Сейчас в разделе</span> <span><span class="bg-az-counter-now">27</span>&nbsp;<span class="bg-az-counter-unit">чел.</span></span></p>
+				<p><span class="bg-az-counter-title">Всего просмотров</span> <span class="bg-az-counter-views" data-format="long">1.7&nbsp;млн.</span></p>
+							<p><span class="bg-az-counter-title">Всего Правил</span> <span class="bg-az-counter-posts">783</span></p>
+										</span>
+		</div>
+	</div>
+</div>
+		</div>
+	<!-- Хук для дополнительных действий -->
+				<div class="widgets-sidebar" id="widgets-sidebar2">
+					</div>
+<!-- End Dynamic menus -->
+	
+<!-- Footer -->
+		<footer class="footer">
+			<!-- Donate button -->
+			<p class="text-center">
+			<a href="//azbyka.ru/kak-pomoch" class="help-btn footer-help-btn">Пожертвовать</a>
+			</p>
+			<!-- //Donate button -->
+			
+			<div class="footer-info">
+				<!-- Footer menu-->
+				<ul id="footer-navigation" class="footer-nav"><li class="menu-item"><a href="https://azbyka.ru/obratnaja-svjaz?the_url=https%3A%2F%2Fazbyka.ru%2Fpravo%2Fpomestnyh-soborov%2F">Обратная связь</a></li><li class="menu-item"><a href="https://azbyka.ru/azbuka-very-na-vashem-sajte">Вебмастеру</a></li></ul>				<!-- Socializing buttons -->
+				<div class="social-share__pre"><i class="fa fa-share-alt"></i> поделиться:</div>
+				
+			<div class="social-share__wrap">
+				<a href="https://vk.ru/share.php?url=https%3A%2F%2Fazbyka.ru%2Fpravo%2Fpomestnyh-soborov%2F" title="Поделиться в  ВК"><i class="fa fa-vk"></i></a>
+				<a href="https://connect.ok.ru/offer?url=https%3A%2F%2Fazbyka.ru%2Fpravo%2Fpomestnyh-soborov%2F" title="Поделиться в  ОК"><i class="fa fa-odnoklassniki"></i></a>
+				<a href="https://t.me/share/url?text=%D0%9F%D1%80%D0%B0%D0%B2%D0%B8%D0%BB%D0%BE+1&url=https%3A%2F%2Fazbyka.ru%2Fpravo%2Fpomestnyh-soborov%2F" title="Поделиться в  Telegram"><i class="fa fa-paper-plane"></i></a>
+			</div>			</div>
+
+			<div class="footer-box">
+				<!-- ReTypos logo -->
+								<!-- //ReTypos logo -->
+			</div>
+			<!-- Copyright -->
+			<div class="footer-copy">
+				<p>©2026 Церковное право</p>
+			</div>
+			<!--//Copyright -->
+
+		</footer>
+<!-- End Footer -->
+		<p class="btn-more-widgets-wrap m-show">
+			<button id="widgets_contents" class="btn-more-widgets"><i class="fa fa-bars" aria-hidden="true"></i> к содержанию</button>
+		</p>
+		
+	</div>
+</aside>
+
+		</section>
+		<!-- End Sidebar -->
+		
+		<!-- Content -->
+		<section  class="main-area-content">
+			<div class="title-flex"><h1><span>Правила Поместных соборов</span></h1><div class="colors-dropdown dropdown-wrap"><i class="fa fa-question-circle dropdown-button"></i><div class="dropdown-content"><p><span class="term-color" style="background:#f7ff23"></span> - Брачное право</p><p><span class="term-color" style="background:#3fcc72"></span> - Жизнь монашествующих</p><p><span class="term-color" style="background:#e8e8e8"></span> - Искажения благочестия</p><p><span class="term-color" style="background:#a9c6c5"></span> - Канон священных книг</p><p><span class="term-color" style="background:#ddd1bc"></span> - Наложение епитимий</p><p><span class="term-color" style="background:#ff5347"></span> - Некоторые ереси</p><p><span class="term-color" style="background:#f98b7f"></span> - Нравственные преступления</p><p><span class="term-color" style="background:#b8d6a4"></span> - Образ жизни и положение клириков</p><p><span class="term-color" style="background:#aef2c0"></span> - Общение с еретиками и иноверцами</p><p><span class="term-color" style="background:#ededaf"></span> - Принятие и лишение сана</p><p><span class="term-color" style="background:#ffd13a"></span> - Принятие иноверцев и отпавших</p><p><span class="term-color" style="background:#789dbf"></span> - Христианское благочестие</p><p><span class="term-color" style="background:#a9d9f9"></span> - Церковная дисциплина</p><p><span class="term-color" style="background:#ddc296"></span> - Церковное законодательство</p><p><span class="term-color" style="background:#f9e0ee"></span> - Церковное имущество</p><p><span class="term-color" style="background:#b485e2"></span> - Церковное судопроизводство</p><p><span class="term-color" style="background:#b5b5b5"></span> - Церковное управление</p><p><span class="term-color" style="background:#e691f7"></span> - Частные исторические ситуации</p></div></div></div><ul class="cat-list"><li><a href="https://azbyka.ru/pravo/ankirskij-sobor-314-g/" title="Показать все записи в категории Анкирский Собор (314г.)" >Анкирский Собор (314г.)</a><ul class="post-list"><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-1/" style="background-color:#ffd13a" title="О епитимии пресвитерам, которые время гонений уступали мучителям и приносили жертвы, но потом возобновили подвиг за веру.
+">1</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-2/" style="background-color:#ffd13a" title="То же о диаконах.
+">2</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-3/" style="background-color:#ffd13a" title="О принятии в общение клириков и мирян, которые убегали от гонителей, но быв схвачены, исповедали христианство, даже если приняли по принуждению идоложертвенное.
+">3</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-4/" style="background-color:#ffd13a" title="О 6‑ти летней епитимии для тех, кто принёс жертву идолам по принуждению, но сделал это с веселием, беспечно.
+">4</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-5/" style="background-color:#ffd13a" title="О епитимии для тех, кто принёс жертву идолам по принуждению, но скорбя об этом.
+">5</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-6/" style="background-color:#ffd13a" title="О 6‑ти летней епитимии для тех, кто принёс жертву идолам уступив угрозам, но раскаялся в этом только к моменту сего собора.
+">6</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-7/" style="background-color:#ffd13a" title="О 2‑х летней епитимии для пиршествующих с язычниками, но принесённой с собой пищей.
+">7</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-8/" style="background-color:#ffd13a" title="О семилетней епитимии для приносящих жертву не единожды.
+">8</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-9/" style="background-color:#aef2c0" title="О 10-ти летней епитимии для тех, кто не только добровольно принес жертвы идолам, но и братьев к сему принуждал.
+">9</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-10/" style="background-color:#e691f7" title="О возможности диаконам жениться после вступления в сан. Это Правило есть местное изъятие из 26 правила Апостольского. Шестой Вселенский Собор, 6‑м правилом подтвердил держаться Апостольского правила.
+">10</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-11/" style="background-color:#f7ff23" title="О том, что похищенная девица, которая была обручена другому, даже если уже была растлена, должна быть возвращена, если обрученный пожелает принять её.
+">11</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-12/" style="background-color:#ededaf" title="О том, что идоложертвовавший до крещения неповинен после крещения.
+">12</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-13/" style="background-color:#b5b5b5" title="О том, что хорепископ недолжен рукополагать без дозволения епископа.
+">13</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-14/" style="background-color:#e8e8e8" title="О необходимости клирикам, воздерживающихся от вкушения мяса, отведывать его во времена собраний. Неповинующийся этому и гнушающийся мяса должен быть извержен из сана.
+">14</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-15/" style="background-color:#f9e0ee" title="О необходимости вернуть проданное пресвитерами вдовствующей кафедры церковное имущество или деньги за него.
+">15</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-16/" style="background-color:#f98b7f" title="О епитимии скотоложникам в зависимости от их возраста.
+">16</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-17/" style="background-color:#f98b7f" title="Повеление скотоложникам молиться вне храма вместе с обуреваемыми.
+">17</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-18/" style="background-color:#b5b5b5" title="Об отлучении епископов не принятых в те епархии, в которые наречены, но отошедших в другие и причинявших насилие предстоятелям их.
+">18</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-19/" style="background-color:#3fcc72" title="О 4‑х летней епитимии, как для второбрачных, для нарушивших обет девства. О том, что девы не должны сожительствовать с некоторыми как с братьями.
+">19</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-20/" style="background-color:#f98b7f" title="О 7‑ми летней епитимии для прелюбодеев.
+">20</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-21/" style="background-color:#f98b7f" title="О снисхождении в епитимии для прелюбодейно зачавшей и сделавшей аборт, с пожизненного срока, до 10-ти лет.
+">21</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-22/" style="background-color:#f98b7f" title="О епитимии для вольного человекоубийцы в виде отлучении от причащения до предсмертного состояния.
+">22</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-23/" style="background-color:#f98b7f" title="О снисхождении в епитимии для невольного человекоубийцы с 7 до 5 лет.
+">23</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-24/" style="background-color:#f98b7f" title="О 5‑ти летней епитимии для волхвующих, ворожей, последующих языческим обычаям и тех, кто этим пользуется.
+">24</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/ankirskij-sobor-25/" style="background-color:#f98b7f" title="О 10-ти летней епитимии для виновных в растлении сестры обручницы, которая удавилась после брака растлителя с обручённой.
+">25</a></li></ul><li><a href="https://azbyka.ru/pravo/neokesarijskij-sobor-315-g/" title="Показать все записи в категории Неокесарийский Собор (315г.)" >Неокесарийский Собор (315г.)</a><ul class="post-list"><li><a class="az-tip" href="https://azbyka.ru/pravo/neokesarijskij-sobor-1/" style="background-color:#f98b7f" title="О запрете пресвитеру жениться и переводе в разряд кающихся за блуд или прелюбодеяние.
+">1</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/neokesarijskij-sobor-2/" style="background-color:#f98b7f" title="Об отлучении от церковного общения вступившую в брак с двумя братьями.
+">2</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/neokesarijskij-sobor-3/" style="background-color:#f98b7f" title="О возможности икономии для многобрачных.
+">3</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/neokesarijskij-sobor-4/" style="background-color:#789dbf" title="О неосуществлённом блудном помысле.
+">4</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/neokesarijskij-sobor-5/" style="background-color:#ddd1bc" title="О епитимии для обличенных во грехе оглашенных.
+">5</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/neokesarijskij-sobor-6/" style="background-color:#a9d9f9" title="О возможности незамедлительного крещения для возжелавшей того беременной.
+">6</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/neokesarijskij-sobor-7/" style="background-color:#f7ff23" title="О запрете пресвитеру пиршествовать на браке двоеженца.
+">7</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/neokesarijskij-sobor-8/" style="background-color:#ededaf" title="О невозможности принять священный сан тому, чья жена обличена в прелюбодеянии. О невозможности совершать церковное служение до необходимого развода в этом случае для клирика.
+">8</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/neokesarijskij-sobor-9/" style="background-color:#ededaf" title="О запрете священнодействия пресвитерам, «согрешивших телом».
+">9</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/neokesarijskij-sobor-10/" style="background-color:#ededaf" title="О запрете диаконского служения, «согрешивших телом».
+">10</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/neokesarijskij-sobor-11/" style="background-color:#ededaf" title="О поставлении во пресвитера не ранее 30 лет от роду.
+">11</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/neokesarijskij-sobor-12/" style="background-color:#ededaf" title="О нежелательности поставления во пресвитера крещёного в болезни.
+">12</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/neokesarijskij-sobor-13/" style="background-color:#b8d6a4" title="О том, что сельские пресвитеры в городской церкви не должны священнодействовать в присутствии епископа, или пресвитеров града.
+">13</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/neokesarijskij-sobor-14/" style="background-color:#b8d6a4" title="О возможности хорепископам священнодействовать в городской церкви.
+">14</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/neokesarijskij-sobor-15/" style="background-color:#e691f7" title="Ссылка на Книгу деяний апостольских о 7‑ми диаконах в одном городе, даже крупном.
+">15</a></li></ul><li><a href="https://azbyka.ru/pravo/gangrskij-sobor-340-g/" title="Показать все записи в категории Гангрский Собор (340г.)" >Гангрский Собор (340г.)</a><ul class="post-list"><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-1/" style="background-color:#e8e8e8" title="Об анафеме порицающим и гнушающимся законным браком и супружеским общением.
+">1</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-2/" style="background-color:#e8e8e8" title="Об анафеме осуждающим вкушение мяса, кроме крови, удавленины и идоложертвенного.
+">2</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-3/" style="background-color:#e8e8e8" title="Об анафеме тем, кто учит раба оставлять его господина, под предлогом благочестия.
+">3</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-4/" style="background-color:#e8e8e8" title="Об анафеме сомневающимся причаститься от женатых пресвитеров.
+">4</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-5/" style="background-color:#e8e8e8" title="Об анафеме учащим пренебрегать храмами и общественными церковными богослужениями.
+">5</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-6/" style="background-color:#e8e8e8" title="Об анафеме внецерковным молитвенным собраниям и дерзающим священнодействовать в молитвенном доме без ведома епископа.
+">6</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-7/" style="background-color:#e8e8e8" title="Об анафеме принимающим или дающим плодоприношение без епископа, или того лица, которому введена церковная экономия.
+">7</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-8/" style="background-color:#e8e8e8" title="Об анафеме принимающим плодоприношения без епископа, или лица поставленного заведовать благотворениями.
+">8</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-9/" style="background-color:#e8e8e8" title="Об анафеме девствующим не по причине красоты девства, но по гнушению браком.
+">9</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-10/" style="background-color:#e8e8e8" title="Об анафеме превозносящимся своим девством над бракосочетавшимися.
+">10</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-11/" style="background-color:#e8e8e8" title="Об анафеме презирающим вечери любви (агапы).
+">11</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-12/" style="background-color:#e8e8e8" title="Об анафеме кичащимся своей грубой одеждой в противовес носящим шелка или общепринятое одеяние.
+">12</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-13/" style="background-color:#e8e8e8" title="Об анафеме женщинам, ради мнимого подвижничества носящим мужскую одежду.
+">13</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-14/" style="background-color:#e8e8e8" title="Об анафеме женщинам, оставившим мужей по причине гнушения браком.
+">14</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-15/" style="background-color:#e8e8e8" title="Об анафеме тем, кто детей своих оставляет и не питает, и не приводит, по возможности, к вере, но, под предлогом отшельничества, нерадит о них.
+">15</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-16/" style="background-color:#e8e8e8" title="Об анафеме под предлогом благочестия удаляющимся из мира и оставляющих своих родителей без попечения.Тем не менее, правоверие нужно ставить выше почтения к ним.
+">16</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-17/" style="background-color:#e8e8e8" title="Об анафеме женщинам, ради мнимого подвижничества остригающим себе волосы.
+">17</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-18/" style="background-color:#e8e8e8" title="Об анафеме постящимся в день воскресный ради мнимого подвижничества.
+">18</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-19/" style="background-color:#e8e8e8" title="Об анафеме отвергающим церковные посты без телесных причин.
+">19</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-20/" style="background-color:#e8e8e8" title="Об анафеме пренебрегающим празднования в честь святых мучеников
+">20</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/gangrskij-sobor-21/" style="background-color:#789dbf" title="О том, что вышеперечисленные анафемы являются не преградой подвижникам, но лишь исправляют тех, кто превозносится и вводит что-то новое, вопреки Св. Писанию и Преданию.
+">21</a></li></ul><li><a href="https://azbyka.ru/pravo/antiohijskij-sobor-341-g/" title="Показать все записи в категории Антиохийский Собор (341г.)" >Антиохийский Собор (341г.)</a><ul class="post-list"><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-1/" style="background-color:#a9d9f9" title="О запрете изменять узаконенное предание о дате празднования Пасхи.
+">1</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-2/" style="background-color:#a9d9f9" title="Об отлучении от Церкви пребывающих на Литургии, но не участвующих в молитве и не причащающихся.
+">2</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-3/" style="background-color:#b8d6a4" title="О епитимии священнослужителям, самовольно оставившим место служения.
+">3</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-4/" style="background-color:#b8d6a4" title="О том, что священнослужитель, изверженный собором, по упорству будет совершать богослужение; то он не может иметь восстановления в чине.
+">4</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-5/" style="background-color:#b8d6a4" title="Об извержении диакона или пресвитера, презирающего епископа, и отступающего от него.
+">5</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-6/" style="background-color:#b5b5b5" title="О том, что отлучённого своим епископом может разрешить только тот же епископ или Собор.
+">6</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-7/" style="background-color:#b5b5b5" title="О запрете принимать пресвитеров, и диаконов, или и епископов без представительной грамоты того епископа, от которого они приняли рукоположение.
+">7</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-8/" style="background-color:#b5b5b5" title="О том, что представительные грамоты для отлучающихся из епархии пресвитеров могут выдавать только епископы.
+">8</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-9/" style="background-color:#b5b5b5" title="О подчинении епископов митрополитам.
+">9</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-10/" style="background-color:#b5b5b5" title="О полномочиях хорепископов (сельских епископов).
+">10</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-11/" style="background-color:#b8d6a4" title="Клирик, приходящий к царю без повеления своего митрополита, должен быть лишен и общения и сана.
+">11</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-12/" style="background-color:#b485e2" title="О запрете изверженному епископу или диакону подавать апелляцию царю.
+">12</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-13/" style="background-color:#b5b5b5" title="О запрете епископу самовольно переходить в другую епархию или вмешиваться в её управление.
+">13</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-14/" style="background-color:#b485e2" title="О том, что, если во время суда над епископом, епископы той области имеют между собою разногласие, то митрополит может призвать других епископов из сопредельной области, для разрешения вопроса.
+">14</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-15/" style="background-color:#b485e2" title="О невозможности апелляции после единогласного решения епископов области об извержении епископа. Настоящее правило отменено 4‑м правилом Сардикийского собора.
+">15</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-16/" style="background-color:#b5b5b5" title="Об извержении епископа, не имеющего епархии, который самовольно захватил вдовствующую кафедру.
+">16</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-17/" style="background-color:#b5b5b5" title="Об отлучении епископа, принявшего рукоположение, но уклоняющегося от епископского служения.
+">17</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-18/" style="background-color:#b5b5b5" title="Епископ, по уважительной причине не могущий прибыть в свою область, да участвует и в чести и служении епископском, не вмешиваясь в дела церкви, где пребывает, а ожидает решение собора.
+">18</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-19/" style="background-color:#b5b5b5" title="О том, что епископ поставляется исключительно собором и с согласия митрополита.
+">19</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-20/" style="background-color:#b5b5b5" title="О необходимости собора епископов каждой митрополии дважды в год в присутствии митрополита.
+">20</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-21/" style="background-color:#b5b5b5" title="О запрете перемещения епископов на другие кафедры.
+">21</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-22/" style="background-color:#b5b5b5" title="О том, чтобы каждый из епископов управлял делами своей епархии, и в другую не отходил совершать рукоположения и делать другое что-либо принадлежащее епископам без согласия местного епископа.
+">22</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-23/" style="background-color:#b5b5b5" title="О том, что епископ, даже при приближении своей кончины, не должен поставлять другого епископа вместо себя
+">23</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-24/" style="background-color:#f9e0ee" title="О том, что епископ должен сделать опись своего имущества и сделать его известным, а также имущества церковного, и это должны знать пресвитеры и диаконы, дабы по кончине его собственное имущество было употреблено по его воле.
+">24</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/antiokhijskij-sobor-25/" style="background-color:#f9e0ee" title="О том, что епископ должен управлять церковным имуществом. В случае нарушений подлежит ответственности пред собором.
+">25</a></li></ul><li><a href="https://azbyka.ru/pravo/sardikijskij-sobor-347-g/" title="Показать все записи в категории Сардикийский Собор (347г.)" >Сардикийский Собор (347г.)</a><ul class="post-list"><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-1/" style="background-color:#b5b5b5" title="Об усилении епитимии (до извержении и прекращении церковного общения) епископам, самовольно переходящим со своих кафедр в более богатые.
+">1</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-2/" style="background-color:#b5b5b5" title="Если епископ оправдывает свой переход в другую епархию (см. предыдущее Правило) мнимым народным волеизъявлением, то лишается святого причастия даже на смертном одре.
+">2</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-3/" style="background-color:#b5b5b5" title="О том, что ни один епископ не имеет права переходить в другую область для совершения какого-либо священнодействия без приглашения епископа данной области. О том, что споры между епископами должен решать их областной собор. Об порядке рассмотрения апелляции осуждённого епископа.
+">3</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-4/" style="background-color:#b5b5b5" title="О том, что не должно поставлять нового епископа на место изверженного из сана на время аппеляции.
+">4</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-5/" style="background-color:#b485e2" title="О порядке рассмотрения апелляции осуждённого епископа.
+">5</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-6/" style="background-color:#b5b5b5" title="Об избрании епископа, о поставления митрополита и о том, что не должно поставлять епископов в малонаселённые места.
+">6</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-7/" style="background-color:#b5b5b5" title="О церковной благотворительности епископов.
+">7</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-8/" style="background-color:#b5b5b5" title="Об оказании епископами благотворительности в воинском стане через диаконов.
+">8</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-9/" style="background-color:#b5b5b5" title="О порядке подачи прошений епископами.
+">9</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-10/" style="background-color:#ededaf" title="О том, что не подобает поспешно поставлять в различные степени иерархического служения. Также требуется основательно убедиться в том, каковы вера, постоянство, кротость ставленника.
+">10</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-11/" style="background-color:#b5b5b5" title="О том, что епископ не должен оставлять свою епархию и переходить в другую для проповеди и или служения. При этом срок возможного отлучения с кафедры аналогичен установленному раннее для мирян: не более трёх воскресных дней в продолжение трех седмиц.
+">11</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-12/" style="background-color:#b5b5b5" title="О порядке посещения епископами своих владений в иных епархиях.
+">12</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-13/" style="background-color:#b5b5b5" title="О запрете епископам принимать в общение клириков, отлучённых в других епархиях.
+">13</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-14/" style="background-color:#b5b5b5" title="О порядке апелляций изверженных диаконов и священников на решения своего епископа.
+">14</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-15/" style="background-color:#b5b5b5" title="О запрете епископам возводить в иерархические степени служащих иных епархии.
+">15</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-16/" style="background-color:#b5b5b5" title="Постановления 11 и 12 правил настоящего собора относительно отсутствующих из своих областей епископов применяются этим правилом к пресвитерам и диаконам.
+">16</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-17/" style="background-color:#b5b5b5" title="О том, что епископ может покидать свою кафедру более чем на три недели в случае насилия или безвинного осуждения.
+">17</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-18/" style="background-color:#b5b5b5" title="О недействительности рукоположений клириков, совершённых незаконными епископами.
+">18</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-19/" style="background-color:#b5b5b5" title="Против епископов, нарушивших постановления 7, 8 и 9 этого собора.
+">19</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sardikijskiy-sobor-20/" style="background-color:#b5b5b5" title="Против епископов, нарушивших постановления 7, 8 и 9 этого собора.
+">20</a></li></ul><li><a href="https://azbyka.ru/pravo/laodikijskij-sobor-360-g/" title="Показать все записи в категории Лаодикийский Собор (360г.)" >Лаодикийский Собор (360г.)</a><ul class="post-list"><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-1/" style="background-color:#f7ff23" title="О епитимии для второбрачных.
+">1</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-2/" style="background-color:#ddd1bc" title="Предписание принимать в церковное общение каждого искренне кающегося и оставляющего свой грех.
+">2</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-3/" style="background-color:#ededaf" title="О том, что недавно крещёных не подобает производить в священнический чин.
+">3</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-4/" style="background-color:#b8d6a4" title="О запрете клирикам заниматься ростовщичеством.
+">4</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-5/" style="background-color:#ededaf" title="О том, что выборы священнослужителей должны совершаться только полноправными членами церкви.
+">5</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-6/" style="background-color:#aef2c0" title="О запрете нераскаявшимся еретикам входить в храм Божий.
+">6</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-7/" style="background-color:#ffd13a" title="О принятии в церковное общение новациан через миропомазание.
+">7</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-8/" style="background-color:#ffd13a" title="О принятии из ереси фригов только после оглашения и крещения.
+">8</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-9/" style="background-color:#aef2c0" title="Об отлучении до раскаяния посещающих кладбища еретиков для молитвы.
+">9</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-10/" style="background-color:#f7ff23" title="О запрете православным вступать в брак с еретиками.
+">10</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-11/" style="background-color:#a9d9f9" title="О воспрещении впредь поставлять пресветерид (стариц).
+">11</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-12/" style="background-color:#ededaf" title="Об условиях поставления епископов и требованиях к ним.
+">12</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-13/" style="background-color:#ededaf" title="О запрете избрания священных лиц высших иерархических степеней “народными сборищами”.
+">13</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-14/" style="background-color:#a9d9f9" title="О запрете обычая в посылать из одного прихода в другой Святые Дары, в качестве подарка на праздник Пасхи.
+">14</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-15/" style="background-color:#a9d9f9" title="О запрете мирянам, не принадлежащие к клиру в качестве певцов, становиться на амвон и самовольно петь.
+">15</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-16/" style="background-color:#a9d9f9" title="Предписание о совершении церковных богослужений в субботу, как и в другие дни.
+">16</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-17/" style="background-color:#a9d9f9" title="Предписание не петь в храме псалмы безпрерывно, а перемежать с чтениями.
+">17</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-18/" style="background-color:#a9d9f9" title="О том, что вполне достаточно существующих молитв и для вечерни и для девятого часа и потому никто не имеет права составлять новых молитв и читать их в церкви.
+">18</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-19/" style="background-color:#a9d9f9" title="О чине древней литургии и позволении причащаться в алтаре только священнослужителям.
+">19</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-20/" style="background-color:#a9d9f9" title="О том, что не подобает диакону сидеть в присутствии пресвитера без его повеления. Подобно и причётникам с иподиаконами в присутствии диакона.
+">20</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-21/" style="background-color:#a9d9f9" title="О запрете иподиаконам прикасаться к святому дискосу и святому потиру в то время, когда приносится Святая Жертва, или переносить их во время Великого входа.
+">21</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-22/" style="background-color:#a9d9f9" title="О запрете иподиаконам носить орарь и напоминание им находиться неотлучно при церковных вратах.
+">22</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-23/" style="background-color:#a9d9f9" title="О запрете носить орарь чтецам и певцам.
+">23</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-24/" style="background-color:#b8d6a4" title="О запрете священно- и церковнослужителям входить в корчемницу.
+">24</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-25/" style="background-color:#a9d9f9" title="О запрете иподиаконам исполнять во время богослужения обязанности священнослужителей и воспрещении им раздавать народу Святое причастие.
+">25</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-26/" style="background-color:#a9d9f9" title="О запрете служить заклинателями лицам не поставленным епископом.
+">26</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-27/" style="background-color:#a9d9f9" title="О том, что не подобает ничего уносить с собой с агап.
+">27</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-28/" style="background-color:#a9d9f9" title="О запрете совершать агапы в храмах.
+">28</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-29/" style="background-color:#e8e8e8" title="Об анафеме тем, кто следует иудейским религиозным обычаям и празднует субботу вместо воскресенья.
+">29</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-30/" style="background-color:#789dbf" title="О запрете мыться в общественных банях вместе с женщинами.
+">30</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-31/" style="background-color:#f7ff23" title="О запрете заключать смешанные браки с иноверцами, за исключением случаев, когда иноверец даёт обещание принять православную веру.
+">31</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-32/" style="background-color:#a9d9f9" title="О запрете принимать благословенные хлебы или частицы просфор от еретиков.
+">32</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-33/" style="background-color:#a9d9f9" title="О запрете молиться с еретиками.
+">33</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-34/" style="background-color:#ff5347" title="Об анафеме сознательно почитающим еретических лжемучеников.
+">34</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-35/" style="background-color:#ff5347" title="Об анафеме еретикам, почитающим Ангелов вместо Христа.
+">35</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-36/" style="background-color:#f98b7f" title="Об извержении клириков, верящих или занимающихся гаданиями, астрологией или носящих талисманы.
+">36</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-37/" style="background-color:#aef2c0" title="О запрете принимать праздничные дары от еретиков и иудеев, и участвовать в их религиозных праздниках.
+">37</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-38/" style="background-color:#aef2c0" title="О запрете принимать от иудеев опресноки.
+">38</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-39/" style="background-color:#aef2c0" title="О запрете участвовать в языческих праздниках.
+">39</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-40/" style="background-color:#b5b5b5" title="Предписание епископам участвовать в соборах.
+">40</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-41/" style="background-color:#b8d6a4" title="О запрете клирикам путешествовать без грамоты от епископа.
+">41</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-42/" style="background-color:#b8d6a4" title="О запрете клирикам путешествовать без повеления от епископа.
+">42</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-43/" style="background-color:#a9d9f9" title="О запрете церковнослужителям оставлять церковные двери ради молитвы.
+">43</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-44/" style="background-color:#a9d9f9" title="О запрете женщинам входить в алтарь.
+">44</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-45/" style="background-color:#a9d9f9" title="О запрете крестить в Великую субботу катехуменов, которые сообщили об этом желании епископу менее чем за две недели.
+">45</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-46/" style="background-color:#789dbf" title="О необходимости катехизации перед крещением.
+">46</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-47/" style="background-color:#789dbf" title="О том, что оглашенные принявшие крещение в болезни, обязаны после выздоровления продолжить изучение веры.
+">47</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-48/" style="background-color:#a9d9f9" title="О необходимости совершать Таинство Миропомазания тотчас после Крещения.
+">48</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-49/" style="background-color:#a9d9f9" title="Повеление совершать в Великий Пост Таинство Евхаристии только в субботние и воскресные дни.
+">49</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-50/" style="background-color:#a9d9f9" title="О запрете прекращать Великий Пост в четверг Страстной седмицы.
+">50</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-51/" style="background-color:#a9d9f9" title="О запрете в Великий Пост совершать празднования мученикам, за исключением суббот и воскресных дней.
+">51</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-52/" style="background-color:#a9d9f9" title="О запрете в Великий Пост совершать браки и праздновать дни рождения.
+">52</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-53/" style="background-color:#789dbf" title="О том, что христианам подобает скромно вести себя на свадьбах.
+">53</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-54/" style="background-color:#789dbf" title="О запрете христианам присутствовать на свадьбах в то время, когда там происходят представления, приличествующие только язычникам.
+">54</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-55/" style="background-color:#789dbf" title="О запрете христианам организовывать пиршества, вводящие в соблазн окружающих.
+">55</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-56/" style="background-color:#b8d6a4" title="О необходимости пресвитерам оказывать епископам подобающую их сану честь.
+">56</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-57/" style="background-color:#b8d6a4" title="Повеление периодевтам и пресвитерам ничего не творить без воли епископа.
+">57</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-58/" style="background-color:#a9d9f9" title="О запрете епископам и пресвитерам совершать Таинство Евхаристии в домах.
+">58</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-59/" style="background-color:#a9c6c5" title="Предписание употреблять при церковных богослужениях только канонические книги Ветхого и Нового Завета, перечисленные в следующем (60) правиле.
+">59</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/laodikijskij-sobor-60/" style="background-color:#a9c6c5" title="Перечисляются канонические книги Ветхого и Нового Завета (см. предыдущее Правило), кроме Апокалипсиса, который не был ещё известен во Фригии как каноническая книга Нового Завета.
+">60</a></li></ul><li><a href="https://azbyka.ru/pravo/karfagenskij-sobor-393-419-gg/" title="Показать все записи в категории Карфагенский Собор (393-419 гг.)" >Карфагенский Собор (393-419 гг.)</a><ul class="post-list"><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-1/" style="background-color:#789dbf" title="О необходимости соблюдать постановления Никейского собора.
+">1</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-2/" style="background-color:#789dbf" title="О нерушимости хранения веры, изложенной Святыми отцами.
+">2</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-3/" style="background-color:#b8d6a4" title="О необходимости для клириков непорочной жизни.
+">3</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-4/" style="background-color:#b8d6a4" title="О необходимости клирикам воздерживаться от своих жён, готовясь приступить к святыне.
+">4</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-5/" style="background-color:#b8d6a4" title="О запрете епископам переходить границы своих областей ради корысти и вообще всем клирикам заниматься ростовщичеством.
+">5</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-6/" style="background-color:#b8d6a4" title="О запрете пресвитерам освящения св. мира, посвящение дев, освящение церквей, публично разрешать отлучённых кающихся на литургии.
+">6</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-7/" style="background-color:#ddd1bc" title="О желательности пресвитерам разрешать отлучённых, находящихся при смерти, с благословения епископа.
+">7</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-8/" style="background-color:#b485e2" title="О церковном судопроизводстве (принятии и рассмотрении обвинений против епископов).
+">8</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-9/" style="background-color:#b8d6a4" title="О том, что, если епископ или пресвитер примет в церковное общение праведно изверженных, да будет сам извержен.
+">9</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-10/" style="background-color:#b8d6a4" title="Об анафеме пресвитеру, ушедшему в раскол от своего епископа.
+">10</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-11/" style="background-color:#b485e2" title="О том, что осужденный своим епископом пресвитер должен заявить об этом соседним епископам, чтобы с их помощью по возможности примириться.
+">11</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-12/" style="background-color:#b485e2" title="О чрезвычайном суде для рассмотрения жалобы против клирика, когда невозможен Собор епископов. Этот суд должен состоять для епископа – из 12 епископов, для пресвитера – из 6 епископов и для диакона – из трех.
+">12</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-13/" style="background-color:#b5b5b5" title="Об извержении епископа, давшего устное согласие на избрание известного кандидата, но затем откажется от данного им голоса без доказательств вины ставленника.
+">13</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-14/" style="background-color:#e691f7" title="О достаточности представительства на ежегодных соборах лишь одного епископа из Триполи и о представительстве клириков в церковном суде этой небольшой области.
+">14</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-15/" style="background-color:#b485e2" title="О запрете клирикам пренебрегать церковным судом в угоду светскому по церковным делам.
+">15</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-16/" style="background-color:#b485e2" title="О том, что церковным судьям первой инстанции нет никакого оскорбления в том, если в высшем суде, т.е. во второй инстанции, решение их будет изменено, за исключением того случая, когда будет доказано, что эти судьи судили несправедливо.
+">16</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-17/" style="background-color:#b485e2" title="О запрете аппеляции против приговора, вынесенного избранными по согласию обеих сторон судьями, хотя бы число судей было менее указанного 12 правилом этого собора.
+">17</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-18/" style="background-color:#789dbf" title="О воспрещении детям священнослужителей участвовать в богохульных сборищах.
+">18</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-19/" style="background-color:#b8d6a4" title="О том, что ни одно духовное лицо не имеет права зарабатывать себе пропитание каким-либо постыдным или бесчестным делом.
+">19</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-20/" style="background-color:#b8d6a4" title="О том, что чтецы Африканской церкви, по достижении зрелого возраста, должны жениться, или навсегда дать обет девства.
+">20</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-21/" style="background-color:#b8d6a4" title="О том, чтобы ни одно духовное лицо не должно взимать процентов на отданное взаймы.
+">21</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-22/" style="background-color:#ededaf" title="О том, что никто не может поставлять диакона ранее 25 лет.
+">22</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-23/" style="background-color:#ededaf" title="О том, что чтецы во время богослужения должны только кланяться епископам и пресвитерам, а не находящемуся в церкви народу, так как они приняли посвящение.
+">23</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-24/" style="background-color:#e691f7" title="О том, что Мавритания Ситифенская должна иметь своего правящего епископа.
+">24</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-25/" style="background-color:#ededaf" title="О необходимости ставленникам в степени клириков предварительно изучить постановления Соборов.
+">25</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-26/" style="background-color:#a9d9f9" title="О запрете крестить и причащать покойников.
+">26</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-27/" style="background-color:#b5b5b5" title="Об обязательном созыве каждый год диоцезальных соборов, на которых должны участвовать все митрополиты или по 2 их местоблюстителя.
+">27</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-28/" style="background-color:#b485e2" title="О порядке проведения судебного процесса, возбужденного вследствие жалобы на какого-либо епископа.
+">28</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-29/" style="background-color:#b485e2" title="О порядке проведения судебного процесса, возбужденного вследствие жалобы на пресвитера, диакона и низших клириков.
+">29</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-30/" style="background-color:#f7ff23" title="О запрете детям клириков вступать в брак с язычниками или еретиками.
+">30</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-31/" style="background-color:#b8d6a4" title="О воспрещении всем членам клира уступать что-либо из своего имущества неправославным христианам по завещанию, дарственной, или иным способом, хотя бы они были и их родственники.
+">31</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-32/" style="background-color:#b8d6a4" title="Об обязанности епископов Африканской Церкви иметь отпускную грамоту от своего митрополита при поездках в Рим.
+">32</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-33/" style="background-color:#a9c6c5" title="Перечисление всех книг Священного Писания, которые должно признавать каноническими для чтения в церкви.
+">33</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-34/" style="background-color:#b8d6a4" title="О необходимости клирикам соблюдать супружеский пост перед совершением Таинства Евхаристии.
+">34</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-35/" style="background-color:#f9e0ee" title="О процедуре согласования продажи церковной собственности не приносящей дохода, в случае крайней нужды.
+">35</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-36/" style="background-color:#f9e0ee" title="О том, что все извергнутые из священного сана должны пожизненно оставаться в разряде мирян.
+">36</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-37/" style="background-color:#b485e2" title="Об отлучении от церковного общения осуждённых клириков, которые будут апеллировать к Римскому престолу.
+">37</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-38/" style="background-color:#ededaf" title="О том, что каждый, осужденный первым судом клирик, должен оставаться под тем наказанием, которое на него наложено первым судом, до тех пор, пока высший суд не освободит его от этого наказания.
+">38</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-39/" style="background-color:#b485e2" title="О возможности для членов клира, которые участвуют в судебном разбирательстве, с позволения правящего епископа, переносить тяжбу в суд ближайшей епархии.
+">39</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-40/" style="background-color:#b8d6a4" title="О том, что клирики, не повинующиеся своему епископу, желающему возвести их на высшие степени, лишаются и имеющегося сана.
+">40</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-41/" style="background-color:#b8d6a4" title="Об имуществе клириков, приобретённом или полученном в наследство во время своего служения.
+">41</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-42/" style="background-color:#f9e0ee" title="О необходимости пресвитерам и епископам согласовывать продажу церковного имущества.
+">42</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-43/" style="background-color:#e691f7" title="О подтверждении решений Иппонского собора 393 г.
+">43</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-44/" style="background-color:#b8d6a4" title="Рекомендация клирикам не предоставлять своим детям свободы до тех пор, пока последние не приобретут полной выдержки и не сумеют вести себя сообразно своему положению.
+">44</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-45/" style="background-color:#ededaf" title="Воспрещение принимать в клир имеющего из своих родных кого-либо, не исповедующего православной веры.
+">45</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-46/" style="background-color:#a9d9f9" title="Об отмене обычая освящать вместе со Святыми Дарами мёд и вино для новокрещённых.
+">46</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-47/" style="background-color:#b8d6a4" title="О запрете для неженатых клириков и монахов заходить ко вдовам и девицам, без разрешения церковной власти.Но и получив разрешение не могут заходить без сопровождающих.
+">47</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-48/" style="background-color:#b5b5b5" title="О наименовании епископа первенствующей кафедры.
+">48</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-49/" style="background-color:#b8d6a4" title="О запрете клирикам без нужды питания в пути посещать корчемницы.
+">49</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-50/" style="background-color:#a9d9f9" title="Повеление клирикам совершать Таинство Евхаристии натощак.
+">50</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-51/" style="background-color:#a9d9f9" title="О запрете обычая устраивать в церкви пиршества.
+">51</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-52/" style="background-color:#ddd1bc" title="О власти епископа определять кающимся время покаяния, сообразно различию и степени их грехов. О том, что пресвитер может разрешить кающегося грешника только в случае крайней необходимости и в отсутствие епископа. О том, что великие грешники, по истечении назначенного им времени покаяния, получают прощение публично перед церковными вратами.
+">52</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-53/" style="background-color:#789dbf" title="О надзоре за жизнью дев, посвящённых Богу.
+">53</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-54/" style="background-color:#a9d9f9" title="О том, что крещение взрослых людей, не могущих исповедать свою веру по причине тяжёлой болезни, может быть произведено под личную ответственность верных Церкви поручителей.
+">54</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-55/" style="background-color:#a9d9f9" title="О возможности покаяния и примирения с Церковью для актёров и комедиантов.
+">55</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-56/" style="background-color:#a9d9f9" title="О возможности чтения в храме, в те дни года, когда совершается воспоминание о смерти святых мучеников, описание их страданий.
+">56</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-57/" style="background-color:#ededaf" title="О возможности рукоположения в клир крещёных донатистами в несознательном возрасте.
+">57</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-58/" style="background-color:#a9d9f9" title="О том, что Божественная Литургия должна совершаться натощак.
+">58</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-59/" style="background-color:#e691f7" title="О невозобновляемости крещения, о невозобновляемости правильно совершенного рукоположения, о запрете епископу оставлять свою кафедру и самовольно занимать другую.
+">59</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-60/" style="background-color:#ededaf" title="О необходимости не менее трёх епископов для поставления епископа.
+">60</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-61/" style="background-color:#b5b5b5" title="О процедуре избрания епископа при возниконовении в народе спора о его кандидатуре.
+">61</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-62/" style="background-color:#e691f7" title="Об объявлении даты празднования Пасхи в епархиях Африканской Церкви через их представителей на ежегодном соборе
+">62</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-63/" style="background-color:#e691f7" title="О необходимости посещении епископом своей удалённой области в Мавритании.
+">63</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-64/" style="background-color:#b8d6a4" title="Об извержении пресвитеров и епископов, превышающих свои территориальные и властные полномочия.
+">64</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-65/" style="background-color:#b5b5b5" title="О том, что ни один епископ не должен принимать и рукополагать в своей церкви клирика, принадлежащего юрисдикции другого епископа.
+">65</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-66/" style="background-color:#b5b5b5" title="О рукоположении во епископа какой-либо епархии духовного лица, не принадлежащего к той митрополичьей области, в состав которой входит данная епархия.
+">66</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-67/" style="background-color:#b5b5b5" title="О том, что епископ может пользоваться юрисдикцией только в том городе и в тех приходах, которые вверены ему собором, отнюдь не распространяя своей власти на другие, ближайшие приходы.
+">67</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-68/" style="background-color:#ffd13a" title="О возможности приёма в клир Православной Церкви донатистских клириков.
+">68</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-69/" style="background-color:#e691f7" title="О ходатайстве к императорам об истреблении остатков идолов в Африке.
+">69</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-70/" style="background-color:#b485e2" title="О ходатайстве к императорам о возвращении церковным судам права решения вопросов частного права между христианами, с тем, чтобы решения этих судов считались окончательными.
+">70</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-71/" style="background-color:#789dbf" title="О ходатайстве к императорам о запрещении языческих пиршеств.
+">71</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-72/" style="background-color:#789dbf" title="О ходатайстве к императорам о воспрещении публичных развлечений в воскресенья и праздничные для Церкви дни.
+">72</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-73/" style="background-color:#b485e2" title="О ходатайстве к императорам о воспрещении знатным лицам брать под свою защиту и настаивать на освобождении от наказания клириков, осуждённых церковным судом.
+">73</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-74/" style="background-color:#789dbf" title="О ходатайстве к императорам о об издании закона, воспрещающего принуждать к театральной службе лиц, которые, обратясь к христианству, приняли крещение и желают сохранить себя чистыми от подобного нечестия.
+">74</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-75/" style="background-color:#e691f7" title="О превозглашении церковью освобождения рабов.
+">75</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-76/" style="background-color:#e691f7" title="О не покорившемся решению церковного суда, осуждённом и низвергнутом епископе Екитии и необходимости делегатам собора употребить все меры к тому, чтобы изгнать его, дабы он прекратил нарушать церковный мир.
+">76</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-77/" style="background-color:#e691f7" title="О кротком обращении с донатистами.
+">77</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-78/" style="background-color:#e691f7" title="О направлении грамот к начальствующим с просьбой защиты от максимианистов.
+">78</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-79/" style="background-color:#ffd13a" title="О приятии раскаявшихся клириков донатистов в клир в своих степенях священства.
+">79</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-80/" style="background-color:#e691f7" title="О назначении посольства к донатистам ради соглашения к миру.
+">80</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-81/" style="background-color:#b8d6a4" title="О необходимости воздержания в определённое время от жён епископам, пресвитерам, диаконам и иподиаконам. Правило не простирается на низших клириков, как не прикасающихся к святыне.
+">81</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-82/" style="background-color:#b8d6a4" title="О воспрещении каждому епископу оставлять то место, которое ему было определено в начале для его постоянного местопребывания, и находиться в каком-либо другом месте вверенной ему области.
+">82</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-83/" style="background-color:#a9d9f9" title="Предписание крестить каждого ребенка, относительно которого неизвестно, был ли он крещен ранее, или нет, конечно в том случае, когда сам ребенок по своему возрасту не способен сообщить, было ли принято им крещение, и нет лица, могущего засвидетельствовать это.
+">83</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-84/" style="background-color:#e691f7" title="О необходимости ежегодно объявлять всем церквам проконсульской Африки после общего собора, созывавшегося в Карфагене, о дне, в который надлежало в текущем году праздновать Христово Воскресение.
+">84</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-85/" style="background-color:#b5b5b5" title="Воспрещение епископу оставаться управляющим вдовствующей церкви более одного года.
+">85</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-86/" style="background-color:#e691f7" title="Постановление ходатайствовать у императоров о назначении особых защитников-экдиков, которые имели бы возможность вместе с епископами оберегать бедных от насилия богачей.
+">86</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-87/" style="background-color:#e691f7" title="О порядке созыва епископов на общий собор всей Африканской церкви.
+">87</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-88/" style="background-color:#e691f7" title="Предписание епископу Кресконию, оставившему свое место и силою захватившему освободившуюся епископскую кафедру в Тубуне, явиться пред общим собором.
+">88</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-89/" style="background-color:#e691f7" title="Постановление послать в Иппон нескольких епископов для водворения нарушенного Екитием мира и для поставления нового епископа.
+">89</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-90/" style="background-color:#b485e2" title="О порядке рассмотрения жалоб и обвинений клириков. Обвиняемые должны употребить все усилия, чтобы в течение года оправдать себя перед церковным судом и вместе с тем показать перед общественным мнением свою невинность. Если же они не успеют сделать этого в течение означенного времени, то теряют право на оправдание и предаются суду.
+">90</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-91/" style="background-color:#b5b5b5" title="Об отлучении от общения с остальными епископами того из них, кто примет без увольнительной (отпускной) грамоты от подлежащего епископа какого-либо монаха с тем, чтобы зачислить его в свой клир или поставить его игуменом одного из своих монастырей.
+">91</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-92/" style="background-color:#aef2c0" title="Об анафеме епископу, завещавшему свое имущество после смерти какому-либо еретику или язычнику, хотя и родственнику своему. При этом даже имя его не должно упоминаться в церковных диптихах.
+">92</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-93/" style="background-color:#e691f7" title="О необходимо исходатайствовать у государственной власти подтверждения права церкви относительно освобождения рабов.
+">93</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-94/" style="background-color:#a9d9f9" title="Предписание по распоряжению епископа разрушать храмы, построенные под предлогом прославления мучеников, а в действительности не только не имеющие под алтарем мощей мучеников или частицы их, но никто и не помнил, чтобы там когда-либо находился или страдал какой-нибудь мученик.
+">94</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-95/" style="background-color:#e691f7" title="О необходимо ходатайствовать перед государственной властью об уничтожении существовавших еще в то время в Африке остатков идолов.
+">95</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-96/" style="background-color:#e691f7" title="О привилегии Карфагенского епископа составлять от имени всех и подписывать каждую грамоту, отправляемую от общего Африканского собора.
+">96</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-97/" style="background-color:#e691f7" title="Об определении старшинства епископов на основании их специальных грамот.
+">97</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-98/" style="background-color:#e691f7" title="Решение прервать общение с епископом Кводвултдеем до тех пор, пока он не подвергнется суду.
+">98</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-99/" style="background-color:#e691f7" title="Одобрение отставки не принятого народом епископа Максимиана (бывшего донатиста) и постановление избрать на его место другого епископа.
+">99</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-100/" style="background-color:#ededaf" title="О необходимости выдавать рукополагаемым епископам грамоты с указанием года и дня рукоположения, дабы не возникало никакого сомнения о младших и старших.
+">100</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-101/" style="background-color:#b8d6a4" title="О том, что каждый, посвященный в известной епархии в чтеца, не может без согласия подлежащего епископа быть принятым в другую епархию.
+">101</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-102/" style="background-color:#e691f7" title="Об переговорах с предводителями донатистов.
+">102</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-103/" style="background-color:#e691f7" title="Об утверждении текста обращения к донатистам.
+">103</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-104/" style="background-color:#e691f7" title="Наставление братиям, Феасию и Еводию, назначенным посланниками от Карфагенского собора к самодержцам, в связи с отказом донатистов участвовать в переговорах.
+">104</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-105/" style="background-color:#e691f7" title="О грамотах к властителям в связи с деятельностью донатистов.
+">105</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-106/" style="background-color:#e691f7" title="О том, что общий собор епископов нужно созывать только в тех случаях, когда того потребует какое-либо особое дело, касающееся всей Африканской церкви, в противном же случае ежегодно должны созываться обычные епархиальные соборы.
+">106</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-107/" style="background-color:#b485e2" title="О том, что некоторые дела, решенные на епархиальных соборах, могут быть пересмотрены и решены вторично, причем после решения избранных по взаимному договору судей нельзя более обращаться к другому высшему суду.
+">107</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-108/" style="background-color:#e691f7" title="Постановление ходатайствовать перед государственной властью о назначении 5 исполнителей для распределения их по разным епархиям Африканской церкви.
+">108</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-109/" style="background-color:#e691f7" title="О необходимости ходатайствовать перед государственной властью о назначении экдиков для защиты как церковных интересов, так и интересов неимущих.
+">109</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-110/" style="background-color:#e691f7" title="О свободе действий делегатов, посланных от собора к императорскому двору.
+">110</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-111/" style="background-color:#b5b5b5" title="О том, что новая епархия может образоваться при условии, если последует решение епископского собора данной митрополичьей области под председательством подлежащего митрополита и согласие епископа выделить из-под своей юрисдикции некоторые места, принадлежащие к его епархии.
+">111</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-112/" style="background-color:#e691f7" title="Об утверждении епископов на территориях, обращающихся от донатистов.
+">112</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-113/" style="background-color:#e691f7" title="О суде по жалобе на епископа Маврентия, в связи с отсутствием его обвинителей.
+">113</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-114/" style="background-color:#e691f7" title="Послание к римскому епископу Иннокентию с просьбой о водворении в Римской и Александрийской церквах мира в связи с изгнанием епископом Феофилом Иоанна Златоуста и отлучением его Иннокенитием за такой поступок.
+">114</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-115/" style="background-color:#f7ff23" title="О том, что нельзя расторгнуть законно заключенного брака на том основании, что муж или жена оставили свою брачную половину.
+">115</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-116/" style="background-color:#a9d9f9" title="Предписание читать в церкви только те молитвы, которые просмотрены на соборах и одобрены последними для употребления в церкви.
+">116</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-117/" style="background-color:#b485e2" title="О том, что спорные дела, возникающие между членами клира, могут разбираться только на церковных судах. О возможности клирикам в исключительных случаях ходатайствовать перед императором о назначении ему епископского суда.
+">117</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-118/" style="background-color:#b8d6a4" title="Об отлучении клириков, принадлежащих к Африканской церкви, самовольно отправившихся в Италию без отпустительной грамоты.
+">118</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-119/" style="background-color:#e691f7" title="О воспрещении (под угрозой отлучения) епископам обращаться к императорскому двору только с согласия первенствующато епископа или митрополита, и после получения на то особой грамоты.
+">119</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-120/" style="background-color:#e691f7" title="О делегатах, посылаемых ко двору с представлением против донатистов и против язычников.
+">120</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-121/" style="background-color:#b485e2" title="Об отношении епископа к решению церковного суда своей епархии (постановление данного правила недостаточно ясно).
+">121</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-122/" style="background-color:#789dbf" title="О том, что желающий стать христианином должен сделать это свободно, по своей доброй воле, а не по насилию и не по необходимости.
+">122</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-123/" style="background-color:#ff5347" title="Против ереси Пелагия. Об анафеме тем, которые утверждает, что Адам сотворён смертным независимо от грехопадения.
+">123</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-124/" style="background-color:#ff5347" title="Против ереси Пелагия. Об анафеме отвергающим необходимость крещения младенцев или отрицающих для них крещение во оставление грехов.
+">124</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-125/" style="background-color:#ff5347" title="Против ереси Пелагия. Об анафеме тем, которые утверждают, что Божественная благодать действенна только для отпущения содеянных грехов, но не подаёт помощи сверх того.
+">125</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-126/" style="background-color:#ff5347" title="Против ереси Пелагия. Об анафеме тем, которые утверждают, что благодатью не подается нам любовь и сила к деланию добра.
+">126</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-127/" style="background-color:#ff5347" title="Против ереси Пелагия. Об анафеме тем, которые утверждают, что человеку возможно исполнить заповеди без содействия Божественной благодати.
+">127</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-128/" style="background-color:#ff5347" title="Против ереси Пелагия. Об анафеме тем, которые утверждают, что не подобает говорить об отсутствии грехов лишь по смиренномудрию, а не по истине.
+">128</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-129/" style="background-color:#ff5347" title="Против ереси Пелагия. Об анафеме тем, которые утверждают, что святые в молитве Господней прошение об оставлении грехов произносят по отношению к другим людям, а не о себе.
+">129</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-130/" style="background-color:#ff5347" title="Против ереси Пелагия. Об анафеме тем, которые утверждают, что святые в молитве Господней прошение об оставлении грехов произносят лишь по смирению, а не по истине.
+">130</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-131/" style="background-color:#e691f7" title="О территориях служения епископов, обратившихся и ереси донатистов.
+">131</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-132/" style="background-color:#e691f7" title="О территориях служения епископов, обратившихся и ереси донатистов.
+">132</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-133/" style="background-color:#e691f7" title="О территориях служения епископов, обратившихся и ереси донатистов.
+">133</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-134/" style="background-color:#b5b5b5" title="О том, чтобы ни один епископ не простирал самовольно своих прав на какой-либо народ (территорию), находящуюся de facto под властью другого епископа.
+">134</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-135/" style="background-color:#e691f7" title="О необходимости епископам употреблять все усилия для приведения донатистов в кафолическое единение и санкциях за небрежение об этом.
+">135</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-136/" style="background-color:#b485e2" title="О том, что после суда избранных судей нельзя больше, под угрозой наказания, обращаться к высшему суду.
+">136</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-137/" style="background-color:#e691f7" title="О санкциях епископам за небрежение об обращении донатистов.
+">137</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-138/" style="background-color:#e691f7" title="О лишении епископства за ложное извещение об обращении донатистов.
+">138</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-139/" style="background-color:#b485e2" title="О процедуре аппеляции для клириков, не довольных решением своих епископов.
+">139</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-140/" style="background-color:#3fcc72" title="О возможности для епископа постричь в монашество девицу до наступления 25-летнего возраста, в случае когда её целомудрию угрожает опасность, или, когда, находясь при смерти, она сама, или ее родители, или опекуны, умоляют не дать ей умереть без иноческого чина.
+">140</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-141/" style="background-color:#e691f7" title="Об избрании 3-х представителя из каждой епархии для довершения дел настоящего Собора.
+">141</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-142/" style="background-color:#e691f7" title="О необходимости избрания заместителей в связи с тем, что многие епископы жаловались на затруднительность дальнейшего пребывания в Карфагене.
+">142</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-143/" style="background-color:#b485e2" title="О запрете принимать жалобы на клириков от тех (клириков и мирян), кто отлучён от церковного общения.
+">143</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-144/" style="background-color:#b485e2" title="О запрете принимать жалобы на членов клира от актёров, от лиц, на которых лежит пятно бесчестия (инфамии); от еретиков и язычников.
+">144</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-145/" style="background-color:#b485e2" title="О том, что если кто-либо подаст одновременно несколько жалоб на клирика, и первая из них будет опровергнута, то не должно допустить обвинителя до подачи прочих жалоб.
+">145</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-146/" style="background-color:#b485e2" title="Предписание не принимать в качестве свидетелей против членов клира всех тех лиц, которые лишены права подавать на них жалобы.
+">146</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/karfagenskij-sobor-147/" style="background-color:#b485e2" title="О хранении клириками тайны исповеди, выражающемся в лишении значения свидетельства епископа, в том случае, если он говорит, что некто исповедался ему в совершенном им преступлении, чего тот не желает признать.
+О том, что епископ, отлучивший кого-либо незаконно за тот грех, который он исповедал ему наедине, сам должен быть лишен общения со стороны других епископов до покаяния.
+">147</a></li></ul><li><a href="https://azbyka.ru/pravo/konstantinopolskij-sobor-394-g/" title="Показать все записи в категории Константинопольский (394г.)" >Константинопольский (394г.)</a><ul class="post-list"><li><a class="az-tip" href="https://azbyka.ru/pravo/konstantinopolskij-sobor-394-1/" style="background-color:#ededaf" title="О том, что епископ может быть извергнут из сана только собором епископов.
+">1</a></li></ul><li><a href="https://azbyka.ru/pravo/konstantinopolskij-dvukratnyj-sobor-861-g/" title="Показать все записи в категории Константинопольский Двукратный Собор (861г.)" >Константинопольский Двукратный Собор (861г.)</a><ul class="post-list"><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-1/" style="background-color:#3fcc72" title="О том, что монастыри могут быть основаны только с благословения епископа. О неприкосновенности монастырей и их имущества.
+">1</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-2/" style="background-color:#3fcc72" title="О принятии в монашеский чин.
+">2</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-3/" style="background-color:#3fcc72" title="Об отлучении для монахов, самовольно оставивших монастырь и игуменах нерадеющих об их возвращении.
+">3</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-4/" style="background-color:#3fcc72" title="Об отлучении монахов, самовольно оставивших свой монастырь и лиц, принявших их.
+">4</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-5/" style="background-color:#3fcc72" title="О необходимости испытания перед монашеским постригом в течение трёх лет, в исключительных случаях – полгода; и епитимии за нарушение этого правила для игумена и постриженного.
+">5</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-6/" style="background-color:#3fcc72" title="О распоряжении имуществом принимающих монашество.
+">6</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-7/" style="background-color:#3fcc72" title="О запрете епископам употреблять доходы епископии на сооружение зданий для собственной надобности под видом монастырей.
+">7</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-8/" style="background-color:#f98b7f" title="О епитимии для оскопляющих кого-либо кроме как по болезни.
+">8</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-9/" style="background-color:#b8d6a4" title="О запрете священнослужителям, под угрозой извержения, применять телесные наказания собственноручно или посредством других лиц.
+">9</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-10/" style="background-color:#f9e0ee" title="Об извержении присвоивших или обративших в личное небогослужебное употребление алтарные священные сосуды или облачения, и отлучении так же использующих церковные вещи, находящиеся вне алтаря.
+">10</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-11/" style="background-color:#b8d6a4" title="Об извержении низших клириков, вступающих в мирские начальственные должности.
+">11</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-12/" style="background-color:#a9d9f9" title="Об необходимости пресвитерам, служащим Литургию или совершающим Таинство Крещения в домовых церквях, под угрозой извержения не совершать этого без назначения епископа.
+">12</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-13/" style="background-color:#a9d9f9" title="Об извержении пресвитеров (и примкнувших к ним лиц), самовольно прервавших общение со своим епископом и переставших поминать при богослужении его имя из-за недоказанных преступлений последнего.
+">13</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-14/" style="background-color:#a9d9f9" title="Аналогично предыдущему правилу в отношении епископа к своему митрополиту.
+">14</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-15/" style="background-color:#a9d9f9" title="Аналогично двум предыдущим в отношении пресвитеров, епископов и митрополитов по отношению к своему патриарху. В случае же, если кто-либо из епископов начнет проповедовать еретическое учение, тогда прочие священно- и церковнослужители обязаны тотчас отделиться от подлежащего епископа, митрополита и патриарха.
+">15</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-16/" style="background-color:#b5b5b5" title="Об отречении епископа от своей кафедры, и о лишении архиерейства епископа, отсутствующего в своей епархии более 6-ти месяцев без уважительной причины.
+">16</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/dvukratnyj-sobor-17/" style="background-color:#ededaf" title="О том, чтобы впредь никто из мирян, или монахов не был внезапно возводим на высоту епископства, но провел на всякой священнослужительской ступени положенное законом время.
+">17</a></li></ul><li><a href="https://azbyka.ru/pravo/konstantinopolskij-sobor-vo-hrame-premudrosti-slova-bozhiya-byvshij-879-g/" title="Показать все записи в категории Константинопольский Собор, во храме Св. Софии - Премудрости Божией (879г.)" >Константинопольский Собор, во храме Св. Софии - Премудрости Божией (879г.)</a><ul class="post-list"><li><a class="az-tip" href="https://azbyka.ru/pravo/sobor-byvshij-vo-hrame-premudrosti-slova-bozhija-1/" style="background-color:#e691f7" title="О согласии между римской и константинопольской церквами в лице папы Иоанна VIII и патрарха Фотия.
+">1</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sobor-byvshij-vo-hrame-premudrosti-slova-bozhija-2/" style="background-color:#3fcc72" title="О запрете епископам из мирян принимать монашество.
+">2</a></li><li><a class="az-tip" href="https://azbyka.ru/pravo/sobor-byvshij-vo-hrame-premudrosti-slova-bozhija-3/" style="background-color:#f98b7f" title="Об анафеме всякому, кто осмелится бить, или заключать в темницу епископа.
+">3</a></li></ul></li></ul><p class="vignette"></p><div class="taxonomy-description"><p>Трулльский собор признал общую законодательную силу правил ряда поместных соборов, проходивших в разное время и в разных странах. Таких соборов – одиннадцать, также отдельно упомянут Карфагенский собор при свт. Киприане (255 г.) о крещении еретиков. Правила всех этих одиннадцати соборов находятся в Афинской Синтагме и греческом Пидалионе. В славянских и румынских канонических сборниках находятся правила только десяти соборов, но в них нет правил Карфагенского собора, бывшего при Киприане. Главное основание, по которому в последних сборниках опущен данный Карфагенский собор, то, что его постановление о необходимости крестить всякого еретика или раскольника, обращающегося к Церкви, никогда не имело обязательного значения для всей Церкви. Согласно 2-му правилу Трулльского собора, оно имело значение, применительно к обстоятельствам места и времени, только для Африканской церкви.</p>
+</div>		</section>
+		<!-- End Content -->
+	</main> 
+</div>
+<!-- End Main area -->
+
+
+<script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/pravo/*"},{"not":{"href_matches":["/pravo/wp-*.php","/pravo/wp-admin/*","/pravo/wp-content/uploads/*","/pravo/wp-content/*","/pravo/wp-content/plugins/*","/pravo/wp-content/themes/azbyka-pravo/*","/pravo/wp-content/themes/azbyka/*","/pravo/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+<style type="text/css"> 
+         /* Hide reCAPTCHA V3 badge */
+        .grecaptcha-badge {
+        
+            visibility: hidden !important;
+        
+        }
+    </style>	<script>
+		jQuery($=>{
+			$('.dropdown-button').click(function(e){
+				$(this).closest('.dropdown-wrap').toggleClass('active');
+			});
+			$('body').click(e=>{
+				if(!$(e.target).closest('.dropdown-wrap').length)
+					$('.dropdown-wrap').removeClass('active');
+			});
+			$('.dropdown-wrap .btn-close').click(function(e){
+				$(this).closest('.dropdown-wrap').removeClass('active');
+			});
+		});
+	</script>
+			<script id="az-post-list-loader-js">
+			(function(){
+				//logic
+				let pagination = document.querySelector('.az-pagination');
+				if(!pagination){
+					console.log('no pagination found');
+					return;
+				}
+				let current = 1;//parseInt(document.querySelector('.pagination .page-numbers.current').textContent);
+				let last = 0;//parseInt(document.querySelector('.pagination .page-numbers.dots+.page-numbers').textContent);
+				let loading = false;
+			
+				const observer = new IntersectionObserver(
+				(entries, observer) => {
+					entries.forEach(entry => {
+						if (entry.isIntersecting && (localStorage.getItem('az_pagination-autoload') === 'true') && !loading) {
+							loadNext();
+						}
+					});
+				}, {
+					root: null,
+					rootMargin: '0px',
+					threshold: 0
+				});
+			
+				let finalize = ()=>{
+					pagination.classList.remove('loading');
+					observer.disconnect();
+					console.log('no more posts');
+				}
+			
+				let loadNext = ()=>{
+					current ++;
+					if(current <= last){
+						console.log('loading page '+current);
+						pagination.classList.add('loading');
+						loading = true;
+						let pageUrl = location.href.split('#')[0].split('/page/')[0].replace(/\/$/, "") + '/page/' + current, 
+							url = pageUrl + '/?content_only=1';
+						window.history.pushState("", "Страница "+current, pageUrl);
+						asyncLoad(url);
+					}else{
+						finalize();
+					}
+				};
+			
+				async function asyncLoad(url) {
+					const response = await fetch(url);
+					let body = await response.text();
+					body = body.replaceAll('?content_only=1', '');
+					pagination.insertAdjacentHTML('beforebegin', body);
+					if(body.includes('az-pagination')){
+						observer.unobserve(pagination)
+						pagination.remove();
+						initLoadMore();
+					}
+					loading = false;
+					if(current == last) finalize();
+					console.log('loaded page '+current);
+					
+					if(window.scrollY + window.innerHeight > pagination.offsetTop)
+						loadNext();
+				}
+				
+				
+				//load more
+				function initLoadMore(){
+					let loadMore = document.querySelector('.pagination-load-more');
+					if(loadMore)
+						loadMore.onclick = loadNext;
+					
+					pagination = document.querySelector('.az-pagination');
+					if(pagination)
+						observer.observe(pagination);
+				}
+				initLoadMore();
+			})();
+		</script>
+				<div  id="notification_container"></div>
+		<aside id="az_toolbox">
+			<i class="fa fa-cog btn-settings"></i>		<i class="scroll-top fa fa-arrow-up active invert" id="scroll-top" title="Вверх"></i>
+			</aside>
+		<div  class="az-sso-messages" style="position:fixed;bottom:0;left:0;z-index:200;display:none"><p class="az-content-echo">Входим...</p><p class="az-content-echo">Куки не обнаружены, не ЛК</p></div>	<div  class="settings-wrap" id="settings_wrap" style="display: none;">
+		<div  class="settings-box" id="settings-box">
+			<div  class="settings-item" data-setting="font-base-size">
+				<span class="settings-caption">Размер шрифта: </span>
+				<span class="settings-field letter-button" id="decrease_letter" title="Уменьшить шрифт">A-</span>
+				<span class="settings-field letter-size" id="size_letter" title="Размер шрифта основного текста">15</span>
+				<span class="settings-field letter-button" id="increase_letter" title="Увеличить шрифт">A+</span>
+			</div>
+
+			<div  class="settings-item theme-settings-item" data-setting="theme">
+				<span class="settings-caption">Тёмная тема:</span>
+				<span data-id="1" data-value="light" class="settings-field selectedBox" title="Светлая"><i class="fa fa-lightbulb-o"></i></span>
+				<span data-id="2" data-value="dark" class="settings-field" title="Тёмная"><i class="fa fa-moon-o"></i></span>
+				</div>
+
+			<details class="settings-colors-wrap">
+				<summary>Цвета</summary>
+
+				<div class="settings-item" data-setting="body-bg">
+					<span class="settings-caption">Цвет фона: </span>
+					<span data-id="1" class="settings-field settings-color-box"></span>
+					<span data-id="3" class="settings-field settings-color-box"></span>
+					<span data-id="4" class="settings-field settings-color-box selectedBox"></span>
+					<input type="color" data-id="0" value="#999999" class="settings-field settings-color-box">
+				</div>
+				
+				<div class="settings-item" data-setting="text-color">
+					<span class="settings-caption">Цвет текста: </span>
+					<span data-id="1" class="settings-field settings-color-box"></span>
+					<span data-id="3" class="settings-field settings-color-box"></span>
+					<span data-id="4" class="settings-field settings-color-box selectedBox"></span>
+					<input type="color" data-id="0" value="#999999" class="settings-field settings-color-box">
+				</div>
+				
+				<div class="settings-item" data-setting="link-color">
+					<span class="settings-caption">Цвет ссылок: </span>
+					<span data-id="1" class="settings-field settings-color-box"></span>
+					<span data-id="3" class="settings-field settings-color-box"></span>
+					<span data-id="4" class="settings-field settings-color-box selectedBox"></span>
+					<input type="color" data-id="0" value="#999999" class="settings-field settings-color-box">
+				</div>
+				
+				<div class="settings-item" data-setting="accent-color">
+					<span class="settings-caption">Цвет акцентов <i class="fa fa-question-circle btn-details" title="Особо выделяемые цветом элементы"></i></span>
+					<span data-id="1" class="settings-field settings-color-box"></span>
+					<span data-id="3" class="settings-field settings-color-box"></span>
+					<span data-id="4" class="settings-field settings-color-box selectedBox"></span>
+					<input type="color" data-id="0" value="#999999" class="settings-field settings-color-box">
+				</div>
+
+				<div class="settings-item m-hide" data-setting="side-bg">
+					<span class="settings-caption">Цвет полей <i class="fa fa-question-circle btn-details" title="Боковые области экрана"></i></span>
+					<span data-id="1" class="settings-field settings-color-box"></span>
+					<span data-id="3" class="settings-field settings-color-box"></span>
+					<span data-id="4" class="settings-field settings-color-box selectedBox"></span>
+					<input type="color" data-id="0" value="#999999" class="settings-field settings-color-box">
+				</div>
+				
+				<div class="settings-item" data-setting="widget-bg">
+					<span class="settings-caption">Фон подложек <i class="fa fa-question-circle btn-details" title="Цвет фона окон и панелей"></i></span>
+					<span data-id="1" class="settings-field settings-color-box"></span>
+					<span data-id="3" class="settings-field settings-color-box"></span>
+					<span data-id="4" class="settings-field settings-color-box selectedBox"></span>
+					<input type="color" data-id="0" value="#999999" class="settings-field settings-color-box">
+				</div>
+
+			</details>
+
+			<div  class="settings-item font-settings-item" data-setting="title-font">
+				<span class="settings-caption">Заголовки:</span>
+				<select class="settings-field settings-field-select" data-id="0">
+					<option value="'Lucida Sans Unicode', 'Lucida Grande', sans-serif">Прямой (Lucida)</option>
+					<option value="'Times New Roman', sans">С засечками (Times)</option>
+					<option value="Georgia-my, sans">Georgia</option>
+					<option value="Courier, mono">Моноширинный</option>
+					<option value="Roboto Condensed">Сжатый</option>
+					<option value="Caveat">Рукописный</option>
+					<option value="IBM Plex Serif">IBM Plex Serif</option>
+					<option value="Vollkorn">Vollkorn</option>
+					<option value="Oranienbaum">Oranienbaum</option>
+				</select>
+			</div>
+
+			<div  class="settings-item font-settings-item" data-setting="text-font">
+				<span class="settings-caption">Текст:</span>
+				<select class="settings-field settings-field-select" data-id="0">
+					<option value="system-ui, sans-serif">Прямой (Системный)</option>
+					<option value="'Times New Roman', sans">С засечками (Times)</option>
+					<option value="Georgia-my, sans">Georgia</option>
+					<option value="Courier, mono">Моноширинный</option>
+					<option value="Roboto Condensed">Сжатый</option>
+					<option value="Caveat">Рукописный</option>
+					<option value="IBM Plex Serif">IBM Plex Serif</option>
+					<option value="Vollkorn">Vollkorn</option>
+					<option value="Oranienbaum">Oranienbaum</option>
+				</select>
+			</div>
+
+			<div  class="settings-item" data-setting="text-align">
+				<span class="settings-caption">Выравнивание:</span>
+				<span data-id="1" data-value="left" class="settings-field selectedBox" title="по левому краю"><i class="fa fa-align-left"></i></span>
+				<span data-id="2" data-value="justify" class="settings-field" title="по ширине"><i class="fa fa-align-justify"></i></span>
+			</div>
+			
+			<div  class="settings-item" data-setting="pagination-autoload">
+				<span class="settings-caption">Загрузка страниц:</span>
+				<span data-id="1" data-value="false" class="settings-field selectedBox" title="вручную"><i class="fa fa-hand-o-down"></i></span>
+				<span data-id="2" data-value="true" class="settings-field" title="автоматически"><i class="fa fa-refresh"></i></span>
+			</div>
+
+			<span class="settings-reset" id="settings-reset"><i class="fa fa-undo"></i> Сбросить настройки</span>
+			<span class="settings-close" id="settings-close"></span>
+		</div>
+	</div>
+	<script  defer="defer" src="https://azbyka.ru/pravo/wp-content/plugins/Bg-Az-Counter-GitHub/js/reconnecting-websocket.min.js?ver=2.9.6" id="bg_counter_websocket-js"></script>
+<script type="text/javascript" id="bg_counter_proc-js-extra">
+/* <![CDATA[ */
+var bg_counter = {"counterurl":"https://stat.azbyka.ru/counters","rateurl":"https://stat.azbyka.ru/rate","scoreurl":"https://stat.azbyka.ru/item-score","batch":"https://stat.azbyka.ru/batch-query","batch_rating":"https://stat.azbyka.ru/batch-rating","websocket":"wss://stat.azbyka.ru/realtime-view","updatesocket":"wss://stat.azbyka.ru/updates","updatetime":"3000","maxreconnect":"5","project":"/project/pravo","type":"category","ID":"6","countviews":"on","votes5":"\u0433\u043e\u043b\u043e\u0441\u043e\u0432","votes2":"\u0433\u043e\u043b\u043ec\u0430","vote1":"\u0433\u043e\u043b\u043e\u0441","short_num":{"K":" \u0442\u044b\u0441.","M":" \u043c\u043b\u043d.","MM":" \u043c\u043b\u0440\u0434."},"voted":"\u0423\u0436\u0435 \u0433\u043e\u043b\u043e\u0441\u043e\u0432\u0430\u043b\u0438","price":["\u0445\u0443\u0434\u043e","\u0441\u043b\u0430\u0431\u043e","\u0441\u043d\u043e\u0441\u043d\u043e","\u0434\u043e\u0441\u0442\u043e\u0439\u043d\u043e","\u0447\u0443\u0434\u0435\u0441\u043d\u043e"],"debug":""};
+//# sourceURL=bg_counter_proc-js-extra
+/* ]]> */
+</script>
+<script data-minify="1"  defer="defer" src="https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/plugins/Bg-Az-Counter-GitHub/js/counter.js?ver=1770901869" id="bg_counter_proc-js"></script>
+<script type="text/javascript" id="myBooks-js-extra">
+/* <![CDATA[ */
+var myBooks = {"ajaxurl":"https://azbyka.ru/pravo/wp-admin/admin-ajax.php","nonce":"d43a32faaa","rest_nonce":"8ead34bba5","siteurl":"https://azbyka.ru/pravo","pageurl":"/pravo/pomestnyh-soborov/","post_id":"2155","is_logged_in":"","page":"1","is_single":"","is_personal":"","template":"https://azbyka.ru/pravo/wp-content/plugins/Bg-Personal/","allow_bookmarks":"1"};
+//# sourceURL=myBooks-js-extra
+/* ]]> */
+</script>
+<script data-minify="1"  defer="defer" src="https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/plugins/Bg-Personal/js/myBooks.js?ver=1770901869" id="myBooks-js"></script>
+<script type="text/javascript" id="bg_bibrefs_proc-js-extra">
+/* <![CDATA[ */
+var bg_bibrefs = {"main_script":"https://azbyka.ru/pravo/wp-content/plugins/bg-biblie-references/js/bg_bibrefs.js","ajaxurl":"https://azbyka.ru/pravo/wp-admin/admin-ajax.php","content":".main-area-content","preq":"0"};
+//# sourceURL=bg_bibrefs_proc-js-extra
+/* ]]> */
+</script>
+<script data-minify="1"  defer="defer" src="https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/plugins/bg-biblie-references/js/bg_bibrefs_loader.js?ver=1770901869" id="bg_bibrefs_proc-js"></script>
+<script type="text/javascript" id="az-settings-js-extra">
+/* <![CDATA[ */
+var azbyka = {"root_url":"https://azbyka.ru/pravo","project":"/pravo","darktheme":"https://azbyka.ru/pravo/wp-content/themes/azbyka/settings/js/darktheme.css?ver=3.7.13.1.14","yellowtheme":"https://azbyka.ru/pravo/wp-content/themes/azbyka/settings/js/yellowtheme.css?ver=3.7.13.1.14","is_home":""};
+//# sourceURL=az-settings-js-extra
+/* ]]> */
+</script>
+<script data-minify="1"  defer="defer" src="https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/settings/js/az-settings.js?ver=1770901869" id="az-settings-js"></script>
+<script data-minify="1"  defer="defer" src="https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/assets/js/top-menu.js?ver=1770901869" id="top-menu-js"></script>
+<script data-minify="1"  defer="defer" src="https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/assets/js/speech.js?ver=1770901869" id="speech-js"></script>
+<script data-minify="1"  defer="defer" src="https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/assets/js/social.js?ver=1770901869" id="azbyka-social-js"></script>
+<script data-minify="1"  defer="defer" src="https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/assets/js/main.js?ver=1770901869" id="azbyka-main-js"></script>
+<script data-minify="1"  defer="defer" src="https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/assets/js/tooltip.js?ver=1770901869" id="az-tooltip-js"></script>
+<script data-minify="1"  defer="defer" src="https://azbyka.ru/pravo/wp-content/cache/min/1/pravo/wp-content/themes/azbyka/assets/js/seo.js?ver=1770901869" id="az-seo-js"></script>
+<script  defer="defer" src="https://azbyka.ru/pravo/wp-content/plugins/wp-rocket/assets/js/heartbeat.js?ver=3.21.3" id="heartbeat-js"></script>
+<noscript id="bz_custom_code" data-load="scroll" data-delay="9000">if(!window.bz_custom_code_loaded){(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+   m[i].l=1*new Date();
+   for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+   k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+   (window, document, "script", "https://cdn.jsdelivr.net/npm/yandex-metrica-watch/tag.js", "ym");
+
+   ym(5565880, "init", {
+        clickmap:true,
+        trackLinks:true,
+        accurateTrackBounce:true,
+        webvisor:true,
+        trackHash:true
+   });}
+			window.bz_custom_code_loaded = true;</noscript><noscript data-load="defer"></noscript>		
+		<script>
+		let doc = document;
+		let addScript = (src, attrs, append = true)=>{
+			console.log('addScript -> ', src, attrs);
+			el = doc.createElement("script");
+			el.src = src;
+			for(at in attrs)
+				el.setAttribute(at, attrs[at]);
+			
+			if(append)
+				doc.body.append(el);
+			
+			return el;
+		};
+		let addScriptNode = (n)=>{
+			console.log('addScriptNode -> ', n);
+			let src = n.getAttribute('data-src');
+			let el = doc.createElement("script");
+			if(src)
+				el.src = src;
+			else{
+				let s = doc.createTextNode(n.textContent);
+				el.appendChild(s);
+			}
+			
+			if(n && n.parentNode)
+				n.parentNode.insertBefore(el,n);
+			else
+				doc.body.append(el);
+			
+			if(!src && n){
+				n.remove();
+			}
+		}
+		let addStyleNode = (el, par)=>{
+			let val = el.textContent;
+			console.log('deferred -> ', val);
+			//if(el.parentNode)
+				//el.parentNode.removeChild(el);
+			par.innerHTML += val;
+		}
+		
+		let nNode = doc.createElement('div');
+			nNode.classList.add('bz-defer-loaded');
+		
+		let deferredLoaded = false;
+		let loadDeferredStyles = function() {
+			if(deferredLoaded)
+				return;
+			
+			deferredLoaded = true;
+			
+			let nds = doc.querySelectorAll("noscript[data-load='defer']");
+			nds.forEach(
+			(el)=>{
+				let func = (el.getAttribute('data-type') === 'script') ? addScriptNode : addStyleNode;
+				let timer = el.getAttribute('data-delay');
+				if(timer)
+					setTimeout(func, timer, el, nNode)
+				else
+					func(el, nNode);
+			});
+			doc.body.append(nNode);
+			
+			//deferred scripts SRC
+			if(window.bz_opt_deferred_scripts && !window.bz_opt_defer_all_scripts){
+				console.log('deferred scripts: ', window.bz_opt_deferred_scripts);
+				for(id in bz_opt_deferred_scripts){
+					addScript(bz_opt_deferred_scripts[id], {id, 'defer':'defer'});
+				}
+			}
+			
+			//custom code
+			ccode = doc.getElementById('bz_custom_code');
+			if(ccode){
+				let timer = ccode.getAttribute('data-delay') || 0;
+				setTimeout(addScriptNode, timer, ccode);
+			}
+		};
+		
+		let goNext = (f)=>{
+			if(typeof window.requestAnimationFrame !== undefined)
+				requestAnimationFrame(f);
+			else
+				setTimeout(f, 10); 
+		}
+		
+		window.addEventListener('load', function() {
+			goNext(loadDeferredStyles);
+		});
+		
+		//on scroll/click/touch
+		let addScrollNodes = () => {
+			console.log('on scroll load -> ');
+			let sn = doc.querySelectorAll("noscript[data-load='scroll']");
+			sn.forEach((el)=>{
+				console.log(el.id);
+				addScriptNode(el);
+			});
+			
+			//deferred scripts SRC
+			if(window.bz_opt_deferred_scripts && window.bz_opt_defer_all_scripts){
+				console.log('deferred scripts: ', window.bz_opt_deferred_scripts);
+				for(id in bz_opt_deferred_scripts){
+					addScript(bz_opt_deferred_scripts[id], {id, 'defer':'defer'});
+				}
+			}
+		}
+		
+		let bz_first_scroll = true;
+		let on_fst_scroll = (e) => {
+			if (bz_first_scroll) {
+				if(e && e.screenX === 0 && e.screenY === 0) return;
+				console.log('first interaction ',e);
+				bz_first_scroll = false;
+				goNext(addScrollNodes);
+				//window.removeEventListener('scroll', on_fst_scroll);
+				doc.removeEventListener('mousemove', on_fst_scroll);
+				doc.removeEventListener('touchstart', on_fst_scroll);
+				doc.dispatchEvent(new Event('firstInteraction'));
+			}
+		};
+		//window.addEventListener('scroll', on_fst_scroll);
+		doc.addEventListener('mousemove', on_fst_scroll);
+		doc.addEventListener('touchstart', on_fst_scroll);
+		
+		window.BZOPT = {addScript};
+		</script>
+	<script>window.lazyLoadOptions=[{elements_selector:"img[data-lazy-src],.rocket-lazyload,iframe[data-lazy-src]",data_src:"lazy-src",data_srcset:"lazy-srcset",data_sizes:"lazy-sizes",class_loading:"lazyloading",class_loaded:"lazyloaded",threshold:300,callback_loaded:function(element){if(element.tagName==="IFRAME"&&element.dataset.rocketLazyload=="fitvidscompatible"){if(element.classList.contains("lazyloaded")){if(typeof window.jQuery!="undefined"){if(jQuery.fn.fitVids){jQuery(element).parent().fitVids()}}}}}},{elements_selector:".rocket-lazyload",data_src:"lazy-src",data_srcset:"lazy-srcset",data_sizes:"lazy-sizes",class_loading:"lazyloading",class_loaded:"lazyloaded",threshold:300,}];window.addEventListener('LazyLoad::Initialized',function(e){var lazyLoadInstance=e.detail.instance;if(window.MutationObserver){var observer=new MutationObserver(function(mutations){var image_count=0;var iframe_count=0;var rocketlazy_count=0;mutations.forEach(function(mutation){for(var i=0;i<mutation.addedNodes.length;i++){if(typeof mutation.addedNodes[i].getElementsByTagName!=='function'){continue}
+if(typeof mutation.addedNodes[i].getElementsByClassName!=='function'){continue}
+images=mutation.addedNodes[i].getElementsByTagName('img');is_image=mutation.addedNodes[i].tagName=="IMG";iframes=mutation.addedNodes[i].getElementsByTagName('iframe');is_iframe=mutation.addedNodes[i].tagName=="IFRAME";rocket_lazy=mutation.addedNodes[i].getElementsByClassName('rocket-lazyload');image_count+=images.length;iframe_count+=iframes.length;rocketlazy_count+=rocket_lazy.length;if(is_image){image_count+=1}
+if(is_iframe){iframe_count+=1}}});if(image_count>0||iframe_count>0||rocketlazy_count>0){lazyLoadInstance.update()}});var b=document.getElementsByTagName("body")[0];var config={childList:!0,subtree:!0};observer.observe(b,config)}},!1)</script><script data-no-minify="1" async src="https://azbyka.ru/pravo/wp-content/plugins/wp-rocket/assets/js/lazyload/17.8.3/lazyload.min.js"></script>
+</body>
+</html>
+
+<!-- This website is like a Rocket, isn't it? Performance optimized by WP Rocket. Learn more: https://wp-rocket.me - Debug: cached@1778959284 -->
