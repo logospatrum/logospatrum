@@ -11,6 +11,14 @@ services:
       - "5432:5432"
     volumes:
       - postgres-dev-data:/var/lib/postgresql/data
+      # Tuned config (work_mem, shared_buffers, etc — see postgres.dev.conf).
+      # Without this the defaults make analytics queries spill to disk.
+      - ./postgres.dev.conf:/etc/postgresql/postgresql.conf:ro
+    command:
+      - "postgres"
+      - "-c"
+      - "config_file=/etc/postgresql/postgresql.conf"
+    shm_size: 1gb
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d patristic"]
       interval: 5s
