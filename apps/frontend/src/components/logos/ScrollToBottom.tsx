@@ -17,7 +17,10 @@ export function ScrollToBottom({ visible, onClick }: Props) {
       aria-label={s.chat.toBottomAria}
       style={{
         position: "absolute",
-        bottom: 100,
+        // Sit above the Monolith bubble (~84px) plus the wrapper's bottom
+        // padding (28px) plus an 8px gap. Pre-fix `bottom: 100` left the pill
+        // floating on top of the textarea.
+        bottom: 150,
         left: "50%",
         transform: `translateX(-50%) translateY(${visible ? 0 : 10}px)`,
         opacity: visible ? 1 : 0,
