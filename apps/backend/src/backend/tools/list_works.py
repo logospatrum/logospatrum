@@ -1,4 +1,4 @@
-"""Tool: list_works — works by author."""
+"""Tool: list_works — works by author with optional substring filter."""
 import json
 from langchain_core.tools import tool
 
@@ -6,23 +6,39 @@ from ..db import conn
 
 
 @tool
-async def list_works(author_slug: str) -> list[dict]:
-    """Список трудов автора.
+async def list_works(author_slug: str, q: str | None = None, limit: int = 30) -> list[dict]:
+    """Поиск трудов автора по подстроке в названии (или дамп с лимитом).
 
     Args:
         author_slug: канонический slug автора (из list_authors).
+        q: подстрока для фильтра по `title_display` (case-insensitive).
+            Пример: q="лествица" сузит выдачу до одного труда у соответствующего автора.
+            У крупных авторов (Иоанн Златоуст — 154 труда, Феофан Затворник — 81) дамп
+            без `q` тяжёлый (~20-30 KB). Всегда передавай `q`, если знаешь хотя бы часть
+            названия.
+        limit: максимум результатов (default 30).
 
-    Возвращает список {slug, title_display, creation_date, section, source_url, topics, paragraph_count}.
+    Возвращает список {slug, title_display, creation_date, section, source_url,
+                       topics, paragraph_count}. Если ничего не нашлось — пустой список.
     """
+    where_parts = ["author_slug = %s"]
+    params: list = [author_slug]
+    if q:
+        where_parts.append("title_display ILIKE %s")
+        params.append(f"%{q}%")
+    params.append(limit)
+    where = " AND ".join(where_parts)
+
     async with conn() as c:
         cur = await c.execute(
-            """
+            f"""
             SELECT slug, title_display, creation_date, section, source_url, topics, paragraph_count
             FROM works
-            WHERE author_slug = %s
+            WHERE {where}
             ORDER BY title_display
+            LIMIT %s
             """,
-            [author_slug],
+            params,
         )
         rows = await cur.fetchall()
     return [
