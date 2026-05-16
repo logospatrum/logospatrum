@@ -84,12 +84,16 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
   // without re-creating its closure on every prop change.
   const dimCursorRef = useRef(false);
   const lightOnRef = useRef(true);
+  const lightSourceRef = useRef<LightSource>(lightSource);
   useEffect(() => {
     dimCursorRef.current = dimCursor;
   }, [dimCursor]);
   useEffect(() => {
     lightOnRef.current = lightOn;
   }, [lightOn]);
+  useEffect(() => {
+    lightSourceRef.current = lightSource;
+  }, [lightSource]);
 
   const registerLight = useCallback((el: SVGFEPointLightElement | null) => {
     if (el && !lightsRef.current.includes(el)) lightsRef.current.push(el);
@@ -134,13 +138,19 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
   const ambientTorchLamp = lerp(TORCH.ambient, LAMP.ambient, torchness);
 
   const isCursorActive = lightSource === "cursor";
-  const cursorIntensity = !isCursorActive ? 0 : baseCursor * progress * lightK;
+  // Peaks — always positive, regardless of mode. The rAF below gates them
+  // off via the `cEnv` envelope (cEnv → 0 when mode ≠ cursor). Keeping the
+  // peak independent of `lightSource` is what lets the rAF loop be the
+  // single writer of these two SVG attributes: no JSX-prop/setAttribute
+  // race like the one that left cursorLit stuck at "0.750" after a chat
+  // switched in from the sidebar (see git history).
+  const cursorPeakDiff = baseCursor * progress * lightK;
+  const cursorPeakSpec = baseSpec * progress * lightK;
   const ambientIntensity = isCursorActive
     ? ambientTorchLamp
     : lightSource === "reading"
       ? 0.18
       : 0.10; // thinking — flames will brighten the rest
-  const specConstant = !isCursorActive ? 0 : baseSpec * progress * lightK;
   const specExponent = 48;
 
   // ── Cursor follow ── only runs while lightSource === "cursor".
@@ -264,32 +274,37 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
         );
       }
 
-      // Cursor envelope — target 0 when LMB is held, when the home input
-      // is focused (dimCursorRef), or when the global light toggle is off.
+      // Cursor envelope — target 0 in any non-cursor mode, or when LMB is
+      // held, the home input is focused (dimCursorRef), or the global
+      // light toggle is off. Always written (no `if`-gate), so the rAF
+      // remains the single writer of the cursor diffuse/spec attributes
+      // and any cached "0.750" from the previous mode gets cleanly faded
+      // out to 0.
       const cTarget =
-        pressedRef.current || dimCursorRef.current || !lightOnRef.current
+        lightSourceRef.current !== "cursor" ||
+        pressedRef.current ||
+        dimCursorRef.current ||
+        !lightOnRef.current
           ? 0
           : 1;
       let cEnv = cursorEnvRef.current;
       cEnv += (cTarget - cEnv) * 0.12;
       if (Math.abs(cTarget - cEnv) < 0.001) cEnv = cTarget;
       cursorEnvRef.current = cEnv;
-      if (lightSource === "cursor") {
-        cursorDiffRef.current?.setAttribute(
-          "diffuseConstant",
-          (cEnv * cursorIntensity).toFixed(3),
-        );
-        cursorSpecRef.current?.setAttribute(
-          "specularConstant",
-          (cEnv * specConstant).toFixed(3),
-        );
-      }
+      cursorDiffRef.current?.setAttribute(
+        "diffuseConstant",
+        (cEnv * cursorPeakDiff).toFixed(3),
+      );
+      cursorSpecRef.current?.setAttribute(
+        "specularConstant",
+        (cEnv * cursorPeakSpec).toFixed(3),
+      );
 
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [lightSource, cursorIntensity, specConstant, reducedMotion]);
+  }, [cursorPeakDiff, cursorPeakSpec, reducedMotion]);
 
   return (
     <>
@@ -398,12 +413,16 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
               <feDistantLight azimuth={220} elevation={28} />
             </feDiffuseLighting>
 
-            {/* Cursor pool — bright, close to the surface. */}
+            {/* Cursor pool — bright, close to the surface. The
+                diffuseConstant/specularConstant attributes are owned
+                exclusively by the rAF loop above (see comment near
+                cursorPeakDiff). Initial 0 here so the rock starts dark
+                until rAF lerps the envelope up. */}
             <feDiffuseLighting
               ref={cursorDiffRef}
               in="rockSharp"
               surfaceScale={surfaceScale}
-              diffuseConstant={cursorIntensity}
+              diffuseConstant={0}
               lightingColor={palette.stoneLit}
               result="cursorLit"
             >
@@ -414,7 +433,7 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
               ref={cursorSpecRef}
               in="rockSharp"
               surfaceScale={surfaceScale}
-              specularConstant={specConstant}
+              specularConstant={0}
               specularExponent={specExponent}
               lightingColor={palette.stoneSpec}
               result="cursorSpec"
@@ -531,8 +550,14 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
 
       {/* Torch cone overlay — dark radial mask cut by the cursor halo.
           Opacity fades with torchness, so the cone opens up as the user
-          accumulates chats. */}
-      {isCursorActive && torchness > 0.02 && (
+          accumulates chats. Mounted regardless of `isCursorActive`; the
+          mode-toggle goes through the `opacity` transition so the mask
+          fades in lockstep with the cursor envelope. If we instead
+          unmounted on mode change, the dark mask would vanish in one
+          paint while the cursor light below it still has ~500ms of
+          envelope fade left — that gap reads visually as a brief
+          "lamp" flash. */}
+      {torchness > 0.02 && (
         <div
           ref={torchRef}
           aria-hidden="true"
@@ -545,7 +570,7 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
               "radial-gradient(circle 24vmax at var(--tx, 50%) var(--ty, 40%), " +
               "rgba(0,0,0,0) 0%, rgba(0,0,0,0) 14%, " +
               "rgba(0,0,0,0.55) 38%, rgba(0,0,0,0.92) 70%, rgba(0,0,0,0.97) 100%)",
-            opacity: torchness,
+            opacity: isCursorActive ? torchness : 0,
             transition: "opacity 500ms ease",
           }}
         />

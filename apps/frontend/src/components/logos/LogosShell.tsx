@@ -2,7 +2,7 @@
 
 import "./logos.css";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 import { useQueryState } from "nuqs";
@@ -26,6 +26,7 @@ import { Logo } from "./Logo";
 import { Quote } from "./Quote";
 import { Monolith } from "./Monolith";
 import { ScrollToBottom } from "./ScrollToBottom";
+import { PerfPanel } from "./PerfPanel";
 import { Starters } from "./Starters";
 import { HumanLine } from "./HumanLine";
 import { AssistantTurn } from "./AssistantTurn";
@@ -58,6 +59,13 @@ function LogosInner() {
 
   const [inputFocused, setInputFocused] = useState(false);
   const [prefill, setPrefill] = useState<string | undefined>(undefined);
+  // Monolith is rendered once as a fixed-positioned overlay. On home it
+  // visually sits where a placeholder div would land inside the flex-
+  // centered home layout — we measure that placeholder's top to keep the
+  // overlay pixel-aligned with the designer's original layout (Logo /
+  // Quote / Monolith / Starters, all flex-column centered).
+  const monoSlotRef = useRef<HTMLDivElement | null>(null);
+  const [monolithTop, setMonolithTop] = useState<number | null>(null);
   const [lightOn, setLightOnState] = useState(true);
   useEffect(() => {
     try {
@@ -82,6 +90,27 @@ function LogosInner() {
 
   // Effective chat count drives the "cave lights up over time" progression.
   const chatCount = threads.length;
+
+  // Pixel-align the fixed Monolith with its in-flow slot on home, or with
+  // a 28px gap from the viewport bottom on chat. Runs synchronously
+  // before paint so the initial frame has the right `top` and we don't
+  // see the input snap into place.
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const MONOLITH_H = 115;
+    const compute = () => {
+      if (inChat) {
+        setMonolithTop(window.innerHeight - MONOLITH_H - 28);
+        return;
+      }
+      const r = monoSlotRef.current?.getBoundingClientRect();
+      if (r) setMonolithTop(r.top);
+      else setMonolithTop(window.innerHeight / 2 - MONOLITH_H / 2);
+    };
+    compute();
+    window.addEventListener("resize", compute);
+    return () => window.removeEventListener("resize", compute);
+  }, [inChat]);
 
   // Three-state light source machine. Mirrors the design's
   // `landing | thinking | reading`.
@@ -244,6 +273,7 @@ function LogosInner() {
 
   return (
     <>
+      <PerfPanel />
       <Background
         lightSource={lightSource}
         lightOn={lightOn}
@@ -251,7 +281,17 @@ function LogosInner() {
         dimCursor={inputFocused && !inChat}
       />
 
-      {inChat && <ChatBackdrop />}
+      {/* ChatBackdrop — always mounted; visibility fades with inChat so
+          the column doesn't pop in or out abruptly. */}
+      <div
+        style={{
+          opacity: inChat ? 1 : 0,
+          transition: "opacity 360ms ease",
+          pointerEvents: "none",
+        }}
+      >
+        <ChatBackdrop />
+      </div>
 
       <Sidebar
         threads={sidebarThreads}
@@ -269,25 +309,140 @@ function LogosInner() {
         onLangChange={setLang}
         librarySlot={librarySlot}
       />
-      {!inChat && <BottomChrome />}
 
-      {!inChat ? (
-        <main
+      {/* BottomChrome — always mounted; visibility fades with home mode
+          so the corpus/clock strip doesn't flash on mount/unmount when
+          switching to a chat. */}
+      <div
+        style={{
+          opacity: !inChat ? 1 : 0,
+          transition: "opacity 360ms ease",
+          pointerEvents: "none",
+        }}
+      >
+        <BottomChrome />
+      </div>
+
+      {/* Unified <main>: both home and chat layers are mounted at all
+          times. Visibility is opacity-driven so switching modes doesn't
+          unmount/remount Logo/Quote/Starters or the chat scroller —
+          which was the cause of the "everything flickers except input"
+          report. */}
+      <main
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 5,
+        }}
+      >
+        {/* Home layer — designer's original flex-centered column.
+            Monolith itself is rendered separately as a fixed overlay,
+            but a same-sized placeholder lives here so the rest of the
+            layout (Logo / Quote / Starters) keeps its designed spacing.
+            We measure the placeholder's getBoundingClientRect to align
+            the fixed overlay onto it. */}
+        <div
+          aria-hidden={inChat}
           style={{
-            position: "relative",
-            zIndex: 5,
-            minHeight: "100vh",
+            position: "absolute",
+            inset: 0,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
             padding: "120px 24px 100px",
             gap: 64,
-            animation: "logos-rise 900ms cubic-bezier(.22,.61,.36,1) both",
+            overflowY: "auto",
+            overflowX: "hidden",
+            scrollbarGutter: "stable",
+            scrollbarWidth: "thin",
+            scrollbarColor: "rgba(255,255,255,0.10) transparent",
+            opacity: inChat ? 0 : 1,
+            pointerEvents: inChat ? "none" : "auto",
+            transition: "opacity 360ms ease",
           }}
         >
           <Logo />
           <Quote show={tweaks.showQuote} />
+          <div
+            ref={monoSlotRef}
+            aria-hidden
+            style={{ height: 115, width: "min(720px, 92vw)" }}
+          />
+          <Starters onPick={submit} />
+        </div>
+
+        {/* Chat layer */}
+        <div
+          ref={scrollerRef}
+          aria-hidden={!inChat}
+          style={{
+            position: "absolute",
+            inset: 0,
+            overflowY: "auto",
+            overflowX: "hidden",
+            padding: "100px 24px 175px",
+            scrollbarGutter: "stable",
+            scrollbarWidth: "thin",
+            scrollbarColor: "rgba(255,255,255,0.10) transparent",
+            opacity: inChat ? 1 : 0,
+            pointerEvents: inChat ? "auto" : "none",
+            transition: "opacity 360ms ease",
+          }}
+        >
+          <div
+            style={{
+              width: "min(760px, 92vw)",
+              margin: "0 auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: 36,
+            }}
+          >
+            {turns.map((turn, i) => (
+              <ChatTurn
+                key={turn.key}
+                turn={turn}
+                isLastTurn={i === turns.length - 1}
+                onRegenerate={handleRegenerate}
+                onEditHuman={(newText) => handleEditHuman(turn.human?.id, newText)}
+              />
+            ))}
+          </div>
+        </div>
+      </main>
+
+      {/* Unified Monolith — single React instance, fixed-positioned.
+          Smoothly transitions between mid-viewport (home) and just-above-
+          bottom (chat) via CSS `top` transition. Previously there were two
+          separate Monoliths inside the !inChat / inChat branches; switching
+          mode unmounted one and mounted the other, which the user saw as a
+          ~400px jump (and rerendered focus state). One instance with one
+          transition is the whole fix. */}
+      <div
+        style={{
+          position: "fixed",
+          left: 0,
+          right: 0,
+          zIndex: 6,
+          pointerEvents: "none",
+          display: "flex",
+          justifyContent: "center",
+          top: monolithTop != null ? `${monolithTop}px` : "50vh",
+          opacity: monolithTop != null ? 1 : 0,
+          transition: "top 480ms cubic-bezier(.22,.61,.36,1)",
+        }}
+      >
+        <div
+          style={{
+            pointerEvents: "auto",
+            position: "relative",
+            width: "min(720px, 92vw)",
+          }}
+        >
+          {inChat && (
+            <ScrollToBottom visible={!atBottom} onClick={scrollToBottom} />
+          )}
           <Monolith
             onSubmit={submit}
             busy={stream.isLoading}
@@ -295,80 +450,8 @@ function LogosInner() {
             onFocusChange={setInputFocused}
             prefill={prefill}
           />
-          <Starters onPick={submit} />
-        </main>
-      ) : (
-        <main
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 5,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <div
-            ref={scrollerRef}
-            style={{
-              flex: 1,
-              overflowY: "auto",
-              overflowX: "hidden",
-              padding: "100px 24px 32px",
-              scrollbarWidth: "thin",
-              scrollbarColor: "rgba(255,255,255,0.10) transparent",
-            }}
-          >
-            <div
-              style={{
-                width: "min(760px, 92vw)",
-                margin: "0 auto",
-                display: "flex",
-                flexDirection: "column",
-                gap: 36,
-              }}
-            >
-              {turns.length === 0 && (
-                <div
-                  style={{
-                    color: palette.faint,
-                    fontFamily: type.ui,
-                    fontSize: 13,
-                    textAlign: "center",
-                    padding: "40px 0",
-                  }}
-                >
-                  {s.sidebar.empty}
-                </div>
-              )}
-              {turns.map((turn, i) => (
-                <ChatTurn
-                  key={turn.key}
-                  turn={turn}
-                  isLastTurn={i === turns.length - 1}
-                  onRegenerate={handleRegenerate}
-                  onEditHuman={(newText) => handleEditHuman(turn.human?.id, newText)}
-                />
-              ))}
-            </div>
-          </div>
-          <div
-            style={{
-              position: "relative",
-              padding: "12px 24px 28px",
-              display: "flex",
-              justifyContent: "center",
-            }}
-          >
-            <ScrollToBottom visible={!atBottom} onClick={scrollToBottom} />
-            <Monolith
-              onSubmit={submit}
-              busy={stream.isLoading}
-              onStop={() => stream.stop()}
-              prefill={prefill}
-            />
-          </div>
-        </main>
-      )}
+        </div>
+      </div>
     </>
   );
 }

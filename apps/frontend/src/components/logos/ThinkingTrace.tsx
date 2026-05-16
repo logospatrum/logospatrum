@@ -4,14 +4,16 @@ import { useState } from "react";
 import { palette, type } from "./tokens";
 import { useStrings } from "./i18n";
 import { Chevron } from "./Chevron";
+import { MarkdownText } from "./markdown/markdown-text";
 import type { DesignToolCall } from "./turns";
 
 function ToolRow({ call }: { call: DesignToolCall }) {
   const { s } = useStrings();
   const [open, setOpen] = useState(false);
   const summary = summarizeArgs(call);
+  const isTask = call.name === "task";
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
+    <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -31,6 +33,8 @@ function ToolRow({ call }: { call: DesignToolCall }) {
           letterSpacing: "0.18em",
           textTransform: "uppercase",
           transition: "color 200ms ease",
+          minWidth: 0,
+          width: "100%",
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.color = palette.text;
@@ -40,7 +44,9 @@ function ToolRow({ call }: { call: DesignToolCall }) {
         }}
       >
         <Chevron open={open} color="currentColor" />
-        <span style={{ color: palette.accent }}>{call.name || "tool"}</span>
+        <span style={{ color: palette.accent, flexShrink: 0 }}>
+          {call.name || "tool"}
+        </span>
         <span
           style={{
             letterSpacing: "0.01em",
@@ -48,16 +54,21 @@ function ToolRow({ call }: { call: DesignToolCall }) {
             fontFamily: type.ui,
             fontSize: 12,
             color: palette.muted,
+            flex: "1 1 auto",
+            minWidth: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
           }}
         >
           {summary}
         </span>
         <span
           style={{
-            marginLeft: "auto",
             color: call.pending ? palette.accent : palette.faint,
             fontSize: 9.5,
             letterSpacing: "0.18em",
+            flexShrink: 0,
           }}
         >
           {call.pending ? "…" : "✓"}
@@ -72,10 +83,11 @@ function ToolRow({ call }: { call: DesignToolCall }) {
             display: "flex",
             flexDirection: "column",
             gap: 12,
+            minWidth: 0,
             animation: "logos-rise 320ms cubic-bezier(.22,.61,.36,1) both",
           }}
         >
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div
               style={{
                 fontFamily: type.mono,
@@ -88,21 +100,9 @@ function ToolRow({ call }: { call: DesignToolCall }) {
             >
               {s.tool.args}
             </div>
-            <pre
-              style={{
-                margin: 0,
-                fontFamily: type.mono,
-                fontSize: 12,
-                lineHeight: 1.5,
-                color: palette.text,
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-              }}
-            >
-              {JSON.stringify(call.args, null, 2)}
-            </pre>
+            <ToolArgsBody call={call} isTask={isTask} />
           </div>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div
               style={{
                 fontFamily: type.mono,
@@ -115,7 +115,7 @@ function ToolRow({ call }: { call: DesignToolCall }) {
             >
               {s.tool.result}
             </div>
-            <ToolResultBody call={call} />
+            <ToolResultBody call={call} isTask={isTask} />
           </div>
         </div>
       )}
@@ -128,6 +128,7 @@ function summarizeArgs(call: DesignToolCall): string {
   // information without forcing the user to expand each tool. Picks the
   // most "queryish" arg if present, else falls back to a key list.
   const a = call.args;
+  if (typeof a.subagent_type === "string") return a.subagent_type;
   if (typeof a.query === "string") return a.query;
   if (typeof a.q === "string") return a.q;
   if (typeof a.citation === "string") return a.citation;
@@ -139,7 +140,47 @@ function summarizeArgs(call: DesignToolCall): string {
   return keys.slice(0, 3).join(" · ");
 }
 
-function ToolResultBody({ call }: { call: DesignToolCall }) {
+function ToolArgsBody({ call, isTask }: { call: DesignToolCall; isTask: boolean }) {
+  if (isTask) {
+    const desc = typeof call.args.description === "string" ? call.args.description : "";
+    const target =
+      typeof call.args.subagent_type === "string" ? call.args.subagent_type : "—";
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
+        <div
+          style={{
+            fontFamily: type.mono,
+            fontSize: 11,
+            letterSpacing: "0.04em",
+            color: palette.muted,
+          }}
+        >
+          target: <span style={{ color: palette.text }}>{target}</span>
+        </div>
+        <div className="logos-tool-md" style={{ minWidth: 0 }}>
+          <MarkdownText>{desc}</MarkdownText>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <pre
+      style={{
+        margin: 0,
+        fontFamily: type.mono,
+        fontSize: 12,
+        lineHeight: 1.5,
+        color: palette.text,
+        whiteSpace: "pre-wrap",
+        overflowWrap: "anywhere",
+      }}
+    >
+      {JSON.stringify(call.args, null, 2)}
+    </pre>
+  );
+}
+
+function ToolResultBody({ call, isTask }: { call: DesignToolCall; isTask: boolean }) {
   const { s } = useStrings();
   if (call.pending) {
     return (
@@ -156,6 +197,21 @@ function ToolResultBody({ call }: { call: DesignToolCall }) {
       </span>
     );
   }
+  if (isTask && call.rawResult) {
+    return (
+      <div
+        className="logos-tool-md"
+        style={{
+          minWidth: 0,
+          maxHeight: 360,
+          overflowY: "auto",
+          paddingRight: 8,
+        }}
+      >
+        <MarkdownText>{call.rawResult}</MarkdownText>
+      </div>
+    );
+  }
   const j = call.jsonResult;
   if (j && typeof j === "object") {
     return (
@@ -167,8 +223,8 @@ function ToolResultBody({ call }: { call: DesignToolCall }) {
           lineHeight: 1.5,
           color: palette.text,
           whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
-          maxHeight: 280,
+          overflowWrap: "anywhere",
+          maxHeight: 360,
           overflowY: "auto",
         }}
       >
@@ -184,6 +240,9 @@ function ToolResultBody({ call }: { call: DesignToolCall }) {
         lineHeight: 1.55,
         color: palette.text,
         whiteSpace: "pre-wrap",
+        overflowWrap: "anywhere",
+        maxHeight: 360,
+        overflowY: "auto",
       }}
     >
       {call.rawResult ?? "—"}

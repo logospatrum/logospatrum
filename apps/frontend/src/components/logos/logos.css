@@ -366,35 +366,156 @@ button:focus-visible, textarea:focus-visible, a:focus-visible {
 .logos-human:hover .logos-human-edit,
 .logos-human:focus-within .logos-human-edit { opacity: 1; }
 
+/* ─── Compact markdown inside tool-trace collapses ─────────────────────
+   Used in ThinkingTrace for the `task` tool's description (args) and
+   final subagent response (result). `.logos-answer` is too large for a
+   trace surface — drop one font-size step, tighten spacing, and beat the
+   tailwind utility classes the upstream `MarkdownText` ships (h-tags, p,
+   ul, ol). Sizes set on every child explicitly (not via inheritance)
+   because the upstream renderer puts utility classes like `text-3xl`
+   and `leading-7` on each element, which would override a root font. */
+.logos-tool-md .markdown-content > * + * { margin-top: 0.5em; }
+.logos-tool-md p {
+  margin: 0;
+  font-family: var(--font-eb-garamond), "EB Garamond", Georgia, serif;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: rgba(236, 230, 214, 0.85);
+}
+.logos-tool-md h1,
+.logos-tool-md h2,
+.logos-tool-md h3,
+.logos-tool-md h4,
+.logos-tool-md h5,
+.logos-tool-md h6 {
+  font-family: var(--font-cormorant), "Cormorant Garamond", "EB Garamond", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  margin: 0.6em 0 0.2em;
+  line-height: 1.3;
+  color: #ece6d6;
+}
+.logos-tool-md h1 { font-size: 15px; }
+.logos-tool-md h2 { font-size: 14px; }
+.logos-tool-md h3 { font-size: 13.5px; }
+.logos-tool-md h4,
+.logos-tool-md h5,
+.logos-tool-md h6 { font-size: 13px; }
+.logos-tool-md ul,
+.logos-tool-md ol {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: rgba(236, 230, 214, 0.85);
+}
+.logos-tool-md li {
+  margin: 0.1em 0;
+  font-family: var(--font-eb-garamond), "EB Garamond", Georgia, serif;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.logos-tool-md li::marker { color: rgba(236, 230, 214, 0.28); }
+.logos-tool-md strong { color: #ece6d6; font-weight: 500; }
+.logos-tool-md em { color: #ece6d6; }
+.logos-tool-md a {
+  color: rgba(236, 230, 214, 0.92);
+  text-decoration: underline;
+  text-decoration-color: rgba(238, 232, 218, 0.16);
+  text-underline-offset: 2px;
+}
+.logos-tool-md a:hover { text-decoration-color: #ece6d6; }
+.logos-tool-md code {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: #ece6d6;
+}
+.logos-tool-md pre {
+  background: #1d2025;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin: 0.5em 0;
+  overflow-x: auto;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+.logos-tool-md pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+.logos-tool-md blockquote {
+  margin: 0.4em 0;
+  padding-left: 12px;
+  border-left: 1px solid rgba(238, 232, 218, 0.18);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: rgba(236, 230, 214, 0.55);
+}
+.logos-tool-md hr {
+  border: 0;
+  border-top: 0.5px solid rgba(238, 232, 218, 0.08);
+  margin: 0.6em 0;
+}
+/* Tables — same palette as .logos-answer (transparent rows, zebra, hairline
+   borders) but tighter padding and 12.5px text. Selector prefixed with
+   `.markdown-content` to beat markdown-styles.css (which ships the legacy
+   light-theme `.markdown-content th { background: #f2f2f2 }` etc. at the
+   same specificity but loads later). */
+.logos-tool-md .markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5em 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.logos-tool-md .markdown-content tr { background: transparent; }
+.logos-tool-md .markdown-content tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+.logos-tool-md .markdown-content th,
+.logos-tool-md .markdown-content td {
+  border: 0.5px solid rgba(238, 232, 218, 0.08);
+  padding: 6px 10px;
+  text-align: left;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(236, 230, 214, 0.85);
+}
+.logos-tool-md .markdown-content th {
+  background: rgba(255, 255, 255, 0.025);
+  font-family: var(--font-cormorant), "Cormorant Garamond", "EB Garamond", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  color: #ece6d6;
+}
+
 /* ─── Citation markers + panel rows + passage modal ─────────────────── */
-/* Scoped under `.logos-answer a.citation-pill` so we beat the
-   `.logos-answer a` underline+color rule (which would otherwise inherit
-   into the pill and make it look like a regular link). */
+/* Inline text marker (no box). Lives inside <sup>, so it visually reads
+   as a footnote `[N]`. Hit-area follows the glyphs themselves — hover
+   reacts to the digit, not to a separate strip. Scoped under
+   `.logos-answer a.citation-pill` to beat the `.logos-answer a`
+   underline+color rule above. */
 .logos-answer a.citation-pill,
 a.citation-pill {
-  display: inline-block;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 11px;
   letter-spacing: 0.04em;
-  color: #ece6d6;
-  background: rgba(255, 255, 255, 0.04);
-  border: 0.5px solid rgba(238, 232, 218, 0.16);
-  border-radius: 4px;
-  padding: 1px 6px;
-  margin: 0 2px;
-  vertical-align: 0.18em;
-  cursor: pointer;
-  user-select: none;
+  color: rgba(238, 232, 218, 0.55);
   text-decoration: none;
-  transition: background 160ms ease, border-color 160ms ease;
+  cursor: pointer;
   font-variant-numeric: tabular-nums;
+  transition: color 160ms ease;
 }
 .logos-answer a.citation-pill:hover,
 .logos-answer a.citation-pill[data-active="true"],
 a.citation-pill:hover,
 a.citation-pill[data-active="true"] {
-  background: rgba(255, 255, 255, 0.10);
-  border-color: rgba(238, 232, 218, 0.36);
+  color: #ece6d6;
   text-decoration: none;
 }
 .citation-row {
@@ -421,30 +542,94 @@ a.citation-pill[data-active="true"] {
   z-index: 50;
   animation: logos-rise 240ms ease-out;
 }
+/* Centering MUST live inside the keyframes — otherwise the `translateY`
+   in `logos-rise` overwrites the `translate(-50%, -50%)` and the modal
+   ends up offset to the bottom-right of viewport center. */
+@keyframes logos-passage-modal-rise {
+  0%   { opacity: 0; transform: translate(-50%, calc(-50% + 10px)); filter: blur(2px); }
+  100% { opacity: 1; transform: translate(-50%, -50%);              filter: blur(0); }
+}
 .logos-passage-modal-content {
   position: fixed;
   top: 50%;
   left: 50%;
+  /* Final state of the keyframes; explicit so the modal stays centered
+     after the animation finishes even without `animation-fill-mode`. */
   transform: translate(-50%, -50%);
   width: min(720px, 92vw);
   max-height: 84vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: #0b0c0e;
   border: 0.5px solid rgba(238, 232, 218, 0.12);
   border-radius: 8px;
-  padding: 28px 32px;
+  padding: 0;
   z-index: 51;
-  animation: logos-rise 320ms cubic-bezier(.22,.61,.36,1) both;
+  animation: logos-passage-modal-rise 320ms cubic-bezier(.22,.61,.36,1) both;
   font-family: var(--font-eb-garamond), "EB Garamond", Georgia, serif;
   font-size: clamp(15px, 1.2vw, 17px);
   line-height: 1.65;
   color: #ece6d6;
+}
+.logos-passage-modal-header {
+  position: relative;
+  flex-shrink: 0;
+  padding: 26px 56px 18px 32px;
+  border-bottom: 0.5px solid rgba(238, 232, 218, 0.08);
+}
+.logos-passage-modal-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 22px 32px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+.logos-passage-modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+.logos-passage-modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.logos-passage-modal-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.logos-passage-modal-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+  background-clip: padding-box;
+}
+.logos-passage-modal-footer {
+  flex-shrink: 0;
+  padding: 16px 32px 22px;
+  border-top: 0.5px solid rgba(238, 232, 218, 0.08);
 }
 .logos-passage-modal-content mark {
   background: rgba(236, 230, 214, 0.18);
   color: inherit;
   padding: 0 2px;
   border-radius: 2px;
+}
+.logos-passage-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: rgba(236, 230, 214, 0.48);
+  font-size: 18px;
+  line-height: 1;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease;
+}
+.logos-passage-modal-close:hover {
+  color: #ece6d6;
+  background: rgba(255, 255, 255, 0.04);
 }
 .logos-passage-modal-content :focus-visible {
   outline: 1px solid rgba(238, 232, 218, 0.36);
