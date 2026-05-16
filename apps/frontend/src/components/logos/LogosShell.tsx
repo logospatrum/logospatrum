@@ -27,6 +27,7 @@ import { Starters } from "./Starters";
 import { HumanLine } from "./HumanLine";
 import { AssistantTurn } from "./AssistantTurn";
 import { groupMessagesIntoTurns } from "./turns";
+import { humanMessageText } from "./markdown/content";
 
 const LIGHT_STORAGE_KEY = "logos:lightOn";
 
@@ -329,16 +330,4 @@ function ChatTurn({ turn }: { turn: ReturnType<typeof groupMessagesIntoTurns>[nu
       {showAssistant && <AssistantTurn turn={turn} />}
     </div>
   );
-}
-
-function humanMessageText(m: Message): string {
-  const c = m.content;
-  if (typeof c === "string") return c;
-  if (Array.isArray(c)) {
-    return c
-      .filter((b): b is { type: "text"; text: string } => b.type === "text")
-      .map((b) => b.text)
-      .join("\n");
-  }
-  return "";
 }

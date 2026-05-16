@@ -13,3 +13,16 @@ export function getContentString(content: Message["content"]): string {
     .map((c) => c.text);
   return texts.join(" ");
 }
+
+/** Extracts plain text from a human Message content (string or content blocks). */
+export function humanMessageText(m: Message): string {
+  const c = m.content;
+  if (typeof c === "string") return c;
+  if (Array.isArray(c)) {
+    return c
+      .filter((b): b is { type: "text"; text: string } => b.type === "text")
+      .map((b) => b.text)
+      .join("\n");
+  }
+  return "";
+}
