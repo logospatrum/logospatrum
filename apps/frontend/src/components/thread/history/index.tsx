@@ -3,7 +3,7 @@ import { useThreads } from "@/providers/Thread";
 import { Thread } from "@langchain/langgraph-sdk";
 import { useEffect } from "react";
 
-import { getContentString } from "../utils";
+import { getContentString } from "../../logos/markdown/content";
 import { useQueryState, parseAsBoolean } from "nuqs";
 import {
   Sheet,

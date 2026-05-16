@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Undo2 } from "lucide-react";
-import { MarkdownText } from "../../markdown-text";
+import { MarkdownText } from "../../../logos/markdown/markdown-text";
 import { haveArgsChanged, prettifyText } from "../utils";
 import { toast } from "sonner";
 

@@ -3,7 +3,7 @@
 import type { AIMessage, Message, ToolMessage } from "@langchain/langgraph-sdk";
 import type { MessageContentComplex } from "@langchain/core/messages";
 import { parsePartialJson } from "@langchain/core/output_parsers";
-import { getContentString } from "@/components/thread/utils";
+import { getContentString } from "./markdown/content";
 
 export interface DesignToolCall {
   id: string;

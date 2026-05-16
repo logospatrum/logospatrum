@@ -1,6 +1,6 @@
 "use client";
 
-import { MarkdownText } from "@/components/thread/markdown-text";
+import { MarkdownText } from "./markdown/markdown-text";
 import { ThinkingTrace } from "./ThinkingTrace";
 import { CitationsList } from "./CitationsList";
 import type { DesignTurn } from "./turns";
