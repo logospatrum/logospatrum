@@ -27,7 +27,7 @@ async function checkGraphStatus(apiUrl: string): Promise<boolean> {
 }
 
 const DEFAULT_API_URL = "http://localhost:2024";
-const DEFAULT_ASSISTANT_ID = "agent";
+const DEFAULT_ASSISTANT_ID = "patristic";
 
 const StreamSession = ({
   children,
@@ -51,7 +51,11 @@ const StreamSession = ({
       return;
     }
     const stored = loadThreads().find((t) => t.id === threadId);
-    stream.setMessages(stored?.messages ?? []);
+    // If the thread isn't in storage yet, it's a freshly-promoted thread
+    // (LogosShell.submit just set threadId during the first message). Leave
+    // the in-memory messages alone so we don't clobber the optimistic state.
+    if (!stored) return;
+    stream.setMessages(stored.messages);
     // We only want this to fire on threadId changes, not on every render of
     // the hook value — stream.setMessages is stable across renders.
     // eslint-disable-next-line react-hooks/exhaustive-deps

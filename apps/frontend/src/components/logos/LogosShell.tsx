@@ -12,6 +12,7 @@ import { useStreamContext } from "@/providers/Stream";
 import { useThreads } from "@/providers/Thread";
 import { ensureToolCallsHaveResponses } from "@/lib/ensure-tool-responses";
 import { sliceForRegenerate, sliceForEdit } from "@/lib/chat-history-slice";
+import { newThreadId } from "@/lib/local-thread-store";
 import { LibraryBrowser } from "@/components/library/LibraryBrowser";
 
 import { palette, tweaks, type } from "./tokens";
@@ -131,6 +132,11 @@ function LogosInner() {
       const trimmed = text.trim();
       if (!trimmed || stream.isLoading) return;
 
+      // Promote the home view to a real thread on first submit so localStorage
+      // can persist this conversation. The URL is the carrier; Stream.tsx's
+      // persist effect needs threadId !== null to fire.
+      if (!threadId) setThreadId(newThreadId());
+
       const newHumanMessage: Message = {
         id: uuidv4(),
         type: "human",
@@ -142,7 +148,7 @@ function LogosInner() {
       });
       setPrefill(undefined);
     },
-    [stream],
+    [stream, threadId, setThreadId],
   );
 
   // Regenerate the last assistant turn by re-submitting the conversation
