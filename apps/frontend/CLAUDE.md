@@ -1,22 +1,51 @@
 # apps/frontend — patristic chat UI
 
-Next.js 15 chat UI (React 19) for the patristic chat agent. Fork of `langchain-ai/agent-chat-ui`. Streams from a running LangGraph Server via `@langchain/langgraph-sdk`. Chat history is **client-side localStorage** — no `/threads` list endpoint on the backend.
+Next.js 15 chat UI (React 19) for the patristic chat agent. Forked from `langchain-ai/agent-chat-ui` and then rebuilt on top of the **ΛΟΓΟΣ Logos shell** ([docs/superpowers/plans/2026-05-16-logos-frontend-cleanup.md](../../docs/superpowers/plans/2026-05-16-logos-frontend-cleanup.md)). Streams from a running LangGraph Server via `@langchain/langgraph-sdk`. Chat history is **client-side localStorage** — no `/threads` list endpoint on the backend.
 
-Upstream structure preserved: `src/app/`, `src/components/thread/`, `src/components/ui/`, `src/components/icons/`, `src/components/thread/agent-inbox/`. Keep diffs against those minimal so upstream merges stay sane. Patristic-specific additions live in `src/components/citation-card.tsx`, `src/components/library/`, `src/components/thread/welcome.tsx`, and the localStorage thread store in `src/providers/Thread.tsx` + `src/lib/local-thread-store.ts`.
+## Shape
 
-## Custom code (paths verified)
+- `src/app/{layout,page,globals}.{tsx,css}` — Next entrypoint. `page.tsx` mounts `<ThreadProvider><StreamProvider><LogosShell/></StreamProvider></ThreadProvider>`; `layout.tsx` wires next/font/google for Cormorant + EB Garamond + Inter + Geist Mono (CSS variables exposed); `globals.css` is a tiny `@import "tailwindcss";` stub.
+- `src/components/logos/` — the design shell (see "Logos shell" below).
+- `src/components/library/` — `LibraryBrowser` Radix dialog + `use-catalog` hook for the `/catalog` endpoint.
+- `src/components/citation-card.tsx` — types only (`ReadPassageSuccess`, `ReadPassageFailure`, `ReadPassageResult`). The Logos `CitationsList` consumes the type; the legacy `CitationCard` component itself is unused.
+- `src/components/icons/` — small SVG components (`github`, `langgraph`).
+- `src/components/ui/sonner.tsx` — Toaster wrapper. The other shadcn wrappers (`button`, `card`, `dialog`, etc.) were deleted with the Thread shell — see commit `e1b1f6c`.
+- `src/providers/Stream.tsx`, `src/providers/Thread.tsx`, `src/lib/local-thread-store.ts` — unchanged from the upstream design but kept for streaming + localStorage history.
+- `src/lib/ensure-tool-responses.ts` — helper used by `LogosShell.submit`.
+- `src/hooks/useMediaQuery.tsx` — used by mobile-responsive Logos components.
 
-- `src/components/citation-card.tsx` — `CitationCard` renders `read_passage` tool results. **Currently handles only the success shape** (`text`, `context_before`, `context_after`, `author`, `work_title`, `source_url`, `chapter_title`, `chapter_num`, `para_start`, `window_size`, `citation`). Failure payloads like `{found: false, error, work_exists, citation}` do NOT match `looksLikeReadPassage` in `src/components/thread/messages/tool-calls.tsx` (it requires `text: string`), so they fall through to the generic JSON tool-result renderer rather than crashing — but the UX is raw JSON. Open item: add a fail-case render branch.
-- `src/components/thread/messages/tool-calls.tsx` — `ToolResult` dispatches `read_passage` to `CitationCard`. The `looksLikeReadPassage` guard (lines ~69–79) is the type narrowing gate.
-- `src/components/library/LibraryBrowser.tsx` — Radix `Dialog` with author tree + client-side search over `name`, `work.title`, `work.topics`. Per-work buttons: speech-bubble `MessageSquare` → `onAskAboutWork(author.name, work.title)`, external `ExternalLink` → `work.source_url` (azbyka). Auto-expands matching authors while searching.
-- `src/components/library/use-catalog.ts` — fetches `${NEXT_PUBLIC_CATALOG_API_URL || "http://localhost:8001"}/catalog`. Caches in `sessionStorage` under `patristic:catalog` for 1h. Types: `Catalog`, `CatalogAuthor`, `CatalogWork`. Response shape produced by `apps/backend/src/backend/catalog.py` → `{authors: [{slug, name, years, century, global_section, works: [{slug, title, creation_date, section, source_url, topics, paragraph_count}]}]}`.
-- `src/components/thread/welcome.tsx` — `PatristicWelcome` with 4 hardcoded Russian example chips in the `EXAMPLES` const. Rendered by `src/components/thread/index.tsx` (line ~444) when there are no messages. Chip click calls `submitText`.
-- `src/providers/Stream.tsx` — wraps `useStream` from `@langchain/langgraph-sdk/react`. Sets `throttle: 50` to batch SSE notify calls (without it, every token re-renders the subtree). Also `fetchStateHistory: { limit: 25 }`. Persists every message change to localStorage via `useThreadStore().saveCurrent`. Pings `${apiUrl}/info` on mount; on failure shows a sonner toast pointing at the configured URL. **No manual `requestAnimationFrame` or `useDeferredValue` is present** — perf comes solely from the SDK's built-in `throttle`.
-- `src/providers/Thread.tsx` + `src/lib/local-thread-store.ts` — localStorage thread store, sorted by `updatedAt` desc, cross-tab sync via the `storage` window event (filters keys starting with `patristic:threads`). `useThreads` exposes the SDK-shaped list; `useThreadStore` exposes `saveCurrent` / `removeThread` / `refresh`. `deriveTitle(messages)` produces the sidebar label.
+## Logos shell (`src/components/logos/`)
+
+The Claude Design "ΛΟΓΟΣ — Theological Research Assistant" prototype (`Logos.html`) was ported here and re-wired to the real `useStreamContext()` and `useThreads()`. Layout:
+
+- `LogosShell.tsx` — orchestrator. Owns the home/chat split, `lightOn` toggle (persisted in `localStorage:logos:lightOn`), prefill prop chain, `handleRegenerate`, `handleEditHuman`, auto-scroll + `ScrollToBottom`. Mounts the LangContext provider.
+- `tokens.ts` — frozen "Graphite Vespers" palette + Cormorant/EB Garamond/Inter/Geist Mono pairing. Hardcoded — the Tweaks panel from the design was a design-tool artifact and isn't shipped.
+- `i18n.ts` — RU/EN string dict, `LangContext`, `useLangState`, `useStrings`, `detectLang` (browser-language auto-detect; persisted in `localStorage:logos:lang`).
+- `logos.css` — base body reset, four keyframes (`logos-rise`, `logos-pulse`, `logos-blink`, `logos-drift`), `prefers-reduced-motion` block, `.logos-answer` markdown overrides, `.logos-library-*` dialog rules.
+- `Background.tsx` — heavy SVG: `feTurbulence` × `feDisplacementMap` rock height-field, ambient + cursor `feDiffuseLighting`, cursor `feSpecularLighting`, flame primitives for chat-mode pulsing, cross-shadow overlay, torch cone overlay. Two rAF loops modulate `diffuseConstant`/`specularConstant` via `setAttribute` (NOT React) so the bundle doesn't re-render 60×/sec. Honours `prefers-reduced-motion`.
+- `TopChrome.tsx`, `BottomChrome.tsx` — header / footer chrome. RU/EN segmented radio + Light toggle + Library pill + brand. Collapses on `(max-width: 640px)`.
+- `Sidebar.tsx` — left-edge peek-out chat history. Hover-on-edge desktop, tap-toggle touch via `useMediaQuery("(hover: none)")`.
+- `Logo.tsx`, `Quote.tsx`, `Monolith.tsx`, `Starters.tsx` — home composition.
+- `ChatBackdrop.tsx` — vertical dark column behind chat. Full-width under `(max-width: 720px)`.
+- `Chevron.tsx`, `ScrollToBottom.tsx` — leaf UI primitives.
+- `ThinkingTrace.tsx` — two-level collapse over `DesignToolCall[]`.
+- `CitationsList.tsx` — compact rendering of `read_passage` tool results in the design's column grid. Handles both `ReadPassageSuccess` and `ReadPassageFailure` shapes.
+- `HumanLine.tsx` — human message with hover-revealed inline Edit (textarea + Cancel/Save).
+- `AssistantTurn.tsx` — wraps `ThinkingTrace` + `MarkdownText` (`.logos-answer` palette overrides) + `CitationsList` + optional Regenerate pill.
+- `turns.ts` — `groupMessagesIntoTurns(Message[], isLoading)` → `DesignTurn[]`. Pairs `tool_call.id` to its matching tool result; handles Anthropic-streamed `tool_use` blocks inside content arrays.
+- `markdown/markdown-text.tsx`, `markdown-styles.css`, `syntax-highlighter.tsx`, `content.ts` — relocated from `components/thread/` (commit `f15e08f`). `MarkdownText` has smooth-typewriter + react-markdown + react-syntax-highlighter + katex.
+- `__tests__/{turns,i18n,humanMessageText}.test.ts` — 21 vitest cases pinning pure-logic behavior.
+
+## Backend integration touchpoints
+
+- `useStreamContext()` (from `providers/Stream.tsx`) — `messages`, `isLoading`, `error`, `submit({messages}, {checkpoint?, …})`, `stop()`, `getMessagesMetadata(msg)` for fork-from-checkpoint flows.
+- `useThreads()` (from `providers/Thread.tsx`) — localStorage thread list, `useThreadStore.saveCurrent` writes on every message change. Sidebar reads `threads.map(t => ({id: t.thread_id, title: t.metadata.title}))`.
+- `LibraryBrowser` — fetches `${NEXT_PUBLIC_CATALOG_API_URL}/catalog`. "Ask about this work" dispatches a `patristic:prefill-input` custom event; `LogosShell` listens and pushes the text into `Monolith.prefill`.
+- `read_passage` tool results — surfaced into `CitationsList` if they match `looksLikeReadPassage` (`text` + `para_start` + `window_size` + `author` + `work_title`, OR the `{found:false,error,citation}` failure shape).
 
 ## Environment
 
-`.env.local` (auto-loaded by Next.js). Only `NEXT_PUBLIC_*` vars reach the browser. Current `.env.local`:
+`.env.local` is auto-loaded. Only `NEXT_PUBLIC_*` variables reach the browser.
 
 ```
 NEXT_PUBLIC_API_URL=http://localhost:2024
@@ -26,42 +55,55 @@ NEXT_PUBLIC_CATALOG_API_URL=http://localhost:8001
 NEXT_PUBLIC_AUTH_SCHEME=
 ```
 
-`StreamProvider` reads `NEXT_PUBLIC_API_URL || NEXT_PUBLIC_LANGGRAPH_API_URL` (in that order), defaulting to `http://localhost:2024`. Assistant id defaults to `agent`. **Verify the langgraph dev port** — it cycles when an old port hangs in `TIME_WAIT`.
+`StreamProvider` reads `NEXT_PUBLIC_API_URL || NEXT_PUBLIC_LANGGRAPH_API_URL`, defaults to `http://localhost:2024`. Assistant id defaults to `agent`. **Verify the `langgraph dev` port** — it cycles when an old port hangs in `TIME_WAIT`.
 
-**Catalog URL mismatch (real, present-tense):** `.env.local` has the catalog on `:8001`, but `apps/backend/langgraph.json` mounts `backend.catalog:app` via `"http": { "app": "backend.catalog:app" }`, meaning the catalog is served on the same port as `langgraph dev` (2024). So `:8001` works only if someone is also running the FastAPI app standalone there. Pick one and align both `apps/frontend/.env.local` and the repo-root `.env` (which has `NEXT_PUBLIC_CATALOG_API_URL=http://localhost:8001`).
+**Catalog URL mismatch (real):** `.env.local` says `:8001` but `apps/backend/langgraph.json` mounts `backend.catalog:app` on the same port as `langgraph dev` (`:2024`). Pick one and align `apps/frontend/.env.local` with `apps/backend/`.
 
 Smoke-checks against a running `langgraph dev`:
 ```
 curl http://localhost:2024/info       # langgraph status (used by Stream.tsx)
 curl http://localhost:2024/catalog    # FastAPI catalog mount
-curl http://localhost:2024/health     # catalog FastAPI health (not /ok)
 ```
 
 ## Running locally
 
 ```
 cd apps/frontend
-npm install        # both package-lock.json and pnpm-lock.yaml are committed; npm wins for upstream parity
-npm run dev        # localhost:3000
+npm install        # npm wins; pnpm-lock.yaml is committed but unused
+npm run dev        # http://localhost:3000
 ```
 
-Prereqs: `langgraph dev` running at the configured URL, Postgres up (catalog hits the `authors` + `works` tables).
+Prereqs: `langgraph dev` running at the configured URL, Postgres up (catalog hits `authors` + `works` tables).
 
-Production build:
+## Tests + build
+
 ```
-npm run build      # last green at commit 8d6087e per STATUS.md
+npm test           # 21 vitest cases (turns.ts, i18n.ts, humanMessageText)
+npm run lint       # 0 errors expected; 4 pre-existing react-refresh warnings
+npm run build      # production build
 ```
+
+Manual QA — run `SMOKE.md` after any PR touching `src/components/logos/*`, `src/app/*`, or `src/providers/*`.
 
 ## Gotchas
 
-- **Two lockfiles committed** (`package-lock.json` AND `pnpm-lock.yaml`). Pick one before committing changes that touch deps. `package.json` declares `"packageManager": "pnpm@10.5.1"` but the rest of the repo and STATUS use npm.
-- Clearing browser storage drops all chat history. `langgraph dev` is in-memory too, so there's no recovery in dev.
-- `LibraryBrowser` filter is pure client-side over the full catalog (`a.name`, `w.title`, `w.topics`). Fine at current scale; reconsider past ~10K works.
-- TS strict mode is on. Run `npm run lint:fix` and `npm run format` before committing.
-- The `CitationCard` interface does NOT have a `found` field; `looksLikeReadPassage` keys on `text` + `para_start` + `window_size` + presence of `author` and `work_title`. Backend changes to the `read_passage` return shape must keep those fields (or update both files in lockstep).
+- **Two lockfiles committed** (`package-lock.json` AND `pnpm-lock.yaml`). Pick one before touching deps. The repo uses npm.
+- **Logos shell uses inline-style objects + raw CSS classes**, not Tailwind. The `@import "tailwindcss"` in `globals.css` only exists for the few non-Logos surfaces (Sonner Toaster, Radix Dialog backdrop). If you find yourself reaching for `cn()` or `class-variance-authority`, you're probably writing in the wrong style — match the surrounding component.
+- **NBSP characters** appear in some i18n strings ("Вы —" / "You —"). The Edit tool occasionally can't anchor on Cyrillic lines that contain them — fall back to `Write` to rewrite the block, or use Powershell/sed with explicit code points.
+- TS strict mode is on. Run `npm run lint` (and ideally `npm run format`) before committing.
+- Clearing browser storage drops all chat history. `langgraph dev` is in-memory in dev too — no recovery.
+- `LibraryBrowser` filter is pure client-side over the full catalog. Fine at current scale; reconsider past ~10K works.
+- `read_passage` tool-result shape is consumed by `CitationsList` via the `looksLikeReadPassage` guard. Backend changes to the return shape must keep `text`, `para_start`, `window_size`, `author`, `work_title` (success) or `{found:false, error, citation, work_exists?}` (failure) — or update `src/components/logos/CitationsList.tsx` in lockstep.
 
-## Not done / situational
+## Intentionally NOT shipped
 
-- No manual UI walkthrough verified in this session (Task 38). Submit a query, click a `CitationCard`, open Library, click the speech-bubble chip — each path still wants eyes.
-- Frontend hasn't been touched since 8d6087e. After backend tool-output shape changes (citations, `read_passage`, catalog endpoint), re-run `npm run build` before claiming green.
-- Failure-case render for `read_passage` is the known open item — see `citation-card.tsx` + `looksLikeReadPassage` above.
+These were in the upstream `agent-chat-ui` Thread shell, deleted during the Logos cleanup (commits `b0ddad7`, `e1b1f6c`, `5b0440f`):
+
+- File upload (PDF/image) UI — backend doesn't accept multimodal
+- `ArtifactProvider` + artifact panel — backend doesn't emit artifacts
+- Branch switcher (alternative response trees)
+- agent-inbox interrupt UI — backend doesn't currently use `interrupt()`. If it does, this needs to be rebuilt on top of the Logos shell.
+- The hide-tool-calls toggle — ThinkingTrace is always present and individually collapsible.
+- "Hide" footnote markers `[1][2][3]` — would require a backend prompt-tuning step that emits markers in the answer text.
+
+If any of those become required, add them on top of `LogosShell` in a focused plan rather than re-importing the old Thread tree.
