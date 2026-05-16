@@ -1,37 +1,19 @@
+// apps/frontend/src/providers/Stream.tsx
 import React, {
   createContext,
   useContext,
   ReactNode,
   useEffect,
 } from "react";
-import { useStream } from "@langchain/langgraph-sdk/react";
-import { type Message } from "@langchain/langgraph-sdk";
-import {
-  uiMessageReducer,
-  isUIMessage,
-  isRemoveUIMessage,
-  type UIMessage,
-  type RemoveUIMessage,
-} from "@langchain/langgraph-sdk/react-ui";
+import type { Message } from "@langchain/langgraph-sdk";
 import { useQueryState } from "nuqs";
-import { useThreadStore } from "./Thread";
 import { toast } from "sonner";
 
-export type StateType = { messages: Message[]; ui?: UIMessage[] };
+import { useStatelessStream } from "@/lib/useStatelessStream";
+import { loadThreads } from "@/lib/local-thread-store";
+import { useThreadStore } from "./Thread";
 
-const useTypedStream = useStream<
-  StateType,
-  {
-    UpdateType: {
-      messages?: Message[] | Message | string;
-      ui?: (UIMessage | RemoveUIMessage)[] | UIMessage | RemoveUIMessage;
-      context?: Record<string, unknown>;
-    };
-    CustomEventType: UIMessage | RemoveUIMessage;
-  }
->;
-
-type StreamContextType = ReturnType<typeof useTypedStream>;
+type StreamContextType = ReturnType<typeof useStatelessStream>;
 const StreamContext = createContext<StreamContextType | undefined>(undefined);
 
 async function checkGraphStatus(apiUrl: string): Promise<boolean> {
@@ -44,7 +26,6 @@ async function checkGraphStatus(apiUrl: string): Promise<boolean> {
   }
 }
 
-// Default values (used if env vars are unset).
 const DEFAULT_API_URL = "http://localhost:2024";
 const DEFAULT_ASSISTANT_ID = "agent";
 
@@ -57,39 +38,31 @@ const StreamSession = ({
   apiUrl: string;
   assistantId: string;
 }) => {
-  const [threadId, setThreadId] = useQueryState("threadId");
+  const [threadId] = useQueryState("threadId");
   const { saveCurrent } = useThreadStore();
 
-  const streamValue = useTypedStream({
-    apiUrl,
-    assistantId,
-    threadId: threadId ?? null,
-    fetchStateHistory: { limit: 25 },
-    // Batch SDK notify calls. Without this every SSE chunk fires
-    // useSyncExternalStore on every token and re-renders the whole subtree.
-    // 50ms is the sweet spot between smooth text and CPU savings.
-    throttle: 50,
-    onCustomEvent: (event, options) => {
-      if (isUIMessage(event) || isRemoveUIMessage(event)) {
-        options.mutate((prev) => {
-          const ui = uiMessageReducer(prev.ui ?? [], event);
-          return { ...prev, ui };
-        });
-      }
-    },
-    onThreadId: (id) => {
-      setThreadId(id);
-      // Save thread metadata to localStorage so the sidebar can list it.
-      saveCurrent(id, []);
-    },
-  });
+  const stream = useStatelessStream({ apiUrl, assistantId });
 
-  // Persist the current thread to localStorage whenever its messages change.
+  // Thread switching: when the URL threadId changes, hydrate `messages` from
+  // localStorage. This replaces the server-side fetchStateHistory path.
+  useEffect(() => {
+    if (!threadId) {
+      stream.setMessages([]);
+      return;
+    }
+    const stored = loadThreads().find((t) => t.id === threadId);
+    stream.setMessages(stored?.messages ?? []);
+    // We only want this to fire on threadId changes, not on every render of
+    // the hook value — stream.setMessages is stable across renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threadId]);
+
+  // Persist the active thread to localStorage on every messages change.
   useEffect(() => {
     if (!threadId) return;
-    if (!streamValue.messages || streamValue.messages.length === 0) return;
-    saveCurrent(threadId, streamValue.messages);
-  }, [threadId, streamValue.messages, saveCurrent]);
+    if (!stream.messages || stream.messages.length === 0) return;
+    saveCurrent(threadId, stream.messages as Message[]);
+  }, [threadId, stream.messages, saveCurrent]);
 
   useEffect(() => {
     checkGraphStatus(apiUrl).then((ok) => {
@@ -109,9 +82,7 @@ const StreamSession = ({
   }, [apiUrl]);
 
   return (
-    <StreamContext.Provider value={streamValue}>
-      {children}
-    </StreamContext.Provider>
+    <StreamContext.Provider value={stream}>{children}</StreamContext.Provider>
   );
 };
 
@@ -128,16 +99,12 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   const finalAssistantId = envAssistantId || DEFAULT_ASSISTANT_ID;
 
   return (
-    <StreamSession
-      apiUrl={finalApiUrl}
-      assistantId={finalAssistantId}
-    >
+    <StreamSession apiUrl={finalApiUrl} assistantId={finalAssistantId}>
       {children}
     </StreamSession>
   );
 };
 
-// Create a custom hook to use the context
 export const useStreamContext = (): StreamContextType => {
   const context = useContext(StreamContext);
   if (context === undefined) {
