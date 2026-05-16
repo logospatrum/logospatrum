@@ -43,7 +43,7 @@ Verify against the actual scripts before running — these are the verified shap
 
 - **DB**: `wsl -e bash -c "cd <repo>/infra && docker compose -f docker-compose.dev.yml up -d postgres"`, then apply `infra/migrations/001_init.sql` (also create `patristic_test` db with the same schema for tests).
 - **Pipeline**: `cd packages/pipeline && PYTHONUTF8=1 .venv/Scripts/python -m pipeline <command>`. `--help` lists commands.
-- **Backend**: `cd apps/backend && PYTHONUTF8=1 .venv/Scripts/langgraph dev --port 2024 --no-browser --allow-blocking`. `--allow-blocking` is currently needed; at least one tool does sync file I/O inside an async handler and `blockbuster` fails the run otherwise. Audit + fix before removing.
+- **Backend**: `cd apps/backend && PYTHONUTF8=1 .venv/Scripts/langgraph dev --port 2024 --no-browser`. (`--allow-blocking` is no longer required — sync file I/O in tools and the embedding service is wrapped in `asyncio.to_thread`. See `apps/backend/CLAUDE.md` if BlockingError returns.)
 - **Frontend**: `cd apps/frontend && npm run dev`.
 - **Unit tests (backend)**: `cd apps/backend && PYTHONUTF8=1 .venv/Scripts/python -m pytest tests/unit/ -v`.
 - **Goldset (integration)**: start `langgraph dev`, then `pytest tests/integration/test_goldset.py -v -s`.

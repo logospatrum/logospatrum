@@ -4,7 +4,11 @@ import psycopg
 from backend.tools import semantic_search as ss_module
 from backend.embeddings.service import EmbeddingService
 
-DB_DSN_TEST = "postgresql://postgres:postgres@localhost:5432/patristic"
+# Re-use the test-DB DSN that conftest already exports — it points at
+# patristic_test (NOT prod patristic). Hardcoding the prod DSN here would
+# read seeds from conftest (which writes to patristic_test) but try to
+# insert into prod, hitting FK errors.
+from tests.conftest import DB_DSN_TEST
 
 
 @pytest.fixture
@@ -38,7 +42,9 @@ async def db_with_real_vectors(db_with_seed_authors, fake_model):
 async def test_semantic_search_returns_top_match(db_with_real_vectors, fake_model, monkeypatch):
     svc = EmbeddingService(model=fake_model, batch_size=4, window_ms=20)
     await svc.start()
-    monkeypatch.setattr(ss_module, "_get_service", lambda: svc)
+    async def _stub():
+        return svc
+    monkeypatch.setattr(ss_module, "_get_service", _stub)
     try:
         result = await ss_module.semantic_search.ainvoke({"query": "Послушание есть совершенное отречение"})
         assert len(result) >= 1
@@ -53,7 +59,9 @@ async def test_semantic_search_returns_top_match(db_with_real_vectors, fake_mode
 async def test_semantic_search_filter_by_author(db_with_real_vectors, fake_model, monkeypatch):
     svc = EmbeddingService(model=fake_model, batch_size=4, window_ms=20)
     await svc.start()
-    monkeypatch.setattr(ss_module, "_get_service", lambda: svc)
+    async def _stub():
+        return svc
+    monkeypatch.setattr(ss_module, "_get_service", _stub)
     try:
         result = await ss_module.semantic_search.ainvoke({"query": "Отречение", "author_slug": "lestvichnik"})
         for r in result:

@@ -7,8 +7,10 @@ from ._citation import make_citation
 from ._filters import resolve_section, slug_filter_sql
 
 
-def _get_service():
-    return get_service()
+async def _get_service():
+    # Indirection layer used by tests (monkeypatched to inject a FakeModel
+    # without going through the real SentenceTransformer load).
+    return await get_service()
 
 
 @tool
@@ -39,7 +41,7 @@ async def semantic_search(
     if not query.strip():
         return []
 
-    svc = _get_service()
+    svc = await _get_service()
     await svc.start()
     vec = await svc.embed(query)
 

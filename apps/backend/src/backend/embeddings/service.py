@@ -82,16 +82,34 @@ class EmbeddingService:
 
 
 _svc: EmbeddingService | None = None
+_svc_lock = asyncio.Lock()
 
 
-def get_service() -> EmbeddingService:
+def _create_service_sync() -> EmbeddingService:
+    """Pure sync constructor; called only via asyncio.to_thread.
+
+    SentenceTransformer's constructor scans the HF cache directory
+    (`ScandirIterator.__next__`) and reads weight files — blocking I/O
+    that will trip blockbuster if invoked on the main event loop.
+    """
+    from sentence_transformers import SentenceTransformer
+
+    model = SentenceTransformer(settings.embedding_model, device=settings.embedding_device)
+    return EmbeddingService(
+        model=model,
+        batch_size=settings.embedding_batch_size,
+        window_ms=settings.embedding_batch_window_ms,
+    )
+
+
+async def get_service() -> EmbeddingService:
+    """Async singleton accessor. First call loads bge-m3 in a worker thread;
+    subsequent calls hit the cache without await overhead."""
     global _svc
-    if _svc is None:
-        from sentence_transformers import SentenceTransformer
-        model = SentenceTransformer(settings.embedding_model, device=settings.embedding_device)
-        _svc = EmbeddingService(
-            model=model,
-            batch_size=settings.embedding_batch_size,
-            window_ms=settings.embedding_batch_window_ms,
-        )
+    if _svc is not None:
+        return _svc
+    async with _svc_lock:
+        if _svc is not None:
+            return _svc
+        _svc = await asyncio.to_thread(_create_service_sync)
     return _svc

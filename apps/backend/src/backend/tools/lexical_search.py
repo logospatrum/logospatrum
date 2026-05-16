@@ -1,8 +1,7 @@
 """Tool: lexical_search — Postgres tsvector + ts_rank, with optional filters."""
+import asyncio
 import json
 import re
-from functools import lru_cache
-from pathlib import Path
 
 from langchain_core.tools import tool
 
@@ -15,21 +14,39 @@ from ._filters import resolve_section, slug_filter_sql
 _PUNCT = re.compile(r"[^\w\s]", re.UNICODE)
 _WS = re.compile(r"\s+")
 
+# Lazy-loaded once, then served from RAM. The file read + JSON parse run in
+# a worker thread so the event loop never blocks (blockbuster catches sync
+# I/O on the main thread and fails the run; ditching --allow-blocking
+# requires this).
+_cs_dict_cache: dict[str, str] | None = None
+_cs_dict_lock = asyncio.Lock()
 
-@lru_cache(maxsize=1)
-def _cs_dict() -> dict[str, str]:
+
+def _cs_dict_sync() -> dict[str, str]:
+    """Pure sync load; called only via asyncio.to_thread."""
     if settings.cs_dict_path.exists():
         return json.loads(settings.cs_dict_path.read_text(encoding="utf-8"))
     return {}
 
 
-def _preprocess(text: str) -> str:
+async def _cs_dict() -> dict[str, str]:
+    global _cs_dict_cache
+    if _cs_dict_cache is not None:
+        return _cs_dict_cache
+    async with _cs_dict_lock:
+        if _cs_dict_cache is not None:
+            return _cs_dict_cache
+        _cs_dict_cache = await asyncio.to_thread(_cs_dict_sync)
+    return _cs_dict_cache
+
+
+async def _preprocess(text: str) -> str:
     if not text:
         return ""
     text = text.lower()
     text = _PUNCT.sub(" ", text)
     text = _WS.sub(" ", text).strip()
-    cs = _cs_dict()
+    cs = await _cs_dict()
     if cs:
         text = " ".join(cs.get(t, t) for t in text.split())
     return text
@@ -60,7 +77,7 @@ async def lexical_search(
 
     Возвращает [{citation, work_slug, chapter_num, para_num, window_size, snippet, score}].
     """
-    q = _preprocess(query)
+    q = await _preprocess(query)
     if not q:
         return []
 

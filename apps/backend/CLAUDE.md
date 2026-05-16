@@ -57,10 +57,13 @@ FastAPI app with:
 
 ```
 cd apps/backend
-PYTHONUTF8=1 .venv/Scripts/langgraph dev --port 2024 --no-browser --allow-blocking
+PYTHONUTF8=1 .venv/Scripts/langgraph dev --port 2024 --no-browser
 ```
 
-`--allow-blocking` is mandatory in the current state: a tool does sync file I/O inside an async handler, `blockbuster` catches it and fails runs with `BlockingError`. Suspects: `expand_concept._load()` (`Path.read_text` + `json.loads`) and `lexical_search._cs_dict()` (same pattern, `@lru_cache`d). TODO: wrap with `asyncio.to_thread`.
+(`--allow-blocking` is no longer needed — all sync I/O in tools and the
+embedding service is wrapped in `asyncio.to_thread` behind an async
+double-checked-locking cache. The fix lives in `expand_concept._load`,
+`lexical_search._cs_dict`, and `embeddings.service.get_service`.)
 
 `langgraph dev` defaults to in-memory persistence; threads don't survive restart. Prod = LangSmith Deployment (out of scope for MVP).
 
@@ -95,7 +98,7 @@ Run: `LANGGRAPH_URL=http://localhost:<port> PYTHONUTF8=1 .venv/Scripts/python -m
 ## Common failure modes
 
 - **401 from Timeweb** → model not in plan (check `/v1/models`) or expired key. Error string: "You don't have access to this model".
-- **BlockingError** → `langgraph dev` started without `--allow-blocking`, or sync file I/O snuck into a tool.
+- **BlockingError** → a new sync file I/O / `os.scandir` snuck into an async tool. Wrap it like the other cached loads do: pure sync function + module-level cache + `asyncio.Lock` + `await asyncio.to_thread(load_sync)`. See `expand_concept._load`, `lexical_search._cs_dict`, or `embeddings.service.get_service` for the pattern.
 - **AssertionError "Torch not compiled with CUDA enabled"** → `.env` has `EMBEDDING_DEVICE=cuda`, backend venv has CPU torch.
 - **`passage not found` cascade** → Sonnet hallucinated short slugs. Look at the `task` tool result; main should copy citations verbatim. If main mangles slugs, the prompt regression is back — check `prompts.py` GOOD/BAD example is still present.
 - **Empty messages list / hang** → run errored mid-flight; check `langgraph dev` stdout for the traceback, or `_state.json` `tasks` field.
