@@ -67,6 +67,8 @@ export const STRINGS = {
       contextHide: "скрыть контекст",
       notFound:    "Цитата не найдена",
       sourceLabel: "azbyka",
+      showPassage: "Полный параграф",
+      highlightNotFound: "(цитата не найдена в параграфе дословно)",
     },
     errors: {
       streamConnect:    "Не удалось подключиться к LangGraph",
@@ -137,6 +139,8 @@ export const STRINGS = {
       contextHide: "hide context",
       notFound:    "Citation not found",
       sourceLabel: "source",
+      showPassage: "Full paragraph",
+      highlightNotFound: "(quote not found verbatim in paragraph)",
     },
     errors: {
       streamConnect:    "Cannot reach LangGraph",

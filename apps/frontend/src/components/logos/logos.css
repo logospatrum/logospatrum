@@ -365,3 +365,81 @@ button:focus-visible, textarea:focus-visible, a:focus-visible {
 .logos-human .logos-human-edit { opacity: 0; }
 .logos-human:hover .logos-human-edit,
 .logos-human:focus-within .logos-human-edit { opacity: 1; }
+
+/* ─── Citation markers + panel rows + passage modal ─────────────────── */
+.citation-pill {
+  display: inline-block;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: #ece6d6;
+  background: rgba(255, 255, 255, 0.04);
+  border: 0.5px solid rgba(238, 232, 218, 0.16);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin: 0 2px;
+  vertical-align: 0.18em;
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+  transition: background 160ms ease, border-color 160ms ease;
+  font-variant-numeric: tabular-nums;
+}
+.citation-pill:hover,
+.citation-pill[data-active="true"] {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(238, 232, 218, 0.36);
+}
+.citation-row {
+  transition: background 240ms ease, box-shadow 240ms ease;
+}
+.citation-row[data-active="true"] {
+  background: rgba(255, 255, 255, 0.025);
+  box-shadow: inset 2px 0 0 #ece6d6;
+}
+@keyframes citation-flash {
+  0%   { background: rgba(255, 255, 255, 0.12); }
+  100% { background: transparent; }
+}
+.citation-row[data-flash="true"] {
+  animation: citation-flash 800ms ease-out;
+}
+
+.logos-passage-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 7, 10, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 50;
+  animation: logos-rise 240ms ease-out;
+}
+.logos-passage-modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(720px, 92vw);
+  max-height: 84vh;
+  overflow-y: auto;
+  background: #0b0c0e;
+  border: 0.5px solid rgba(238, 232, 218, 0.12);
+  border-radius: 8px;
+  padding: 28px 32px;
+  z-index: 51;
+  animation: logos-rise 320ms cubic-bezier(.22,.61,.36,1) both;
+  font-family: var(--font-eb-garamond), "EB Garamond", Georgia, serif;
+  font-size: clamp(15px, 1.2vw, 17px);
+  line-height: 1.65;
+  color: #ece6d6;
+}
+.logos-passage-modal-content mark {
+  background: rgba(236, 230, 214, 0.18);
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+.logos-passage-modal-content :focus-visible {
+  outline: 1px solid rgba(238, 232, 218, 0.36);
+  outline-offset: 2px;
+}
