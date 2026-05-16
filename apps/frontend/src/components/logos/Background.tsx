@@ -101,10 +101,21 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
     if (el && !flameRRefs.current.includes(el)) flameRRefs.current.push(el);
   }, []);
 
-  // Progressive illumination — how lit-up the cave is given chatCount.
-  //   progress  : 0.15 at 0 chats → 1 at 20+. Caps the cursor intensity.
-  //   torchness : 1 = full torch (tight + dark cone overlay),
-  //               0 = full lamp (broad soft pool). Crossfades 5..10.
+  // ── Progressive illumination ─────────────────────────────────────────
+  // Cursor light strength scales with how many past conversations the
+  // user has had (passed in as chatCount, which comes from useThreads()).
+  //
+  //   N = 0   → very tight torch, ~15% of peak intensity.
+  //   N = 5   → torch peaks; starts crossfading to lamp.
+  //   N = 10  → full lamp shape; intensity ramping up.
+  //   N = 20+ → full lamp at 100% (capped by tweaks.light).
+  //
+  // KNOWN LIMITATION: chatCount is read from localStorage threads, which
+  // means clearing browser storage (or using incognito) resets the user
+  // to a "new visitor" cave. This is intentional — the metaphor is "your
+  // own accumulated conversations light up your space", not a global
+  // counter. If a server-backed counter is wanted, fetch it from the
+  // backend and merge here.
   const N = Math.max(0, chatCount);
   const baseline = 0.15;
   const progress = baseline + (1 - baseline) * Math.min(1, N / 20);
