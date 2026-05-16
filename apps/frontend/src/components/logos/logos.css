@@ -367,7 +367,11 @@ button:focus-visible, textarea:focus-visible, a:focus-visible {
 .logos-human:focus-within .logos-human-edit { opacity: 1; }
 
 /* ─── Citation markers + panel rows + passage modal ─────────────────── */
-.citation-pill {
+/* Scoped under `.logos-answer a.citation-pill` so we beat the
+   `.logos-answer a` underline+color rule (which would otherwise inherit
+   into the pill and make it look like a regular link). */
+.logos-answer a.citation-pill,
+a.citation-pill {
   display: inline-block;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 11px;
@@ -385,10 +389,13 @@ button:focus-visible, textarea:focus-visible, a:focus-visible {
   transition: background 160ms ease, border-color 160ms ease;
   font-variant-numeric: tabular-nums;
 }
-.citation-pill:hover,
-.citation-pill[data-active="true"] {
+.logos-answer a.citation-pill:hover,
+.logos-answer a.citation-pill[data-active="true"],
+a.citation-pill:hover,
+a.citation-pill[data-active="true"] {
   background: rgba(255, 255, 255, 0.10);
   border-color: rgba(238, 232, 218, 0.36);
+  text-decoration: none;
 }
 .citation-row {
   transition: background 240ms ease, box-shadow 240ms ease;
