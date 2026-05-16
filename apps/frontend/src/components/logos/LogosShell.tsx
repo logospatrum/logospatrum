@@ -1,5 +1,7 @@
 "use client";
 
+import "./logos.css";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
