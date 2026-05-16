@@ -51,6 +51,8 @@ export const STRINGS = {
       editAria: "Изменить и переотправить",
       cancelEdit: "Отмена",
       saveEdit: "Сохранить",
+      toBottom: "К концу",
+      toBottomAria: "Прокрутить к последнему сообщению",
     },
     starters: [
       "Сущность и энергия у свт. Григория Паламы",
@@ -119,6 +121,8 @@ export const STRINGS = {
       editAria: "Edit and resubmit",
       cancelEdit: "Cancel",
       saveEdit: "Save",
+      toBottom: "To end",
+      toBottomAria: "Scroll to the latest message",
     },
     starters: [
       "Essence and energies in St. Gregory Palamas",

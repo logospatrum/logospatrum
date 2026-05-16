@@ -23,6 +23,7 @@ import { ChatBackdrop } from "./ChatBackdrop";
 import { Logo } from "./Logo";
 import { Quote } from "./Quote";
 import { Monolith } from "./Monolith";
+import { ScrollToBottom } from "./ScrollToBottom";
 import { Starters } from "./Starters";
 import { HumanLine } from "./HumanLine";
 import { AssistantTurn } from "./AssistantTurn";
@@ -206,13 +207,37 @@ function LogosInner() {
     setThreadId(null);
   }, [setThreadId]);
 
-  // Auto-scroll the chat list when new content arrives.
+  // Auto-scroll the chat list when new content arrives — but only if the
+  // user is already near the bottom. If they've scrolled up to re-read,
+  // don't yank the viewport. The ScrollToBottom pill lets them re-engage.
   const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const [atBottom, setAtBottom] = useState(true);
+
   useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return undefined;
+    const onScroll = () => {
+      const slack = el.scrollHeight - el.scrollTop - el.clientHeight;
+      setAtBottom(slack < 24);
+    };
+    el.addEventListener("scroll", onScroll);
+    onScroll();
+    return () => el.removeEventListener("scroll", onScroll);
+    // Re-bind when the scroll container or the message count changes so the
+    // initial `slack` reading picks up the new content height.
+  }, [stream.messages.length]);
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el || !atBottom) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [stream.messages.length, stream.isLoading, atBottom]);
+
+  const scrollToBottom = useCallback(() => {
     const el = scrollerRef.current;
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [stream.messages.length, stream.isLoading]);
+  }, []);
 
   // Sidebar entries from localStorage threads.
   const sidebarThreads: SidebarThread[] = useMemo(
@@ -359,11 +384,13 @@ function LogosInner() {
           </div>
           <div
             style={{
+              position: "relative",
               padding: "12px 24px 28px",
               display: "flex",
               justifyContent: "center",
             }}
           >
+            <ScrollToBottom visible={!atBottom} onClick={scrollToBottom} />
             <Monolith
               onSubmit={submit}
               busy={stream.isLoading}
