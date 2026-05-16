@@ -11,6 +11,7 @@ import type { Message } from "@langchain/langgraph-sdk";
 import { useStreamContext } from "@/providers/Stream";
 import { useThreads } from "@/providers/Thread";
 import { ensureToolCallsHaveResponses } from "@/lib/ensure-tool-responses";
+import { sliceForRegenerate, sliceForEdit } from "@/lib/chat-history-slice";
 import { LibraryBrowser } from "@/components/library/LibraryBrowser";
 
 import { palette, tweaks, type } from "./tokens";
@@ -150,26 +151,13 @@ function LogosInner() {
     [stream],
   );
 
-  // Regenerate the last assistant turn. Uses the parent checkpoint from
-  // the last *human* message in the stream so the new generation forks
-  // off the same input.
+  // Regenerate the last assistant turn by re-submitting the conversation
+  // sliced to (and including) the last human message. No server-side
+  // checkpoint involved — the frontend owns history.
   const handleRegenerate = useCallback(() => {
-    // Find the last human message to fork from
-    const reversedIdx = [...stream.messages]
-      .reverse()
-      .findIndex((m) => m.type === "human");
-    if (reversedIdx < 0) return;
-    const lastHuman =
-      stream.messages[stream.messages.length - 1 - reversedIdx];
-    const meta = stream.getMessagesMetadata(lastHuman);
-    const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
-    if (!parentCheckpoint) return;
-    stream.submit(undefined, {
-      checkpoint: parentCheckpoint,
-      streamMode: ["values"],
-      streamSubgraphs: true,
-      streamResumable: true,
-    });
+    const sliced = sliceForRegenerate(stream.messages);
+    if (sliced.length === 0) return;
+    stream.submit({ messages: sliced });
   }, [stream]);
 
   // Edit a previous human message: forks the conversation at the parent
