@@ -15,12 +15,12 @@ interface Props {
  */
 export function CitationPill({ n }: Props) {
   const num = Number(n);
-  const { hoveredN, setHoveredN, scrollToN } = useCitationContext();
+  const { hoveredN, setHoveredN, scrollToN, turnKey } = useCitationContext();
   const active = hoveredN === num;
   return (
     <sup>
       <a
-        href={`#cite-${num}`}
+        href={`#${turnKey}-cite-${num}`}
         className="citation-pill"
         data-citation-n={num}
         data-active={active ? "true" : undefined}
