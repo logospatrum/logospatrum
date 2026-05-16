@@ -24,6 +24,18 @@ def paragraphs() -> None:
     asyncio.run(_run())
 
 
+@app.command()
+def pravo(throttle_ms: int = 200):
+    """Scrape azbyka.ru/pravo/* and emit one markdown file per rule.
+
+    Resumable: skips a rule if its target md file already exists. Run
+    `pipeline paragraphs` afterwards to ingest.
+    """
+    from .pravo import PravoCollector
+    with PravoCollector(throttle_ms=throttle_ms) as col:
+        col.run()
+
+
 @app.command(name="bible-markdown")
 def bible_markdown() -> None:
     """Конвертит Bible epub'ы → один-стих-один-md в output/Bible/. Skip-if-exists."""
