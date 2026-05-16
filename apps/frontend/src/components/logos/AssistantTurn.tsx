@@ -4,7 +4,11 @@ import { MarkdownText } from "./markdown/markdown-text";
 import { ThinkingTrace } from "./ThinkingTrace";
 import { CitationsList } from "./CitationsList";
 import { CitationProvider } from "./CitationContext";
-import { extractMarkers, numberMarkers } from "@/lib/citation-marker";
+import {
+  extractMarkers,
+  numberMarkers,
+  stripTrailingPartialMarker,
+} from "@/lib/citation-marker";
 import { palette, type } from "./tokens";
 import { useStrings } from "./i18n";
 import { useMemo } from "react";
@@ -26,10 +30,16 @@ export function AssistantTurn({ turn, showRegenerate, onRegenerate }: Props) {
   const { s } = useStrings();
   const showTrace = turn.toolCalls.length > 0;
   const showAnswer = turn.answerText.trim().length > 0;
-  const markers = useMemo(() => extractMarkers(turn.answerText), [turn.answerText]);
-  const numberedAnswer = useMemo(
-    () => numberMarkers(turn.answerText),
+  // Hide any half-typed [[… that's still streaming so the raw marker
+  // syntax doesn't leak into the rendered markdown.
+  const cleanAnswer = useMemo(
+    () => stripTrailingPartialMarker(turn.answerText),
     [turn.answerText],
+  );
+  const markers = useMemo(() => extractMarkers(cleanAnswer), [cleanAnswer]);
+  const numberedAnswer = useMemo(
+    () => numberMarkers(cleanAnswer),
+    [cleanAnswer],
   );
   return (
     <CitationProvider turnKey={turn.key}>

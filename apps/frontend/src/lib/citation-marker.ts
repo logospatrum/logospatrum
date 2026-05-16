@@ -20,6 +20,19 @@ export const INTERNAL_MARKER_RE =
   /\[\[#(\d+)\|([^|\]]+)\|«([^»]+)»\]\]/g;
 
 /**
+ * Drop any trailing half-typed marker (`[[…` without a closing `]]`). During
+ * streaming the marker regex won't match a partial token, so without this
+ * helper the raw `[[slug|«quote…` text leaks into the rendered markdown for
+ * a few hundred ms until the closing `]]` chunk arrives. Apply once before
+ * extractMarkers / numberMarkers.
+ */
+export function stripTrailingPartialMarker(answerText: string): string {
+  const m = answerText.match(/\[\[[^\]]*$/);
+  if (!m || m.index === undefined) return answerText;
+  return answerText.slice(0, m.index);
+}
+
+/**
  * Walk text left-to-right, return one marker per [[slug|«quote»]] in order.
  * N is 1-based by order of appearance.
  */

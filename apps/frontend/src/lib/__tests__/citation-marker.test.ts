@@ -1,5 +1,39 @@
 import { describe, it, expect } from "vitest";
-import { extractMarkers, numberMarkers } from "../citation-marker";
+import {
+  extractMarkers,
+  numberMarkers,
+  stripTrailingPartialMarker,
+} from "../citation-marker";
+
+describe("stripTrailingPartialMarker", () => {
+  it("returns text unchanged when no markers", () => {
+    expect(stripTrailingPartialMarker("hello world")).toBe("hello world");
+  });
+
+  it("returns text unchanged when last marker is closed", () => {
+    expect(
+      stripTrailingPartialMarker("hello [[a/b/0001/p1|«q»]] world"),
+    ).toBe("hello [[a/b/0001/p1|«q»]] world");
+  });
+
+  it("strips a half-typed marker at end of stream", () => {
+    expect(
+      stripTrailingPartialMarker("hello [[a/b/0001/p1|«сп"),
+    ).toBe("hello ");
+  });
+
+  it("preserves closed markers before a trailing partial", () => {
+    expect(
+      stripTrailingPartialMarker(
+        "first [[a/b/0001/p1|«q1»]] then [[c/d/0002/p2|«стр",
+      ),
+    ).toBe("first [[a/b/0001/p1|«q1»]] then ");
+  });
+
+  it("strips bare opening brackets at end", () => {
+    expect(stripTrailingPartialMarker("text and [[")).toBe("text and ");
+  });
+});
 
 describe("extractMarkers", () => {
   it("returns empty for plain text", () => {
