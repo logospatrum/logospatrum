@@ -122,7 +122,10 @@ function LogosInner() {
     return () => window.removeEventListener("patristic:prefill-input", handler);
   }, []);
 
-  // Submit a user message — same shape the old Thread component used.
+  // Submit a user message — full history is sent because the backend is
+  // stateless. Tool-call orphans (a previous run was stopped mid-turn) are
+  // patched up with synthetic tool responses so the graph doesn't reject
+  // the input.
   const submit = useCallback(
     (text: string) => {
       const trimmed = text.trim();
@@ -133,19 +136,10 @@ function LogosInner() {
         type: "human",
         content: [{ type: "text", text: trimmed }] as Message["content"],
       };
-      const toolMessages = ensureToolCallsHaveResponses(stream.messages);
-      stream.submit(
-        { messages: [...toolMessages, newHumanMessage] },
-        {
-          streamMode: ["values"],
-          streamSubgraphs: true,
-          streamResumable: true,
-          optimisticValues: (prev) => ({
-            ...prev,
-            messages: [...(prev.messages ?? []), ...toolMessages, newHumanMessage],
-          }),
-        },
-      );
+      const toolStubs = ensureToolCallsHaveResponses(stream.messages);
+      stream.submit({
+        messages: [...stream.messages, ...toolStubs, newHumanMessage],
+      });
       setPrefill(undefined);
     },
     [stream],
@@ -160,33 +154,14 @@ function LogosInner() {
     stream.submit({ messages: sliced });
   }, [stream]);
 
-  // Edit a previous human message: forks the conversation at the parent
-  // checkpoint of that human and submits a new content.
+  // Edit a previous human message: replace its content and drop every
+  // message after it, then re-submit the sliced history.
   const handleEditHuman = useCallback(
     (humanId: string | undefined, newText: string) => {
       if (!humanId) return;
-      const target = stream.messages.find((m) => m.id === humanId);
-      if (!target) return;
-      const meta = stream.getMessagesMetadata(target);
-      const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
-      if (!parentCheckpoint) return;
-      const newMessage: Message = {
-        type: "human",
-        content: [{ type: "text", text: newText }] as Message["content"],
-      };
-      stream.submit(
-        { messages: [newMessage] },
-        {
-          checkpoint: parentCheckpoint,
-          streamMode: ["values"],
-          streamSubgraphs: true,
-          streamResumable: true,
-          optimisticValues: (prev) => ({
-            ...prev,
-            messages: [...(prev.messages ?? []), newMessage],
-          }),
-        },
-      );
+      const sliced = sliceForEdit(stream.messages, humanId, newText);
+      if (sliced === stream.messages) return; // id not found
+      stream.submit({ messages: sliced });
     },
     [stream],
   );
