@@ -64,43 +64,69 @@ async def lexical_search(
     if not q:
         return []
 
-    filters: list[str] = []
-    params: list = [q, q]
+    # When filtering by author or section the naive plan nested-loops 300+
+    # inner Bitmap Heap Scans (one per matching work) and takes ~2.4s on
+    # multi-author cross queries. Materializing the eligible work_slug list
+    # into a CTE forces the planner into a single BitmapAnd between the
+    # GIN(text_for_lexical) index and the small CTE join — drops latency
+    # to ~200-400ms. work_slug filter alone doesn't need the CTE (already
+    # a tight set on a primary-key prefix).
+    use_wlist = bool(author_slug) or bool(section)
 
-    a_sql, a_params = slug_filter_sql("w.author_slug", author_slug)
-    if a_sql:
-        filters.append(a_sql)
-        params.extend(a_params)
+    sql_parts: list[str] = []
+    all_params: list = []
 
+    if use_wlist:
+        cte_filters: list[str] = []
+        cte_params: list = []
+        a_sql, a_params = slug_filter_sql("w.author_slug", author_slug)
+        if a_sql:
+            cte_filters.append(a_sql)
+            cte_params.extend(a_params)
+        if section:
+            cte_filters.append("a.global_section = %s")
+            cte_params.append(resolve_section(section))
+        sql_parts.append(
+            "WITH wlist AS MATERIALIZED (\n"
+            "  SELECT w.slug FROM works w\n"
+            "  JOIN authors a ON a.slug = w.author_slug\n"
+            f"  WHERE {' AND '.join(cte_filters)}\n"
+            ")"
+        )
+        all_params.extend(cte_params)
+
+    # Main query params: q twice (ts_rank + tsquery in WHERE).
+    all_params.extend([q, q])
+
+    extra_filters: list[str] = []
     w_sql, w_params = slug_filter_sql("e.work_slug", work_slug)
     if w_sql:
-        filters.append(w_sql)
-        params.extend(w_params)
+        extra_filters.append(w_sql)
+        all_params.extend(w_params)
+    where_extra = (" AND " + " AND ".join(extra_filters)) if extra_filters else ""
+    all_params.append(limit)
 
-    if section:
-        filters.append("a.global_section = %s")
-        params.append(resolve_section(section))
+    join_wlist = "JOIN wlist ON wlist.slug = e.work_slug" if use_wlist else ""
 
-    where_extra = (" AND " + " AND ".join(filters)) if filters else ""
-    params.append(limit)
-
-    sql = f"""
+    sql_parts.append(f"""
         SELECT w.author_slug, e.work_slug, e.chapter_num, e.para_num, e.window_size,
                LEFT(p.text, 200) AS snippet,
                ts_rank(e.text_for_lexical, plainto_tsquery('russian', %s)) AS score
         FROM embeddings e
+        {join_wlist}
         JOIN works w ON w.slug = e.work_slug
-        JOIN authors a ON a.slug = w.author_slug
         JOIN paragraphs p ON p.work_slug = e.work_slug
             AND p.chapter_num = e.chapter_num
             AND p.para_num = e.para_num
         WHERE e.text_for_lexical @@ plainto_tsquery('russian', %s){where_extra}
         ORDER BY score DESC
         LIMIT %s
-    """
+    """)
+
+    sql = "\n".join(sql_parts)
 
     async with conn() as c:
-        cur = await c.execute(sql, params)
+        cur = await c.execute(sql, all_params)
         rows = await cur.fetchall()
 
     return [

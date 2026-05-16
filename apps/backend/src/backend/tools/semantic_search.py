@@ -76,9 +76,23 @@ async def semantic_search(
     """
     params = [vec] + where_params + [vec, limit]
 
+    # HNSW + selective filter is a post-filter trap: at the default
+    # ef_search=40, the index returns ~40 nearest vectors anywhere in the
+    # corpus, the WHERE clause then rejects nearly all of them (one author
+    # is ~1-2% of 2M windows), and the result silently comes back empty.
+    #
+    # Fix: pgvector 0.8+ `iterative_scan = strict_order` re-enters the
+    # index until LIMIT rows survive the filter, preserving exact
+    # distance ordering. It also automatically caps the work — no need
+    # to guess ef_search per selectivity. See:
+    # https://github.com/pgvector/pgvector#iterative-index-scans
     async with conn() as c:
-        cur = await c.execute(sql, params)
-        rows = await cur.fetchall()
+        async with c.transaction():
+            if filters:
+                await c.execute("SET LOCAL hnsw.iterative_scan = strict_order")
+                await c.execute("SET LOCAL hnsw.ef_search = 100")
+            cur = await c.execute(sql, params)
+            rows = await cur.fetchall()
 
     return [
         {
