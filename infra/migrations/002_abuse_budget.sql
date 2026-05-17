@@ -7,3 +7,5 @@ CREATE TABLE IF NOT EXISTS budget_usage (
     PRIMARY KEY (subject_key, bucket)
 );
 CREATE INDEX IF NOT EXISTS budget_usage_bucket_idx ON budget_usage (bucket);
+
+INSERT INTO schema_migrations(version) VALUES ('002_abuse_budget') ON CONFLICT DO NOTHING;
