@@ -36,7 +36,25 @@ export function Logo() {
           userSelect: "none",
         }}
       >
-        ΛΟΓΟΣ
+        <span>ΛΟΓΟΣ</span>
+        <span
+          aria-hidden="true"
+          style={{
+            fontFamily: type.mono,
+            fontSize: "0.18em",
+            fontWeight: 400,
+            letterSpacing: "0.2em",
+            color: palette.faint,
+            marginLeft: "0.3em",
+            // Smaller text rides the bigger baseline by default — bottoms align.
+            verticalAlign: "baseline",
+            // Cancel the engraved inner stroke for the small label.
+            WebkitTextStroke: "0",
+            textShadow: "none",
+          }}
+        >
+          AI
+        </span>
       </h1>
     </div>
   );

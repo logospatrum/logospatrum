@@ -78,8 +78,10 @@ curl http://localhost:2024/catalog    # FastAPI catalog mount
 ```
 cd apps/frontend
 npm install        # npm wins; pnpm-lock.yaml is committed but unused
-npm run dev        # http://localhost:3000
+PORT=3001 npm run dev   # http://localhost:3001
 ```
+
+**Port 3001, not 3000.** 3000 is reserved by other tooling on this machine — DO NOT use it. Always start the frontend with `PORT=3001`. The default Next.js port (3000) is hands-off.
 
 Prereqs: `langgraph dev` running at the configured URL, Postgres up (catalog hits `authors` + `works` tables).
 

@@ -6,7 +6,7 @@ export type Lang = "ru" | "en";
 
 export const STRINGS = {
   ru: {
-    tagline: "Theological Research Assistant",
+    tagline: "Orthodox Theological Research Assistant",
     brand:   "ΛΟΓΟΣ  ·  Theologica",
     sidebar: {
       historyAria: "История разговоров",
@@ -14,6 +14,7 @@ export const STRINGS = {
       newChat:     "Новый разговор",
       empty:       "История пуста. Задайте первый вопрос — он сохранится здесь.",
       home:        "На главную",
+      exportAria:  "Экспортировать в Markdown",
     },
     top: {
       homeLabel:    "Новый разговор",
@@ -25,7 +26,7 @@ export const STRINGS = {
       libraryAria:  "Открыть библиотеку",
       libraryLabel: "Корпус",
     },
-    bottom: { corpus: "Patristic Corpus · azbyka.ru" },
+    bottom: { corpus: "Корпус собран с azbyka.ru" },
     quote: {
       line1: "…если они умолкнут,",
       line2: "то камни возопиют.",
@@ -40,6 +41,7 @@ export const STRINGS = {
     },
     chat: {
       placeholder: "Спросите о вере, догматике или Священном Предании",
+      placeholderShort: "Спросите о вере…",
       sendAria:    "Отправить запрос",
       stopAria:    "Остановить",
       enterHint:   "↵  Отправить  ·  ⇧ ↵ Новая строка",
@@ -47,6 +49,8 @@ export const STRINGS = {
       you:         "Вы —",
       regenerate: "Перегенерировать",
       regenerateAria: "Перегенерировать ответ",
+      export:     "Экспорт",
+      exportAria: "Экспортировать чат в Markdown",
       edit: "Изменить",
       editAria: "Изменить и переотправить",
       cancelEdit: "Отмена",
@@ -56,9 +60,9 @@ export const STRINGS = {
     },
     starters: [
       "Сущность и энергия у свт. Григория Паламы",
-      "Иконоборчество и VII Вселенский Собор",
-      "Чин крещения у свт. Кирилла Иерусалимского",
-      "Каппадокийцы о троичном богословии",
+      "Считал ли блж. Августин, что вера и разум должны быть согласованы?",
+      "Был ли свет Преображения тварным или нетварным?",
+      "Милость или справедливость — что у Бога преобладает?",
     ],
     askAboutWork: (author: string, work: string) =>
       `Расскажи о труде «${work}» — ${author}. Какие ключевые темы и цитаты?`,
@@ -78,7 +82,7 @@ export const STRINGS = {
     },
   },
   en: {
-    tagline: "Theological Research Assistant",
+    tagline: "Orthodox Theological Research Assistant",
     brand:   "ΛΟΓΟΣ  ·  Theologica",
     sidebar: {
       historyAria: "Conversation history",
@@ -86,6 +90,7 @@ export const STRINGS = {
       newChat:     "New conversation",
       empty:       "History is empty. Ask your first question — it will be saved here.",
       home:        "Back to home",
+      exportAria:  "Export to Markdown",
     },
     top: {
       homeLabel:    "New conversation",
@@ -97,7 +102,7 @@ export const STRINGS = {
       libraryAria:  "Open the corpus",
       libraryLabel: "Corpus",
     },
-    bottom: { corpus: "Patristic Corpus · azbyka.ru" },
+    bottom: { corpus: "Corpus sourced from azbyka.ru" },
     quote: {
       line1: "…if these were silent,",
       line2: "the stones would cry out.",
@@ -112,6 +117,7 @@ export const STRINGS = {
     },
     chat: {
       placeholder: "Ask about doctrine, councils, or sacred tradition",
+      placeholderShort: "Ask about doctrine…",
       sendAria:    "Send query",
       stopAria:    "Stop",
       enterHint:   "↵  Send  ·  ⇧ ↵ Newline",
@@ -119,6 +125,8 @@ export const STRINGS = {
       you:         "You —",
       regenerate: "Regenerate",
       regenerateAria: "Regenerate the answer",
+      export:     "Export",
+      exportAria: "Export chat to Markdown",
       edit: "Edit",
       editAria: "Edit and resubmit",
       cancelEdit: "Cancel",
@@ -128,9 +136,9 @@ export const STRINGS = {
     },
     starters: [
       "Essence and energies in St. Gregory Palamas",
-      "Iconoclasm and the Seventh Ecumenical Council",
-      "The rite of baptism in St. Cyril of Jerusalem",
-      "The Cappadocians on Trinitarian theology",
+      "Did Blessed Augustine believe faith and reason must agree?",
+      "Was the Light of the Transfiguration created or uncreated?",
+      "Mercy or justice — which prevails in God?",
     ],
     askAboutWork: (author: string, work: string) =>
       `Tell me about "${work}" by ${author}. What are the key themes and quotations?`,

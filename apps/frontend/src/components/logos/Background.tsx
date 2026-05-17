@@ -39,6 +39,27 @@ interface Props {
 const VBW = 1600;
 const VBH = 1000;
 
+// Camera zoom — show the central 85% of the logical 1600×1000 rock
+// plate. Cropping inward by 7.5% on every side hides the edge
+// artefacts (filter "seam" + displacement halo at user-space borders)
+// without paying for a viewBox bleed, and the visible rock just
+// reads bigger. Cursor mapping and pointer math reference this VIEW
+// range; flames live outside it on Y by design (under-illumination).
+const VB_VIEW_X0 = 120;
+const VB_VIEW_Y0 = 75;
+const VB_VIEW_W = VBW - 2 * VB_VIEW_X0; // 1360
+const VB_VIEW_H = VBH - 2 * VB_VIEW_Y0; // 850
+
+// Filter region — slightly wider than the camera view so
+// feDisplacementMap has buffer pixels to sample when displacing
+// at the boundary. Without the buffer the displaced output shows
+// a thin "drained" strip at the edge.
+const FILTER_BUFFER = 40;
+const VB_FILTER_X0 = VB_VIEW_X0 - FILTER_BUFFER;
+const VB_FILTER_Y0 = VB_VIEW_Y0 - FILTER_BUFFER;
+const VB_FILTER_W = VB_VIEW_W + 2 * FILTER_BUFFER;
+const VB_FILTER_H = VB_VIEW_H + 2 * FILTER_BUFFER;
+
 // Cadence at which we invalidate the SVG filter (via setAttribute on
 // fePointLight/feDiffuseLighting). The filter graph is the perf
 // bottleneck — every attribute change triggers a full re-render of
@@ -122,8 +143,10 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
   //
   //   N = 0   → very tight torch, ~15% of peak intensity.
   //   N = 5   → torch peaks; starts crossfading to lamp.
-  //   N = 10  → full lamp shape; intensity ramping up.
-  //   N = 20+ → full lamp at 100% (capped by tweaks.light).
+  //   N = 10  → full lamp shape; intensity still ramping up.
+  //   N = 30+ → full lamp at the calibrated ceiling (well below the old
+  //             3.5 peak that was reported as blinding around N=6–10
+  //             once the torch cone faded out).
   //
   // KNOWN LIMITATION: chatCount is read from localStorage threads, which
   // means clearing browser storage (or using incognito) resets the user
@@ -133,15 +156,20 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
   // backend and merge here.
   const N = Math.max(0, chatCount);
   const baseline = 0.15;
-  const progress = baseline + (1 - baseline) * Math.min(1, N / 20);
+  // Slower ramp (over 30 chats, not 20) so the lamp doesn't reach its
+  // full intensity right after the torch cone disappears.
+  const progress = baseline + (1 - baseline) * Math.min(1, N / 30);
   const torchness = Math.max(0, Math.min(1, (10 - N) / 5));
   const lerp = (a: number, b: number, t: number) => a * t + b * (1 - t);
   const lightK = tweaks.light / 100;
   const grainK = tweaks.noise / 100;
   const surfaceScale = 14 + grainK * 14;
 
+  // LAMP peak softened: diffuse 3.5 → 2.4, specular 0.41 → 0.28. The
+  // torch numbers are unchanged so the early-visitor experience stays
+  // the same — only the post-crossfade brightness drops.
   const TORCH = { cursor: 5.0, ambient: 0.20, z: 32, specZ: 40, specC: 0.65 };
-  const LAMP = { cursor: 3.5, ambient: 0.32, z: 90, specZ: 110, specC: 0.41 };
+  const LAMP = { cursor: 2.4, ambient: 0.26, z: 90, specZ: 110, specC: 0.28 };
   const baseCursor = lerp(TORCH.cursor, LAMP.cursor, torchness);
   const baseSpec = lerp(TORCH.specC, LAMP.specC, torchness);
   const cursorZ = lerp(TORCH.z, LAMP.z, torchness);
@@ -177,8 +205,11 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
     const onMove = (e: PointerEvent) => {
       const r = svgRef.current?.getBoundingClientRect();
       if (!r) return;
-      tx = ((e.clientX - r.left) / r.width) * VBW;
-      ty = ((e.clientY - r.top) / r.height) * VBH;
+      // Map element pixels to the *visible* user-space window so the
+      // light pool stays under the cursor — element 0..r.width
+      // corresponds to viewBox VB_VIEW_X0..VB_VIEW_X0+VB_VIEW_W.
+      tx = ((e.clientX - r.left) / r.width) * VB_VIEW_W + VB_VIEW_X0;
+      ty = ((e.clientY - r.top) / r.height) * VB_VIEW_H + VB_VIEW_Y0;
       pxX = e.clientX;
       pxY = e.clientY;
     };
@@ -244,8 +275,14 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
         return;
       }
       lastWrite = now;
+      // Read mode via ref, not closure — this effect's deps don't include
+      // lightSource (intentional, so the loop isn't torn down on every
+      // mode change), so the closure binding would stay frozen at
+      // "thinking" forever once flames first ignite. Bug symptom: going
+      // home mid-stream kept the flames burning under the rock until
+      // chatCount / lightK happened to change.
       const target =
-        lightSource === "thinking" && lightOnRef.current ? 1 : 0;
+        lightSourceRef.current === "thinking" && lightOnRef.current ? 1 : 0;
       let env = flameEnvRef.current;
       env += (target - env) * 0.04;
       if (Math.abs(target - env) < 0.0005) env = target;
@@ -333,7 +370,7 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
     <>
       <svg
         ref={svgRef}
-        viewBox={`0 0 ${VBW} ${VBH}`}
+        viewBox={`${VB_VIEW_X0} ${VB_VIEW_Y0} ${VB_VIEW_W} ${VB_VIEW_H}`}
         preserveAspectRatio="xMidYMid slice"
         aria-hidden="true"
         style={{
@@ -349,10 +386,10 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
         <defs>
           <filter
             id="logosRockCliff"
-            x="0"
-            y="0"
-            width={VBW}
-            height={VBH}
+            x={VB_FILTER_X0}
+            y={VB_FILTER_Y0}
+            width={VB_FILTER_W}
+            height={VB_FILTER_H}
             filterUnits="userSpaceOnUse"
             primitiveUnits="userSpaceOnUse"
             colorInterpolationFilters="sRGB"
@@ -390,6 +427,7 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
               <feFuncG type="table" tableValues="0 0.05 0.18 0.55 0.85 1" />
               <feFuncB type="table" tableValues="0 0.05 0.18 0.55 0.85 1" />
             </feComponentTransfer>
+
 
             {/* Albedo: a static greyscale "body" of the rock, multiplied
                 with the lit output so the pattern reads as one stone
@@ -532,9 +570,28 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
           </radialGradient>
         </defs>
 
-        <rect width={VBW} height={VBH} filter="url(#logosRockCliff)" />
-        <rect width={VBW} height={VBH} fill="url(#logosBeam)" style={{ mixBlendMode: "screen" }} />
-        <rect width={VBW} height={VBH} fill="url(#logosVignette)" />
+        <rect
+          x={VB_FILTER_X0}
+          y={VB_FILTER_Y0}
+          width={VB_FILTER_W}
+          height={VB_FILTER_H}
+          filter="url(#logosRockCliff)"
+        />
+        <rect
+          x={VB_VIEW_X0}
+          y={VB_VIEW_Y0}
+          width={VB_VIEW_W}
+          height={VB_VIEW_H}
+          fill="url(#logosBeam)"
+          style={{ mixBlendMode: "screen" }}
+        />
+        <rect
+          x={VB_VIEW_X0}
+          y={VB_VIEW_Y0}
+          width={VB_VIEW_W}
+          height={VB_VIEW_H}
+          fill="url(#logosVignette)"
+        />
       </svg>
 
       {/* Cross-shadow overlay — only outside of cursor (home) mode. */}

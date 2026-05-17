@@ -12,10 +12,16 @@ import { useStreamContext } from "@/providers/Stream";
 import { useThreads } from "@/providers/Thread";
 import { ensureToolCallsHaveResponses } from "@/lib/ensure-tool-responses";
 import { sliceForRegenerate, sliceForEdit } from "@/lib/chat-history-slice";
-import { newThreadId } from "@/lib/local-thread-store";
+import { loadThreads, newThreadId } from "@/lib/local-thread-store";
+import {
+  downloadMarkdown,
+  exportFilename,
+  messagesToMarkdown,
+} from "@/lib/export-markdown";
 import { LibraryBrowser } from "@/components/library/LibraryBrowser";
 
 import { palette, tweaks, type } from "./tokens";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { LangContext, useLangState, useStrings } from "./i18n";
 import { Background, type LightSource } from "./Background";
 import { TopChrome } from "./TopChrome";
@@ -51,6 +57,7 @@ function LogosInner() {
   const { s, lang, setLang } = useStrings();
   const stream = useStreamContext();
   const { threads } = useThreads();
+  const isNarrow = useMediaQuery("(max-width: 640px)");
 
   // URL-driven threadId (matches upstream agent-chat-ui behavior so the
   // back/forward buttons keep working).
@@ -99,7 +106,10 @@ function LogosInner() {
     if (typeof window === "undefined") return undefined;
     const MONOLITH_H = 115;
     const compute = () => {
-      if (inChat) {
+      // On narrow viewports the home column overflows and the user has to
+      // scroll past Starters to read everything. A fixed-mid-viewport input
+      // would slide over the chips. Bottom-pin it like the chat-mode input.
+      if (inChat || isNarrow) {
         setMonolithTop(window.innerHeight - MONOLITH_H - 28);
         return;
       }
@@ -110,7 +120,7 @@ function LogosInner() {
     compute();
     window.addEventListener("resize", compute);
     return () => window.removeEventListener("resize", compute);
-  }, [inChat]);
+  }, [inChat, isNarrow]);
 
   // Three-state light source machine. Mirrors the design's
   // `landing | thinking | reading`.
@@ -205,6 +215,29 @@ function LogosInner() {
     setThreadId(null);
   }, [setThreadId]);
 
+  // Export the *active* chat (in-chat pill).
+  const handleExportActive = useCallback(() => {
+    if (stream.messages.length === 0) return;
+    const meta = (threads.find((t) => t.thread_id === threadId)?.metadata ?? {}) as {
+      title?: string;
+    };
+    const title = meta.title;
+    const md = messagesToMarkdown(stream.messages, { lang, title });
+    downloadMarkdown(exportFilename(title ?? "chat"), md);
+  }, [stream.messages, threads, threadId, lang]);
+
+  // Export *any* thread from the sidebar by id, without switching the active
+  // thread. Reads directly from localStorage so non-active threads work too.
+  const handleExportThread = useCallback(
+    (id: string) => {
+      const stored = loadThreads().find((t) => t.id === id);
+      if (!stored) return;
+      const md = messagesToMarkdown(stored.messages, { lang, title: stored.title });
+      downloadMarkdown(exportFilename(stored.title), md);
+    },
+    [lang],
+  );
+
   // Auto-scroll the chat list when new content arrives — but only if the
   // user is already near the bottom. If they've scrolled up to re-read,
   // don't yank the viewport. The ScrollToBottom pill lets them re-engage.
@@ -298,6 +331,7 @@ function LogosInner() {
         activeId={threadId}
         onPick={(id) => setThreadId(id)}
         onNew={goHome}
+        onExport={handleExportThread}
       />
 
       <TopChrome
@@ -312,10 +346,11 @@ function LogosInner() {
 
       {/* BottomChrome — always mounted; visibility fades with home mode
           so the corpus/clock strip doesn't flash on mount/unmount when
-          switching to a chat. */}
+          switching to a chat. Hidden on narrow viewports where the
+          bottom-pinned Monolith already occupies the same band. */}
       <div
         style={{
-          opacity: !inChat ? 1 : 0,
+          opacity: !inChat && !isNarrow ? 1 : 0,
           transition: "opacity 360ms ease",
           pointerEvents: "none",
         }}
@@ -350,7 +385,7 @@ function LogosInner() {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            padding: "120px 24px 100px",
+            padding: isNarrow ? "120px 24px 175px" : "120px 24px 100px",
             gap: 64,
             overflowY: "auto",
             overflowX: "hidden",
@@ -405,6 +440,7 @@ function LogosInner() {
                 turn={turn}
                 isLastTurn={i === turns.length - 1}
                 onRegenerate={handleRegenerate}
+                onExport={handleExportActive}
                 onEditHuman={(newText) => handleEditHuman(turn.human?.id, newText)}
               />
             ))}
@@ -460,11 +496,13 @@ function ChatTurn({
   turn,
   isLastTurn,
   onRegenerate,
+  onExport,
   onEditHuman,
 }: {
   turn: ReturnType<typeof groupMessagesIntoTurns>[number];
   isLastTurn: boolean;
   onRegenerate: () => void;
+  onExport: () => void;
   onEditHuman: (newText: string) => void;
 }) {
   const humanText = turn.human ? humanMessageText(turn.human) : "";
@@ -480,6 +518,7 @@ function ChatTurn({
           turn={turn}
           showRegenerate={isLastTurn && !turn.inProgress}
           onRegenerate={onRegenerate}
+          onExport={onExport}
         />
       )}
     </div>

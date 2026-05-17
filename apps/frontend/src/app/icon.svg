@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="10" fill="#0b0c0e"/>
+  <!-- Greek capital Lambda, hand-drawn as a serifed pair of strokes so it
+       reads at 16px favicon resolution. Stroke color matches palette.accent. -->
+  <g fill="#ece6d6" stroke="none">
+    <path d="M32 11 L48 53 L40.5 53 L32 28.5 L23.5 53 L16 53 Z"/>
+  </g>
+</svg>

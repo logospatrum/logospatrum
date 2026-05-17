@@ -12,6 +12,13 @@ import type {
 } from "@/components/citation-card";
 import type { DesignToolCall } from "./turns";
 import type { CitationMarker } from "@/lib/citation-marker";
+import {
+  bibleAzbykaUrl,
+  bibleShortRef,
+  workSlugFromCitation,
+} from "@/lib/bible-books";
+import type { Lang } from "./i18n";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 type RowKind =
   | { kind: "success"; marker: CitationMarker; rich: ReadPassageSuccess }
@@ -27,6 +34,32 @@ function chapterLabel(d: ReadPassageSuccess): string | null {
   if (d.chapter_title) return d.chapter_title;
   if (d.chapter_num) return `гл. ${d.chapter_num}`;
   return null;
+}
+
+/** Build the right-column ref string. Scripture gets `Мф 1:2`; patristic
+ *  keeps the chapter/§ form. */
+function refLabel(d: ReadPassageSuccess, lang: Lang): string {
+  const workSlug = workSlugFromCitation(d.citation);
+  if (workSlug) {
+    const bibleRef = bibleShortRef(
+      workSlug,
+      lang,
+      d.chapter_num,
+      d.para_start,
+      d.window_size,
+    );
+    if (bibleRef) return bibleRef;
+  }
+  return [chapterLabel(d), paraLabel(d)].filter(Boolean).join(" · ");
+}
+
+/** Resolve the azbyka link. Patristic works carry `source_url`; Bible works
+ *  have it NULL, so build it from the static book map. */
+function azbykaHref(d: ReadPassageSuccess): string | null {
+  if (d.source_url) return d.source_url;
+  const workSlug = workSlugFromCitation(d.citation);
+  if (!workSlug) return null;
+  return bibleAzbykaUrl(workSlug, d.chapter_num, d.para_start, d.window_size);
 }
 
 function matchToolCall(
@@ -67,11 +100,13 @@ function buildRows(
 }
 
 function CitationRowSuccess({ row }: { row: Extract<RowKind, { kind: "success" }> }) {
-  const { s } = useStrings();
+  const { s, lang } = useStrings();
   const { hoveredN, setHoveredN, turnKey } = useCitationContext();
   const [modalOpen, setModalOpen] = useState(false);
+  const isNarrow = useMediaQuery("(max-width: 640px)");
   const { marker, rich } = row;
-  const ref = [chapterLabel(rich), paraLabel(rich)].filter(Boolean).join(" · ");
+  const ref = refLabel(rich, lang);
+  const href = azbykaHref(rich);
   const active = hoveredN === marker.n;
 
   return (
@@ -83,8 +118,12 @@ function CitationRowSuccess({ row }: { row: Extract<RowKind, { kind: "success" }
       onMouseLeave={() => setHoveredN(null)}
       style={{
         display: "grid",
-        gridTemplateColumns: "32px 1fr 220px",
-        gap: 20,
+        // On narrow viewports the fixed 220px right column was squeezing
+        // the quote container down to ~30px — barely 3 words per line.
+        // Collapse to a 2-col layout there and inline ref + azbyka below
+        // the metadata inside the middle column.
+        gridTemplateColumns: isNarrow ? "24px 1fr" : "32px 1fr 220px",
+        gap: isNarrow ? 12 : 20,
         padding: "20px 14px",
         marginInline: -14,
         borderBottom: `0.5px solid ${palette.hairline}`,
@@ -161,42 +200,77 @@ function CitationRowSuccess({ row }: { row: Extract<RowKind, { kind: "success" }
         >
           <span>▾ {s.citation.showPassage}</span>
         </button>
-      </div>
-      <div
-        style={{
-          fontFamily: type.mono,
-          fontSize: 10,
-          letterSpacing: "0.18em",
-          textTransform: "uppercase",
-          color: palette.faint,
-          textAlign: "right",
-          lineHeight: 1.6,
-        }}
-      >
-        {ref && <div>{ref}</div>}
-        {rich.source_url && (
-          <div style={{ marginTop: 6 }}>
-            <a
-              href={rich.source_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                color: palette.muted,
-                textDecoration: "none",
-                borderBottom: `0.5px solid ${palette.hairline}`,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = palette.text;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = palette.muted;
-              }}
-            >
-              {s.citation.sourceLabel} ↗
-            </a>
+        {isNarrow && (ref || href) && (
+          <div
+            style={{
+              marginTop: 10,
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 10,
+              alignItems: "baseline",
+              fontFamily: type.mono,
+              fontSize: 10,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color: palette.faint,
+              lineHeight: 1.6,
+            }}
+          >
+            {ref && <span>{ref}</span>}
+            {href && (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: palette.muted,
+                  textDecoration: "none",
+                  borderBottom: `0.5px solid ${palette.hairline}`,
+                }}
+              >
+                {s.citation.sourceLabel} ↗
+              </a>
+            )}
           </div>
         )}
       </div>
+      {!isNarrow && (
+        <div
+          style={{
+            fontFamily: type.mono,
+            fontSize: 10,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            color: palette.faint,
+            textAlign: "right",
+            lineHeight: 1.6,
+          }}
+        >
+          {ref && <div>{ref}</div>}
+          {href && (
+            <div style={{ marginTop: 6 }}>
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: palette.muted,
+                  textDecoration: "none",
+                  borderBottom: `0.5px solid ${palette.hairline}`,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = palette.text;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = palette.muted;
+                }}
+              >
+                {s.citation.sourceLabel} ↗
+              </a>
+            </div>
+          )}
+        </div>
+      )}
       <PassageModal
         open={modalOpen}
         onOpenChange={setModalOpen}
@@ -210,6 +284,7 @@ function CitationRowSuccess({ row }: { row: Extract<RowKind, { kind: "success" }
 function CitationRowError({ row }: { row: Extract<RowKind, { kind: "error" }> }) {
   const { s } = useStrings();
   const { hoveredN, setHoveredN, turnKey } = useCitationContext();
+  const isNarrow = useMediaQuery("(max-width: 640px)");
   const { marker, err } = row;
   const active = hoveredN === marker.n;
   const explain =
@@ -227,8 +302,8 @@ function CitationRowError({ row }: { row: Extract<RowKind, { kind: "error" }> })
       onMouseLeave={() => setHoveredN(null)}
       style={{
         display: "grid",
-        gridTemplateColumns: "32px 1fr 220px",
-        gap: 20,
+        gridTemplateColumns: isNarrow ? "24px 1fr" : "32px 1fr 220px",
+        gap: isNarrow ? 12 : 20,
         padding: "20px 14px",
         marginInline: -14,
         borderBottom: `0.5px solid ${palette.hairline}`,
@@ -283,7 +358,7 @@ function CitationRowError({ row }: { row: Extract<RowKind, { kind: "error" }> })
           {explain}
         </div>
       </div>
-      <div />
+      {!isNarrow && <div />}
     </div>
   );
 }

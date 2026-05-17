@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { palette, type } from "./tokens";
 import { useStrings } from "./i18n";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 interface Props {
   /** Called when the user hits Enter (without shift) or clicks the send arrow. */
@@ -21,6 +22,7 @@ interface Props {
 
 export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill }: Props) {
   const { s } = useStrings();
+  const isNarrow = useMediaQuery("(max-width: 640px)");
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
@@ -137,7 +139,7 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill }: Pro
               send();
             }
           }}
-          placeholder={s.chat.placeholder}
+          placeholder={isNarrow ? s.chat.placeholderShort : s.chat.placeholder}
           rows={1}
           style={{
             flex: 1,
@@ -219,8 +221,8 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill }: Pro
           color: palette.faint,
         }}
       >
-        <span>{s.chat.enterHint}</span>
-        <span>{s.chat.safety}</span>
+        {!isNarrow && <span>{s.chat.enterHint}</span>}
+        <span style={isNarrow ? { marginLeft: "auto" } : undefined}>{s.chat.safety}</span>
       </div>
     </div>
   );

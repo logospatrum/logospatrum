@@ -29,7 +29,7 @@ export const type = {
   mono:   `var(--font-geist-mono), "Geist Mono", ui-monospace, monospace`,
   logoWeight: 300,
   logoTracking: "0.32em",
-  logoSize: "clamp(72px, 11vw, 168px)",
+  logoSize: "clamp(54px, 11vw, 168px)",
 } as const;
 
 // Default tweak values the designer settled on — no longer user-controlled,
