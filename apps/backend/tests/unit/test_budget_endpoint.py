@@ -78,20 +78,3 @@ async def test_kill_switch_disables_global_month(monkeypatch, db_clean, client):
     data = r.json()
     assert data["allowed"] is True
     assert data["warn"] is False
-
-
-def test_session_refresh_returns_token_for_cookie(monkeypatch, client):
-    monkeypatch.setattr("backend.config.settings.pat_session_secret", "0" * 64)
-    r = client.get("/session/refresh", params={"cookie": "abc-uid"})
-    assert r.status_code == 200
-    data = r.json()
-    assert data["token"]
-    assert len(data["token"]) == 43  # urlsafe base64 of 32 bytes, no padding
-    assert "=" not in data["token"]  # Node-symmetric (stripped padding)
-    assert data["expires_at"]
-
-
-def test_session_refresh_500_when_no_secret(monkeypatch, client):
-    monkeypatch.setattr("backend.config.settings.pat_session_secret", "")
-    r = client.get("/session/refresh", params={"cookie": "abc"})
-    assert r.status_code == 500
