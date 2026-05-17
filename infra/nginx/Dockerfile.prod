@@ -1,14 +1,19 @@
 FROM nginx:alpine
 
-# Install OpenSSL and certbot dependencies
+# certbot for Let's Encrypt cert renewal (renew-ssl.sh / init-letsencrypt.sh)
 RUN apk add --no-cache openssl certbot
 
-# Copy nginx configuration
-COPY nginx.prod.conf /etc/nginx/nginx.conf
+# Drop our nginx.prod.conf into /etc/nginx/templates/ — the stock nginx:alpine
+# entrypoint script /docker-entrypoint.d/20-envsubst-on-templates.sh runs
+# envsubst over every *.template at container start, rendering ${DOMAIN} and
+# ${ALLOWED_ORIGIN} into /etc/nginx/conf.d/default.conf before nginx boots.
+COPY nginx.prod.conf  /etc/nginx/templates/default.conf.template
 
-# Create directories
+# Shared proxy headers/timeouts referenced via `include` in default.conf.
+COPY proxy_common.conf /etc/nginx/proxy_common.conf
+
 RUN mkdir -p /etc/nginx/ssl /var/www/certbot
 
 EXPOSE 80 443
 
-CMD ["nginx", "-g", "daemon off;"]
+# Default CMD `nginx -g 'daemon off;'` runs AFTER the envsubst step.
