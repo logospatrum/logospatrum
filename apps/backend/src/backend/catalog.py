@@ -2,9 +2,10 @@
 import json
 from datetime import datetime, timedelta
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from .budget import session as sess
 from .budget import storage
 from .config import settings
 from .db import conn
@@ -131,3 +132,18 @@ async def budget_check(subject: str) -> dict:
         "warn": used >= settings.soft_warn_ratio * limit,
         "reset_at": _tomorrow_msk_iso(),
     }
+
+
+@app.get("/session/refresh")
+async def session_refresh(cookie: str) -> dict:
+    """Issue a fresh HMAC session token for the cookie's pat_uid.
+
+    Called by the frontend at midnight rollover (after a silent 401). Uses the
+    same HMAC formula as the TS middleware so the two stay byte-symmetric.
+    """
+    if not settings.pat_session_secret:
+        raise HTTPException(status_code=500, detail="PAT_SESSION_SECRET not configured")
+    pat_uid = f"cookie:{cookie}"
+    today = storage._today_msk()
+    token = sess.sign(settings.pat_session_secret, pat_uid, today)
+    return {"token": token, "expires_at": _tomorrow_msk_iso()}
