@@ -9,6 +9,8 @@
 2. Render Scripture citations correctly in the citation panel (use `Мф 1:2`, not `гл. 1 · §2`).
 3. Build clickable azbyka.ru/biblia links for Scripture rows that currently have `source_url=NULL`.
 4. Replace the default Next.js favicon with a themed Λ glyph.
+5. Add a small "AI" suffix to the home `<Logo />` (baseline-aligned, dim).
+6. Replace the four home-page starter chips with sharper, more curiosity-grabbing patristic questions.
 
 ## Non-goals
 
@@ -147,6 +149,48 @@ export.notFound, export.exportedAt
 Create `src/app/icon.svg` (Next.js 15 metadata file convention; auto-served as `/icon` and registered in `<head>`). 32x32 viewBox, a Λ in `palette.accent` (`#C8A86B`-ish) centered on `palette.bg` (`#0B0A09`-ish, near-black). Slight 1px stroke matching the brand pairing.
 
 Delete the default `src/app/favicon.ico` so Next.js picks up `icon.svg` exclusively (otherwise the .ico wins for the legacy `/favicon.ico` slot).
+
+### G. "AI" suffix on the home `<Logo />`
+
+`Logo.tsx` keeps the column layout. The h1 wraps `ΛΟΓΟΣ` and a small `AI` glyph as two inline-baseline spans:
+
+```tsx
+<h1 style={{ ...existing }}>
+  <span>ΛΟΓΟΣ</span>
+  <span style={{
+    fontFamily: type.mono,
+    fontSize: "0.18em",
+    fontWeight: 400,
+    letterSpacing: "0.2em",
+    color: palette.faint,
+    marginLeft: "0.3em",
+    verticalAlign: "baseline",
+    WebkitTextStroke: "0",
+  }}>AI</span>
+</h1>
+```
+
+Defaults of CSS inline-flow keep both spans on the h1 baseline — the smaller AI text sits with its bottom flush with the bottom of ΛΟΓΟΣ. The `0.18em` size means AI scales with the responsive `clamp()` h1 font size (~13px at the small end, ~30px at the wide end). `palette.faint` keeps it dim; `WebkitTextStroke: 0` cancels the engraved inner-stroke inherited from h1 so the small AI stays clean.
+
+The optical `paddingLeft: type.logoTracking` on h1 stays — the AI is small enough that visual center doesn't drift noticeably. TopChrome brand string is untouched.
+
+### H. New starter chips (`i18n.ts STRINGS.starters`)
+
+Replace the four current starters with curiosity-grabbing patristic provocations. The pool stays at four entries (matches the current grid). Confirmed RU set:
+
+1. `Сущность и энергия у свт. Григория Паламы`
+2. `Спасётся ли тот, кто никогда не слышал о Христе?`
+3. `Был ли свет Преображения тварным или нетварным?`
+4. `Милость или справедливость — что у Бога преобладает?`
+
+EN set (parallel):
+
+1. `Essence and energies in St. Gregory Palamas`
+2. `Can one be saved who never heard of Christ?`
+3. `Was the Light of the Transfiguration created or uncreated?`
+4. `Mercy or justice — which prevails in God?`
+
+No layout or component change — `Starters.tsx` already reads from `s.starters` array. This is a pure i18n delta.
 
 ## Data flow
 
