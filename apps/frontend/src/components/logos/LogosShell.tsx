@@ -19,6 +19,7 @@ import {
   messagesToMarkdown,
 } from "@/lib/export-markdown";
 import { LibraryBrowser } from "@/components/library/LibraryBrowser";
+import { ConnectAgent } from "@/components/connect/ConnectAgent";
 
 import { palette, tweaks, type } from "./tokens";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -327,6 +328,7 @@ function LogosInner() {
       }}
     />
   );
+  const connectSlot = <ConnectAgent />;
 
   return (
     <>
@@ -366,6 +368,7 @@ function LogosInner() {
         lang={lang}
         onLangChange={setLang}
         librarySlot={librarySlot}
+        connectSlot={connectSlot}
       />
 
       {budgetWarning && !globalPaused && (

@@ -15,6 +15,9 @@ interface Props {
    *  LibraryBrowser keeps its own Radix dialog while looking like part
    *  of the top chrome. */
   librarySlot?: React.ReactNode;
+  /** Optional slot for the ConnectAgent trigger — same pattern as
+   *  librarySlot. Rendered after the library pill. */
+  connectSlot?: React.ReactNode;
 }
 
 export function TopChrome({
@@ -25,6 +28,7 @@ export function TopChrome({
   lang,
   onLangChange,
   librarySlot,
+  connectSlot,
 }: Props) {
   const { s } = useStrings();
   const isNarrow = useMediaQuery("(max-width: 640px)");
@@ -72,6 +76,7 @@ export function TopChrome({
         style={{ display: "flex", alignItems: "center", gap: 8, pointerEvents: "auto", marginLeft: isNarrow ? "auto" : 0 }}
       >
         {!isNarrow && librarySlot}
+        {!isNarrow && connectSlot}
 
         {inChat && (
           <button

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { palette, type } from "./tokens";
 import { useStrings } from "./i18n";
+import { GitHubSVG } from "@/components/icons/github";
 
 export function BottomChrome() {
   const { s } = useStrings();
@@ -38,7 +39,31 @@ export function BottomChrome() {
         pointerEvents: "none",
       }}
     >
-      <span>{s.bottom.corpus}</span>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 16, pointerEvents: "auto" }}>
+        {s.bottom.corpus}
+        <a
+          href="https://github.com/logospatrum/logospatrum"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={s.bottom.githubAria}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            color: "inherit",
+            textDecoration: "none",
+            opacity: 0.7,
+            transition: "opacity 120ms ease",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.7")}
+        >
+          <span style={{ width: 12, height: 12, display: "inline-block" }}>
+            <GitHubSVG width="100%" height="100%" />
+          </span>
+          {s.bottom.github}
+        </a>
+      </span>
       <span>
         Σ &nbsp;·&nbsp; {hh}:{mm} &nbsp;·&nbsp; v 0.5
       </span>

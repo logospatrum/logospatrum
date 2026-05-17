@@ -26,7 +26,11 @@ export const STRINGS = {
       libraryAria:  "Открыть библиотеку",
       libraryLabel: "Корпус",
     },
-    bottom: { corpus: "Корпус собран с azbyka.ru" },
+    bottom: {
+      corpus: "Корпус собран с azbyka.ru",
+      github: "Open source",
+      githubAria: "Открыть исходники на GitHub",
+    },
     quote: {
       line1: "…если они умолкнут,",
       line2: "то камни возопиют.",
@@ -80,6 +84,22 @@ export const STRINGS = {
         `Проверьте, что бэкенд запущен на ${url}.`,
       generic: "Произошла ошибка. Попробуйте ещё раз.",
     },
+    connect: {
+      trigger: "Подключить",
+      triggerAria: "Подключить к своему агенту",
+      title: "Подключи Patristica к своему агенту",
+      blurb: "MCP-сервер с инструментами поиска по святоотеческой библиотеке. Бесплатно, без регистрации.",
+      tabClaude: "Claude Code",
+      tabJson: "Другие клиенты (JSON)",
+      fullPluginLabel: "Полный плагин (плюс teo-search субагент и автотриггер-скилл):",
+      rawMcpLabel: "или только MCP, без агента и скилла:",
+      jsonBlurb: "Для Cursor, Cline, langchain и других — скопируй в свой mcpServers:",
+      toolsList: "Доступные инструменты:",
+      sourcesLink: "Исходники на GitHub",
+      sourcesAria: "Открыть репозиторий плагина",
+      copyAria: "Скопировать",
+      copied: "Скопировано",
+    },
     budget: {
       warning: (used: number, limit: number) =>
         `Осталось ${(limit - used).toFixed(0)} ₽ из дневного лимита ${limit.toFixed(0)} ₽. После 0 ₽ запросы будут отклонены до завтра.`,
@@ -108,7 +128,11 @@ export const STRINGS = {
       libraryAria:  "Open the corpus",
       libraryLabel: "Corpus",
     },
-    bottom: { corpus: "Corpus sourced from azbyka.ru" },
+    bottom: {
+      corpus: "Corpus sourced from azbyka.ru",
+      github: "Open source",
+      githubAria: "Open the source code on GitHub",
+    },
     quote: {
       line1: "…if these were silent,",
       line2: "the stones would cry out.",
@@ -161,6 +185,22 @@ export const STRINGS = {
       streamConnectDesc: (url: string) =>
         `Make sure the backend is running at ${url}.`,
       generic: "Something went wrong. Please try again.",
+    },
+    connect: {
+      trigger: "Connect",
+      triggerAria: "Connect to your agent",
+      title: "Connect Patristica to your agent",
+      blurb: "MCP server with patristic-corpus search tools. Free, no signup.",
+      tabClaude: "Claude Code",
+      tabJson: "Other clients (JSON)",
+      fullPluginLabel: "Full plugin (with teo-search subagent and auto-trigger skill):",
+      rawMcpLabel: "or just the MCP, no agent or skill:",
+      jsonBlurb: "For Cursor, Cline, langchain, and others — paste into your mcpServers:",
+      toolsList: "Available tools:",
+      sourcesLink: "Source on GitHub",
+      sourcesAria: "Open the plugin repository",
+      copyAria: "Copy",
+      copied: "Copied",
     },
     budget: {
       warning: (used: number, limit: number) =>
