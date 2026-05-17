@@ -36,9 +36,12 @@ services:
       retries: 10
 
   backend:
-    build:
-      context: ../apps/backend
-      dockerfile: Dockerfile
+    image: ghcr.io/logospatrum/backend:latest
+    # NOTE: listens on :8000 (langgraph-built image default), not :2024.
+    # Image is produced by .github/workflows/build-and-push.yml via
+    # `langgraph build` and pushed to GHCR. Pull it on VPS with:
+    #   docker login ghcr.io -u $GHCR_USERNAME -p $GHCR_TOKEN
+    #   docker compose -f infra/docker-compose.prod.yml pull backend
     networks: [internal]
     env_file: ../.env
     environment:
@@ -48,15 +51,13 @@ services:
         condition: service_healthy
 
   nextjs:
-    build:
-      context: ../apps/frontend
-      dockerfile: Dockerfile
+    image: ghcr.io/logospatrum/frontend:latest
     networks: [internal]
     env_file: ../.env
     environment:
       # SSR proxy fetches reach the backend via docker DNS, not the public
       # domain. The browser hits /api/* relatively, the proxy forwards here.
-      LANGGRAPH_API_URL: http://backend:2024
+      LANGGRAPH_API_URL: http://backend:8000
       NODE_ENV: production
     depends_on: [backend]
 
