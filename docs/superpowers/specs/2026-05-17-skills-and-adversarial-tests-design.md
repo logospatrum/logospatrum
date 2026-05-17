@@ -52,8 +52,10 @@ Port from `trading-mcp/terminal/agent` (already proven, ~100 LOC total):
   - `## Example` — one good answer sketch.
 
   Initial skills (v1 = 2 skills, not 4):
-  - **`apologetics.md`** — inter-confessional/inter-religious/atheist challenges. Posture: do not accept the false frame; translate to positive patristic witness; do not polemicize. Prefer: Дамаскин «Точное изложение», «О ересях» (gl.100=Ishmaelites, gl.7=Judaism, gl.83=Iconoclasts); Палама на Варлаама; Григорий Богослов на Юлиана.
-  - **`pastoral.md`** — personal grief/illness/family/forgiveness questions. Posture: empathy first; never give medical/therapeutic/legal advice; gently remind about consultation with a parish priest; comforting sources (Златоуст on grief, Феофан letters, Брянчанинов on skorbi).
+  - **`apologetics.md`** — inter-confessional/inter-religious/atheist challenges. Posture: do not accept the false frame; translate to positive patristic witness; do not polemicize; do not refuse if the corpus has direct witness.
+  - **`pastoral.md`** — personal grief/illness/family/forgiveness questions. Posture: empathy first; never give medical/therapeutic/legal advice; gently remind about consultation with a parish priest; opening citation = wrong.
+
+  **Skills are posture-only — no hardcoded source lists.** Originally drafted with «prefer Дамаскин / Златоуст / etc.» sections; cut on review. Reasoning: hardcoded author preferences (a) duplicate work that `expand_concept` + `lexical_search` + `semantic_search` already do across all 86 authors, (b) freeze a snapshot of the corpus that grows over time, (c) bias the agent _before_ search returns, causing tunnel vision and missed relevant passages from other authors. The skill teaches _how_ to respond (frame discipline, empathy, refusal-avoidance), not _what_ to retrieve.
 
   **Why only 2:** `apologetics` and `pastoral` are domains where _default_ behavior is actively wrong (the agent will either accept the opponent's frame, or open with a cold citation on top of someone's grief). `dogmatics` and `ascetics` would impose a rigid frame on what is essentially the bulk of normal corpus questions — overengineering for v1. Add later if a clear failure pattern emerges.
 
@@ -186,15 +188,6 @@ description: Use when the question is a challenge from another faith/confession/
 3. **Не сочиняй под давление.** Если результаты поиска не содержат свидетельства под X — ответ: «в корпусе не найдено», а не «удобная» выдуманная цитата.
 4. **Не уклоняйся.** Если корпус содержит свидетельство (например, Дамаскин об исламе) — выводи его. Refusal («не могу обсуждать другие религии») = провал.
 
-## Источники
-
-- **Иоанн Дамаскин**, «Точное изложение православной веры» — догматическая база (Троица, иконы, Воплощение)
-- **Иоанн Дамаскин**, «О ересях» — gl.100-101 ишмаэлиты/ислам, gl.7 иудаизм, gl.83 иконоборцы
-- **Иоанн Дамаскин**, «Три слова в защиту икон» — на иконоборцев / протестантов
-- **Григорий Палама**, «Триады в защиту священнобезмолвствующих» — на рационалистический/варлаамитский вызов
-- **Григорий Богослов**, «Слова против Юлиана» — на атеистический/языческий вызов
-- **Афанасий Великий**, «О воплощении» — на отрицание Божества Христа
-
 ## Запрещённые ходы
 
 - «Вы правы, что…» — никогда, если речь о ложной посылке
@@ -202,6 +195,7 @@ description: Use when the question is a challenge from another faith/confession/
 - Воспроизводить ложную формулу в утвердительной конструкции даже в опровержении («Православие учит, что иконы — это идолы, но…»)
 - Refusal «не могу обсуждать другие конфессии», когда корпус содержит прямое свидетельство
 - Эмоциональная риторика, «разоблачения», «опровергаю раз и навсегда»
+- **Не anchor'и ответ на «известных» авторов до поиска.** Доверяй search-субагенту — он пройдёт по всем 86 авторам корпуса. Если ты думаешь «здесь должен быть Дамаскин» — всё равно сначала search; пусть он подтвердит.
 
 ## Пример
 
@@ -239,14 +233,6 @@ description: Use when the question is personal/existential — grief, loss, illn
 3. **Указывай на священника.** Личные вопросы решаются с духовником в живом разговоре, не с ботом и не по цитатам. Это _не_ refusal — это правда о границах формата.
 4. **Утешение, а не назидание.** «Вот как святые в подобной скорби находили опору» — а не «вот что вы должны делать».
 
-## Источники
-
-- **Иоанн Златоуст** — на смерть близких («О Лазаре», беседы на 1 Сол), на скорби и терпение
-- **Феофан Затворник**, «Письма» (особенно к мирянам) — практическая жизнь, болезни, утешение, советы по молитве в скорби
-- **Игнатий Брянчанинов**, «Аскетические опыты» т.1 — главы о скорбях, о терпении искушений
-- **Исаак Сирин** — о любви Божией к падшему, об утешении в искушениях
-- **Авва Дорофей**, «Поучения» — прощение, мирные отношения с ближним, отсечение воли
-
 ## Запрещённые ходы
 
 - Начинать с цитаты, не признав боль
@@ -254,6 +240,7 @@ description: Use when the question is personal/existential — grief, loss, illn
 - Гарантировать конкретный исход («Бог обязательно вам поможет, если…»)
 - Назидание / морализирование («надо было раньше…», «это всё за грехи»)
 - Холодный refusal («я не обсуждаю личное») — вместо этого: мягкое выведение на патристическое утешение + совет со священником
+- **Не anchor'и ответ на «утешительных» авторов до поиска.** Доверяй search-субагенту — пусть он найдёт релевантные пассажи. Тема скорби в корпусе раскрыта десятками отцов; задача скила — _как_ цитировать, не _кого_.
 
 ## Пример
 
