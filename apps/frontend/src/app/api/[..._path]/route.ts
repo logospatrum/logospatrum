@@ -68,11 +68,15 @@ async function handle(
 
   // 1) HMAC verify (skipped only by OPTIONS above; /api/session has its own
   //    route at apps/frontend/src/app/api/session/route.ts so it never reaches
-  //    this catch-all).
-  const patUid = req.cookies.get("pat_uid")?.value ?? "";
-  const sessionToken = req.headers.get("x-pat-session") ?? "";
-  if (!verifyHmac(patUid, sessionToken)) {
-    return NextResponse.json({ error: "session_invalid" }, { status: 401 });
+  //    this catch-all). Diagnostic /info is whitelisted so checkGraphStatus
+  //    works for unauthenticated probes from the browser.
+  const isUnauthenticated = pathStr === "info";
+  if (!isUnauthenticated) {
+    const patUid = req.cookies.get("pat_uid")?.value ?? "";
+    const sessionToken = req.headers.get("x-pat-session") ?? "";
+    if (!verifyHmac(patUid, sessionToken)) {
+      return NextResponse.json({ error: "session_invalid" }, { status: 401 });
+    }
   }
 
   const subject = subjectKeyFor(req);

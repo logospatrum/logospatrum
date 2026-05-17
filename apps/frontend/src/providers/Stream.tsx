@@ -26,7 +26,10 @@ async function checkGraphStatus(apiUrl: string): Promise<boolean> {
   }
 }
 
-const DEFAULT_API_URL = "http://localhost:2024";
+// Default to the Next.js proxy at /api so the HMAC + budget guard chain
+// is always engaged (dev frontend 3001 → /api/* → backend 2024 via
+// LANGGRAPH_API_URL server-side env). To bypass, set NEXT_PUBLIC_API_URL.
+const DEFAULT_API_URL = "/api";
 const DEFAULT_ASSISTANT_ID = "patristic";
 
 const StreamSession = ({
