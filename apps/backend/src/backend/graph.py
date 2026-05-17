@@ -1,4 +1,6 @@
 """LangGraph + deepagents graph: Sonnet main + Haiku search subagent."""
+from pathlib import Path
+
 from deepagents import create_deep_agent
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END, MessagesState
@@ -6,6 +8,8 @@ from langgraph.graph import StateGraph, END, MessagesState
 from .budget.node import budget_record
 from .config import settings
 from .prompts import MAIN_AGENT_PROMPT, SEARCH_AGENT_PROMPT
+from .skill_tools import build_skill_tools
+from .skills_registry import scan_skills, render_skills_registry_for_prompt
 from .tools.list_authors import list_authors
 from .tools.list_works import list_works
 from .tools.expand_concept import expand_concept
@@ -29,6 +33,14 @@ search_model = ChatOpenAI(
 )
 
 
+_SKILLS = scan_skills(Path(__file__).parent / "skills")
+_SKILL_TOOLS = build_skill_tools(skills=_SKILLS)
+_MAIN_PROMPT = MAIN_AGENT_PROMPT.replace(
+    "{{SKILLS_REGISTRY}}",
+    render_skills_registry_for_prompt(_SKILLS),
+)
+
+
 search_subagent = {
     "name": "search",
     "description": "Searches the patristic corpus. Delegate when you need citations.",
@@ -42,8 +54,8 @@ search_subagent = {
 _inner = create_deep_agent(
     model=main_model,
     tools=[read_passage, list_authors, list_works, expand_concept,
-           lexical_search, semantic_search],
-    system_prompt=MAIN_AGENT_PROMPT,
+           lexical_search, semantic_search, *_SKILL_TOOLS],
+    system_prompt=_MAIN_PROMPT,
     subagents=[search_subagent],
 ).with_config({"recursion_limit": 50})  # preserved: deepagents needs depth for tool-use loops
 
