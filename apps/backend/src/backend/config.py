@@ -33,7 +33,10 @@ class Settings(BaseSettings):
 
     # === anti-abuse / budget ===
     pat_session_secret: str = ""  # 32-byte hex; required in prod
-    allowed_origin: str = "http://localhost:3000"
+    # Comma-separated origins for CORS. Dev default covers both 3001 (the
+    # project's chosen frontend port — see apps/frontend/CLAUDE.md) and 3000
+    # (legacy). Production must override with the real domain.
+    allowed_origin: str = "http://localhost:3001,http://localhost:3000"
     daily_rub_per_cookie: float = 500.0
     daily_rub_per_ip: float = 250.0
     soft_warn_ratio: float = 0.8
