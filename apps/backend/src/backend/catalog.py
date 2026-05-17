@@ -1,17 +1,22 @@
 """FastAPI app: catalog endpoint mounted under LangGraph Server."""
 import json
+from datetime import datetime, timedelta
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .budget import storage
+from .config import settings
 from .db import conn
 
 app = FastAPI(title="Patristic Catalog")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"http://localhost:\d+",
-    allow_methods=["*"],
+    allow_origins=[o.strip() for o in settings.allowed_origin.split(",") if o.strip()],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
+    allow_credentials=True,
 )
 
 
@@ -60,3 +65,44 @@ async def get_catalog() -> dict:
 @app.get("/health")
 async def health() -> dict:
     return {"status": "ok"}
+
+
+def _tomorrow_msk_iso() -> str:
+    today = datetime.strptime(storage._today_msk(), "%Y-%m-%d").replace(tzinfo=storage.MSK)
+    return (today + timedelta(days=1)).isoformat()
+
+
+def _next_month_msk_iso() -> str:
+    month = datetime.strptime(storage._this_month_msk() + "-01", "%Y-%m-%d").replace(tzinfo=storage.MSK)
+    if month.month == 12:
+        nxt = month.replace(year=month.year + 1, month=1)
+    else:
+        nxt = month.replace(month=month.month + 1)
+    return nxt.isoformat()
+
+
+@app.get("/budget/check")
+async def budget_check(subject: str) -> dict:
+    if subject == "__global_month":
+        used = await storage.get_used_rub(subject, storage._this_month_msk())
+        limit = settings.global_monthly_kill_rub
+        return {
+            "allowed": used < limit,
+            "used_rub": used,
+            "limit_rub": limit,
+            "warn": used >= settings.soft_warn_ratio * limit,
+            "reset_at": _next_month_msk_iso(),
+        }
+    limit = (
+        settings.daily_rub_per_cookie
+        if subject.startswith("cookie:")
+        else settings.daily_rub_per_ip
+    )
+    used = await storage.get_used_rub(subject, storage._today_msk())
+    return {
+        "allowed": used < limit,
+        "used_rub": used,
+        "limit_rub": limit,
+        "warn": used >= settings.soft_warn_ratio * limit,
+        "reset_at": _tomorrow_msk_iso(),
+    }

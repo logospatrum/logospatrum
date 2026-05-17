@@ -1,0 +1,58 @@
+import pytest
+from fastapi.testclient import TestClient
+
+from backend.catalog import app
+from backend.budget import storage
+
+
+@pytest.fixture
+def client():
+    return TestClient(app)
+
+
+@pytest.mark.asyncio
+async def test_cookie_subject_allowed_when_under_limit(db_clean, client):
+    await storage.add_usage("cookie:test1", storage._today_msk(), 100.0)
+    r = client.get("/budget/check", params={"subject": "cookie:test1"})
+    assert r.status_code == 200
+    data = r.json()
+    assert data["allowed"] is True
+    assert data["warn"] is False
+    assert data["used_rub"] == pytest.approx(100.0)
+    assert data["limit_rub"] == pytest.approx(500.0)
+
+
+@pytest.mark.asyncio
+async def test_cookie_subject_warn_at_80pct(db_clean, client):
+    await storage.add_usage("cookie:test2", storage._today_msk(), 400.0)
+    r = client.get("/budget/check", params={"subject": "cookie:test2"})
+    data = r.json()
+    assert data["allowed"] is True
+    assert data["warn"] is True
+
+
+@pytest.mark.asyncio
+async def test_cookie_subject_denied_at_100pct(db_clean, client):
+    await storage.add_usage("cookie:test3", storage._today_msk(), 501.0)
+    r = client.get("/budget/check", params={"subject": "cookie:test3"})
+    data = r.json()
+    assert data["allowed"] is False
+
+
+@pytest.mark.asyncio
+async def test_ip_subject_uses_lower_limit(db_clean, client):
+    # IP cap = 250 ₽
+    await storage.add_usage("ip:1.2.3.4", storage._today_msk(), 251.0)
+    r = client.get("/budget/check", params={"subject": "ip:1.2.3.4"})
+    data = r.json()
+    assert data["allowed"] is False
+    assert data["limit_rub"] == pytest.approx(250.0)
+
+
+@pytest.mark.asyncio
+async def test_global_month_subject(db_clean, client):
+    await storage.add_usage("__global_month", storage._this_month_msk(), 30_001.0)
+    r = client.get("/budget/check", params={"subject": "__global_month"})
+    data = r.json()
+    assert data["allowed"] is False
+    assert data["limit_rub"] == pytest.approx(30_000.0)
