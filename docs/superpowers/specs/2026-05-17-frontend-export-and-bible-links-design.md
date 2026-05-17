@@ -179,14 +179,14 @@ The optical `paddingLeft: type.logoTracking` on h1 stays — the AI is small eno
 Replace the four current starters with curiosity-grabbing patristic provocations. The pool stays at four entries (matches the current grid). Confirmed RU set:
 
 1. `Сущность и энергия у свт. Григория Паламы`
-2. `Спасётся ли тот, кто никогда не слышал о Христе?`
+2. `Считал ли блж. Августин, что вера и разум должны быть согласованы?`
 3. `Был ли свет Преображения тварным или нетварным?`
 4. `Милость или справедливость — что у Бога преобладает?`
 
 EN set (parallel):
 
 1. `Essence and energies in St. Gregory Palamas`
-2. `Can one be saved who never heard of Christ?`
+2. `Did Blessed Augustine believe faith and reason must agree?`
 3. `Was the Light of the Transfiguration created or uncreated?`
 4. `Mercy or justice — which prevails in God?`
 
