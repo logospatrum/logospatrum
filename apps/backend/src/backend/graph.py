@@ -1,7 +1,9 @@
 """LangGraph + deepagents graph: Sonnet main + Haiku search subagent."""
 from deepagents import create_deep_agent
 from langchain_openai import ChatOpenAI
+from langgraph.graph import StateGraph, END, MessagesState
 
+from .budget.node import budget_record
 from .config import settings
 from .prompts import MAIN_AGENT_PROMPT, SEARCH_AGENT_PROMPT
 from .tools.list_authors import list_authors
@@ -37,10 +39,24 @@ search_subagent = {
 }
 
 
-agent = create_deep_agent(
+_inner = create_deep_agent(
     model=main_model,
     tools=[read_passage, list_authors, list_works, expand_concept,
            lexical_search, semantic_search],
     system_prompt=MAIN_AGENT_PROMPT,
     subagents=[search_subagent],
-).with_config({"recursion_limit": 50})
+)
+
+
+# Wrap to attach a terminal accounting node. The inner deepagents graph runs
+# first; once it returns its final state, `budget_record` reads the usage
+# metadata from the messages, converts to RUB, and UPSERTs into budget_usage.
+# Streaming: clients must pass `subgraphs=True` to see inner agent events
+# (frontend Stream.tsx is updated in Task 5.2).
+_wrapper = StateGraph(MessagesState)
+_wrapper.add_node("agent_inner", _inner)
+_wrapper.add_node("budget_record", budget_record)
+_wrapper.set_entry_point("agent_inner")
+_wrapper.add_edge("agent_inner", "budget_record")
+_wrapper.add_edge("budget_record", END)
+agent = _wrapper.compile().with_config({"recursion_limit": 50})
