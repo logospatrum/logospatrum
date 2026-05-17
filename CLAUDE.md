@@ -67,6 +67,28 @@ Public-anonymous chat is gated by a layered defence — see [docs/superpowers/sp
 - Kill switch: `BUDGET_GUARD_ENABLED=false` makes `/budget/check` always return `allowed=true` AND makes the post-run accounting node no-op. Use as rollback.
 - Tariffs in `apps/backend/src/backend/budget/pricing.py` are hardcoded Timeweb prices as of 2026-05-16. Update there if Timeweb changes them.
 
+## Production rollout (added 2026-05-17)
+
+Backend image is built by GitHub Actions and pushed to GHCR — see [docs/superpowers/specs/2026-05-17-mcp-feature-and-prod-rollout-design.md](docs/superpowers/specs/2026-05-17-mcp-feature-and-prod-rollout-design.md).
+
+- **CI** (`.github/workflows/build-and-push.yml`): on push to `master`/`main` or `v*` tag, two parallel jobs build:
+  - `ghcr.io/logospatrum/backend:<sha>` + `:latest` via `langgraph build` (Wolfi distro, base `langchain/langgraph-api:3.11`, listens on `:8000`).
+  - `ghcr.io/logospatrum/frontend:<sha>` + `:latest` via `apps/frontend/Dockerfile`.
+- **VPS deploy (MVP, manual SSH-pull)**:
+  ```
+  ssh root@<vps>
+  cd /opt/logospatrum
+  git pull
+  docker login ghcr.io -u $GHCR_USERNAME -p $GHCR_TOKEN     # read:packages PAT
+  docker compose -f infra/docker-compose.prod.yml pull
+  docker compose -f infra/docker-compose.prod.yml up -d
+  ```
+- **API surface**: the Next.js `/api/[..._path]/route.ts` is a whitelist proxy. Only `/info`, `/catalog`, `/openapi.json`, `/mcp` (public, no HMAC), and `/runs/stream` (HMAC + budget + subject inject) reach the backend. Everything else 404s — including `/store/*`, `/runs/batch`, `/runs/crons`, `/a2a`. New LangGraph endpoints are 404 by default.
+- **Plugin**: `logospatrum/patristic-plugin` is a git submodule at `plugins/patristic-plugin`. Iterate on it inside that checkout; commits go to the plugin repo. Monorepo only tracks its SHA.
+- **Domain hardcoded in plugin**: `https://logospatrum.com/api/mcp`. If you move the prod domain, update `plugins/patristic-plugin/.claude-plugin/plugin.json` and re-publish the plugin repo.
+- **Backend port**: prod compose listens on `:8000` (langgraph-built default). `langgraph dev` locally on the host keeps `:2024`. Only the prod image changed; dev flow unchanged.
+- **Wolfi caveat**: if CI build fails on native deps (sentence-transformers/torch), drop `"image_distro": "wolfi"` from `apps/backend/langgraph.json` to fall back to debian-based.
+
 ## Don't
 
 - Don't proactively create `*.md` (incl. README) unless asked.

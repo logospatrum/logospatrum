@@ -1,135 +1,71 @@
-# Patristic Chat
+# Logospatrum — Theological Research Assistant
 
-Агентный чат по русскому святоотеческому корпусу с верифицированными цитатами.
+![ΛΟΓΟΣ main screen](docs/screenshots/main-screen.png)
 
-**Корпус:** ~2000 трудов от ~85 авторов из раздела «Избранные богословы» azbyka.ru + греческая философия (Платон, Аристотель) + Православная Библия. Всё на русском.
+Russian Orthodox patristic chat. Agentic RAG over ~2,100 works / 86 authors /
+726K paragraphs / 1.98M embedding windows from azbyka.ru. Two-tier deepagents
+graph (Claude Sonnet 4.6 main + Haiku 4.5 search subagent via Timeweb AI),
+Postgres 16 + pgvector (semantic) + tsvector (lexical), bge-m3 embeddings,
+Next.js 15 frontend.
 
-**Архитектура:** см. [design spec](docs/superpowers/specs/2026-05-14-patristic-chat-design.md). Кратко — LangGraph Server + deepagents (Sonnet main + Haiku search subagent) поверх PostgreSQL 16 + pgvector + tsvector. Фронт — Next.js форк `agent-chat-ui` с historiей чатов в localStorage и библиографическим браузером с поиском.
+**Live:** https://logospatrum.com
 
-## Структура монорепо
+## What's here
 
-```
-apps/
-├── backend/        # LangGraph Server + 6 тулов агента + FastAPI /catalog
-└── frontend/       # форк agent-chat-ui (Next.js + Tailwind + Radix)
-packages/
-└── pipeline/       # CLI: scrape → markdown → paragraphs → embed → enrich
-infra/
-├── migrations/     # SQL миграции
-├── docker-compose.dev.yml
-└── scripts/        # migrate.sh, init-letsencrypt.sh, pg_dump_restore.md
-tests/
-└── eval/gold.yaml  # 53-entry goldset (acceptance gate)
-```
+- `apps/backend/` — LangGraph graph + FastAPI catalog/budget endpoints.
+- `apps/frontend/` — Next.js 15 chat UI (Logos shell).
+- `packages/pipeline/` — corpus ingest CLI (scrape, markdown, chapters,
+  paragraphs, embed).
+- `plugins/patristic-plugin/` — git submodule → [logospatrum/patristic-plugin](https://github.com/logospatrum/patristic-plugin).
+  The Claude Code plugin third-party agents install to use our MCP.
+- `infra/` — docker-compose, nginx, migrations.
+- `docs/superpowers/{specs,plans}/` — design docs + implementation plans.
+- `tests/eval/gold.yaml` — 53-query acceptance set.
 
-## Быстрый старт (dev на Windows + WSL2)
+## Quick links
 
-### 1. Postgres
+- **Connect your agent (MCP):** https://logospatrum.com — click "Подключить"
+  in the top bar. Or directly:
+  `claude mcp add --transport http patristic https://logospatrum.com/api/mcp`.
+- **Plugin repo:** https://github.com/logospatrum/patristic-plugin
+- **Backend internals:** [apps/backend/CLAUDE.md](apps/backend/CLAUDE.md)
+- **Frontend internals:** [apps/frontend/CLAUDE.md](apps/frontend/CLAUDE.md)
+- **Pipeline (data ingest):** [packages/pipeline/](packages/pipeline/)
+- **Root project notes:** [CLAUDE.md](CLAUDE.md)
 
-WSL2 должна быть запущена (`wsl -l -v` показывает Ubuntu Running). Если нет — `wsl -e bash -c "sleep infinity"` в фоне:
+## Local dev
 
-```bash
-cp .env.example .env
-# отредактируй TIMEWEB_AI_KEY (ключ от https://api.timeweb.ai/v1)
-
-wsl -e bash -c "cd '/mnt/c/Users/79819/PycharmProjects/christian_rag' && docker compose -f infra/docker-compose.dev.yml up -d postgres"
-# применить миграции
-wsl -e bash -c "docker exec -i patristic-postgres-dev psql -U postgres -d patristic" < infra/migrations/001_init.sql
-```
-
-### 2. Pipeline (одноразово, индексация корпуса)
-
-Требуется Python 3.13 + (опционально) NVIDIA GPU.
+Prereqs: Docker + WSL2 (Windows), Python 3.13, Node 20.
 
 ```bash
-cd packages/pipeline
-python -m venv .venv
-# torch с CUDA 12.8 для Blackwell GPU:
-.venv/Scripts/pip install torch --index-url https://download.pytorch.org/whl/cu128
-.venv/Scripts/pip install -e ".[dev]"
+# Postgres (pgvector)
+wsl -e bash -c "cd $(pwd)/infra && docker compose -f docker-compose.dev.yml up -d postgres"
 
-# проверка CUDA:
-.venv/Scripts/python -c "import torch; print('CUDA:', torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else '')"
+# Backend (LangGraph dev server)
+cd apps/backend && PYTHONUTF8=1 .venv/Scripts/langgraph dev --port 2024 --no-browser
 
-# индексация (с PYTHONUTF8=1 для русских docstring-ов в --help):
-PYTHONUTF8=1 .venv/Scripts/python -m pipeline diagnose     # отчёт о пробелах
-PYTHONUTF8=1 .venv/Scripts/python -m pipeline paragraphs   # ~8 мин на 86K md
-PYTHONUTF8=1 .venv/Scripts/python -m pipeline concepts-bootstrap  # ~2-5 мин, Haiku
-PYTHONUTF8=1 .venv/Scripts/python -m pipeline embed --device cuda --batch-size 64  # 2-6 ч на GPU
+# Frontend (note: PORT=3001, not 3000 — see apps/frontend/CLAUDE.md)
+cd apps/frontend && PORT=3001 npm run dev
 ```
 
-Опционально, после прохождения goldset (см. Task 42 в плане):
+## Production deploy
+
+CI (`.github/workflows/build-and-push.yml`) builds + pushes to GHCR on every
+push to `master` / tag `v*`. VPS pulls with:
 
 ```bash
-# Подними LM Studio с qwen3.5-9b или другой 7-14B моделью на :1234
-ENRICH_PROVIDER=local PYTHONUTF8=1 .venv/Scripts/python -m pipeline enrich
+ssh root@<vps>
+cd /opt/logospatrum
+git pull
+docker login ghcr.io -u $GHCR_USERNAME -p $GHCR_TOKEN   # read:packages PAT
+docker compose -f infra/docker-compose.prod.yml pull
+docker compose -f infra/docker-compose.prod.yml up -d
 ```
 
-### 3. Backend
+See `docs/superpowers/specs/2026-05-17-mcp-feature-and-prod-rollout-design.md`
+for the full architecture (whitelist API surface, Wolfi-based langgraph-built
+backend, MCP-as-public-feature).
 
-```bash
-cd apps/backend
-python -m venv .venv
-.venv/Scripts/pip install -e ".[dev]"
+## License
 
-# юнит-тесты (требуют запущенный postgres):
-PYTHONUTF8=1 .venv/Scripts/python -m pytest tests/unit/ -v
-
-# dev server:
-PYTHONUTF8=1 .venv/Scripts/langgraph dev --port 2024 --no-browser
-```
-
-LangGraph Server поднимется на `localhost:2024` с агентом `patristic` и встроенным FastAPI приложением `GET /catalog` (для библиографического браузера на фронте).
-
-### 4. Frontend
-
-```bash
-cd apps/frontend
-npm install
-npm run dev
-```
-
-Открыть `http://localhost:3000`. Welcome-экран с примерами запросов, иконка библиотеки в шапке.
-
-## Тестирование
-
-| Слой | Команда | Тестов |
-|---|---|---|
-| Pipeline | `cd packages/pipeline && PYTHONUTF8=1 .venv/Scripts/python -m pytest -v` | 31 |
-| Backend | `cd apps/backend && PYTHONUTF8=1 .venv/Scripts/python -m pytest tests/unit -v` | 32 |
-| Frontend build | `cd apps/frontend && npm run build` | — |
-| Goldset (acceptance) | `cd apps/backend && pytest tests/integration/test_goldset.py -v -s` | 53 запроса |
-
-## Acceptance gate
-
-MVP считается готовым **только когда `tests/eval/gold.yaml` (53 entries) проходит** через полный агент с порогами:
-- addressed ≥ 80%
-- thematic ≥ 60%
-- cross ≥ 70%
-- negative = 100%
-
-См. [implementation plan](docs/superpowers/plans/2026-05-14-patristic-chat-mvp.md), Task 39.
-
-## Deployment
-
-Полный рунбук — [`infra/scripts/pg_dump_restore.md`](infra/scripts/pg_dump_restore.md). Кратко:
-
-1. Локально проиндексировать корпус (см. выше).
-2. `wsl -e bash -c "docker exec patristic-postgres-dev pg_dump -U postgres -d patristic -Fc"` → файл-дамп ~3-5 ГБ.
-3. `scp` на VPS, `pg_restore` в продовый Postgres.
-4. На VPS: `docker compose -f infra/docker-compose.prod.yml up -d` (для прод-конфига см. `infra/docker-compose.prod.yml`, не входит в MVP).
-5. SSL: `infra/scripts/init-letsencrypt.sh`.
-
-## Документы
-
-- [Design spec](docs/superpowers/specs/2026-05-14-patristic-chat-design.md)
-- [Implementation plan](docs/superpowers/plans/2026-05-14-patristic-chat-mvp.md) — 42 задачи в 10 фазах
-- [STATUS.md](STATUS.md) — текущее состояние реализации
-- [pg_dump_restore.md](infra/scripts/pg_dump_restore.md) — runbook деплоя БД
-
-## Известные ограничения окружения
-
-- **Windows + WSL2 only.** Бек работает и на Linux/macOS, но команды в README предполагают Git Bash на Windows. На Linux замените `.venv/Scripts/python` на `.venv/bin/python` и убирайте префикс `wsl -e bash -c "..."` вокруг docker-команд.
-- **`PYTHONUTF8=1` обязателен на Windows** для рендера русских docstring-ов в typer-help и для корректного логирования. Включён в pipeline и backend по умолчанию через окружение.
-- **`WindowsSelectorEventLoopPolicy`** установлен в `__init__.py` обоих пакетов — psycopg-pool 3.3.x иначе виснет на Windows + Python 3.13.
-- **GPU.** Эмбеддинг на GPU быстрее в 10-20x. На CPU тоже работает, но фаза embed может занять сутки. Если без GPU — переключите модель на `intfloat/multilingual-e5-small` (`EMBEDDING_MODEL` в `.env`) и сделайте полную переиндексацию.
+MIT.

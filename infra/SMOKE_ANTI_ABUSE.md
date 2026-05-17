@@ -18,6 +18,14 @@ Prereqs:
 
 ## Checks
 
+**Note (2026-05-17):** As of the MCP-prod-rollout spec, only `/api/info`,
+`/api/catalog`, `/api/openapi.json`, `/api/mcp`, and `/api/runs/stream`
+reach the backend. Everything else (`/store/*`, `/runs/batch`,
+`/runs/crons*`, `/a2a`, `/threads` GET, `/assistants/*`) returns `404`
+from the proxy without contacting backend. The HMAC checks (#1-3) apply
+ONLY to `/runs/stream`; public paths bypass HMAC entirely.
+
+
 For each `curl` example, replace `https://localhost` with your real domain.
 Use `-k` only for local self-signed TLS.
 
@@ -96,6 +104,59 @@ Use `-k` only for local self-signed TLS.
   ```
   Expect: `cookie:<uuid>` and `__global_month` rows with the same
   `used_rub` value (single-digit to low-tens of rubles for a basic query).
+
+- [ ] **11. MCP reachable without HMAC.** The product feature.
+  ```
+  curl -ki -X POST https://${DOMAIN}/api/mcp \
+    -H "Content-Type: application/json" \
+    -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+  ```
+  Expect: `HTTP/2 200` with JSON listing 6 tools (`read_passage`,
+  `lexical_search`, `semantic_search`, `list_authors`, `list_works`,
+  `expand_concept`). No `Origin`, no `pat_uid`, no `X-Pat-Session`
+  required — that's the point.
+
+- [ ] **12. MCP rate-limited by IP.** Fire 121 requests to `/api/mcp` in 60s
+  → 121st returns `HTTP/2 429` (mcp_zone 120r/m).
+
+- [ ] **13. Blacklist returns 404 from proxy.** Each should return `HTTP/2 404`
+  with empty body, AND backend should never see the request (verify via
+  nginx access log or backend log silence):
+  ```
+  curl -ki https://${DOMAIN}/api/store/items
+  curl -ki -X POST https://${DOMAIN}/api/runs/batch -d '{}'
+  curl -ki -X POST https://${DOMAIN}/api/runs/crons -d '{}'
+  curl -ki https://${DOMAIN}/api/threads
+  curl -ki https://${DOMAIN}/api/a2a
+  curl -ki https://${DOMAIN}/api/assistants
+  ```
+
+- [ ] **14. ConnectAgent modal works.** Open `https://${DOMAIN}/` → click
+  "Подключить" pill in TopChrome → modal opens → both tabs render →
+  copy buttons copy + show Sonner toast → "Исходники на GitHub" link
+  opens `github.com/logospatrum/patristic-plugin` in new tab.
+
+- [ ] **15. BottomChrome GitHub link.** Visible on home (faded on chat
+  per existing BottomChrome opacity transition). Click → opens
+  `github.com/logospatrum/logospatrum`.
+
+- [ ] **16. Plugin install end-to-end.** Fresh Claude Code instance:
+  ```
+  /plugin marketplace add https://github.com/logospatrum/patristic-plugin
+  /plugin install patristic
+  ```
+  Ask theological question (e.g. "что говорят отцы о любви к врагам")
+  → `theology-router` skill activates → main delegates to `teo-search`
+  → main reads passages via `read_passage` → cites correctly.
+
+- [ ] **17. Backend port 8000 reachable from nginx (Stage 2 only).**
+  After `docker compose pull && docker compose up -d backend` with the
+  langgraph-built image:
+  ```
+  docker exec <nginx-container-id> sh -c 'wget -qO- http://backend:8000/info | head -3'
+  ```
+  Expect: JSON with langgraph version info. Old `:2024` is no longer
+  bound inside the backend container.
 
 ## Pass/fail tracking
 
