@@ -8,6 +8,23 @@ import {
 } from "next/font/google";
 import React from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { cookies } from "next/headers";
+import crypto from "node:crypto";
+
+/**
+ * Compute the daily HMAC session token. Symmetric with
+ * `apps/backend/src/backend/budget/session.py:sign` — same secret, same
+ * `cookie:<uuid>:<UTC_date>` input, same `base64url` encoding without padding.
+ * Embedded into <meta name="pat-session"> and sent back as X-Pat-Session.
+ */
+function signSession(patUid: string, secret: string): string {
+  if (!secret || !patUid) return "";
+  const date = new Date().toISOString().slice(0, 10); // UTC YYYY-MM-DD
+  return crypto
+    .createHmac("sha256", secret)
+    .update(`cookie:${patUid}:${date}`)
+    .digest("base64url"); // Node 16+ emits unpadded base64url
+}
 
 // The ΛΟΓΟΣ typography pairing. Cormorant + EB Garamond for the sacred
 // surfaces (logo, scripture, quoted excerpts), Inter for chrome, Geist Mono
@@ -47,16 +64,25 @@ export const metadata: Metadata = {
     "Поиск и беседа по святоотеческой литературе, философии и Писанию с точными цитатами и ссылками на оригинал.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Cookie is issued by middleware.ts on first visit. We compute the HMAC
+  // token here (Node runtime) because node:crypto.createHmac isn't available
+  // in middleware's Edge runtime.
+  const patUid = (await cookies()).get("pat_uid")?.value ?? "";
+  const patSession = signSession(patUid, process.env.PAT_SESSION_SECRET ?? "");
+
   return (
     <html
       lang="ru"
       className={`${inter.variable} ${cormorant.variable} ${ebGaramond.variable} ${geistMono.variable}`}
     >
+      <head>
+        <meta name="pat-session" content={patSession} />
+      </head>
       <body className={inter.className}>
         <NuqsAdapter>{children}</NuqsAdapter>
       </body>
