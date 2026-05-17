@@ -14,7 +14,7 @@ Russian patristic chat MVP. Agentic RAG over Russian Orthodox patristic corpus f
 
 ## Two .env files — do NOT sync
 
-- `/.env` — root. Backend + frontend read this. Has `TIMEWEB_AI_KEY`, `MAIN_AGENT_MODEL` (Timeweb proxy caps at `claude-sonnet-4-6` — no 4-7, confirmed via `GET /v1/models` 2026-05-16; see `apps/backend/src/backend/config.py:21`), `SEARCH_AGENT_MODEL=anthropic/claude-haiku-4-5`, `EMBEDDING_DEVICE=cpu`, `POSTGRES_DSN`, `NEXT_PUBLIC_*`. Gitignored.
+- `/.env` — root. Backend + frontend read this. Has `TIMEWEB_AI_KEY`, `MAIN_AGENT_MODEL` (Timeweb proxy caps at `claude-sonnet-4-6` — no 4-7, confirmed via `GET /v1/models` 2026-05-16; see `apps/backend/src/backend/config.py:21`), `SEARCH_AGENT_MODEL=anthropic/claude-haiku-4-5`, `EMBEDDING_DEVICE=cpu`, `POSTGRES_DSN`, `NEXT_PUBLIC_*`, plus anti-abuse vars (`PAT_SESSION_SECRET`, `DOMAIN`, `ALLOWED_ORIGIN`, `DAILY_RUB_PER_*`, `GLOBAL_MONTHLY_KILL_RUB`, `BUDGET_GUARD_ENABLED`). Gitignored. See `.env.example`.
 - `/packages/pipeline/.env` — pipeline-local. `EMBEDDING_DEVICE=cuda` for RTX 5070 Ti (torch+cu128). Pipeline `.venv` has cuda torch; backend `.venv` has cpu torch — keep them separate.
 
 ## Windows-specific gotchas (all hit and fixed)
@@ -54,6 +54,18 @@ Verify against the actual scripts before running — these are the verified shap
 - `apps/backend/_smoke/q{1..4}_*.txt` — last smoke transcripts (addressed / thematic / cross / negative). `*_state.json` has final checkpoint with `tasks` (interrupts/errors) and full message list.
 - Postgres queries: `docker exec patristic-postgres-dev psql -U postgres -d patristic -c "<sql>"`.
 - If author/work slugs in `gold.yaml` don't match: re-check against `SELECT slug FROM authors` / `SELECT slug FROM works` after a fresh `paragraphs` run — `slugify()` output depends on real folder names in `output/`.
+
+## Anti-abuse / RUB budget (added 2026-05-17)
+
+Public-anonymous chat is gated by a layered defence — see [docs/superpowers/specs/2026-05-16-anti-abuse-rate-limits-design.md](docs/superpowers/specs/2026-05-16-anti-abuse-rate-limits-design.md) and the smoke checklist at [infra/SMOKE_ANTI_ABUSE.md](infra/SMOKE_ANTI_ABUSE.md).
+
+- **In prod (`infra/docker-compose.prod.yml`), the frontend MUST hit LangGraph through Next.js `/api/*` proxy, not directly.** `NEXT_PUBLIC_API_URL=/api` (relative) routes the browser through the HMAC + budget guard. Setting it to `http://localhost:2024` bypasses anti-abuse entirely.
+- Backend is bound to the internal docker network in prod — no published ports. Only `nginx` exposes 80/443.
+- New table: `budget_usage(subject_key, bucket, used_rub, updated_at)` — `subject_key` is `cookie:<uuid>` / `ip:<addr>` / `__global_month` / `__unknown__`; `bucket` is `YYYY-MM-DD` (daily, MSK) or `YYYY-MM` (monthly). Apply `infra/migrations/002_abuse_budget.sql` to both `patristic` and `patristic_test`.
+- HMAC session token formula is symmetric across Python (`backend.budget.session.sign`), Next.js middleware/layout (`node:crypto.createHmac`), the custom proxy at `/api/[..._path]/route.ts`, and the `/api/session` refresh endpoint. Input: `cookie:<uuid>:<UTC_date>`. Output: `base64url` WITHOUT padding (43 chars). Tests pin a Node-compat vector at `apps/backend/tests/unit/test_session_hmac.py::test_known_node_compatible_vector`.
+- Rotating `PAT_SESSION_SECRET` invalidates all open browser tabs (next request → 401 → silent `/api/session` refresh if cookie is still valid; otherwise hard reload).
+- Kill switch: `BUDGET_GUARD_ENABLED=false` makes `/budget/check` always return `allowed=true` AND makes the post-run accounting node no-op. Use as rollback.
+- Tariffs in `apps/backend/src/backend/budget/pricing.py` are hardcoded Timeweb prices as of 2026-05-16. Update there if Timeweb changes them.
 
 ## Don't
 
