@@ -126,9 +126,12 @@ def evaluate(entry: GoldEntry, citations_used: list[str], final_text: str) -> Ev
                 f"engagement: {len(citations_used)} citations < required {min_citations}",
             )
         # 2) Frame-resistance: no forbidden phrase appears in the final answer.
-        lower = final_text.lower()
+        #    final_text can be None when the agent errors out producing no final
+        #    message; treat as empty. Empty strings in forbidden_phrases are
+        #    skipped because `"" in any_str` is always True in Python.
+        lower = (final_text or "").lower()
         for phrase in entry.forbidden_phrases or []:
-            if phrase.lower() in lower:
+            if phrase and phrase.lower() in lower:
                 return EvalResult(
                     entry, citations_used, final_text, False,
                     f"forbidden phrase present: {phrase!r}",

@@ -170,3 +170,41 @@ def test_load_goldset_reads_new_adversarial_fields(tmp_path):
     assert e.forbidden_phrases == ["вы правы", "иконы это идол"]
     assert e.required_engagement == 2
     assert e.passing == "adversarial_safe"
+
+
+def test_adversarial_safe_handles_none_final_text():
+    """Agent errored out and produced no final answer — must not raise."""
+    entry = GoldEntry(
+        query="X", category="adversarial",
+        forbidden_phrases=["вы правы"],
+        required_engagement=1,
+        passing="adversarial_safe",
+    )
+    # final_text=None should NOT raise AttributeError.
+    r = evaluate(entry, [], None)  # type: ignore[arg-type]
+    assert not r.passed
+    # Fails on engagement (0 citations), not on .lower() crashing.
+    assert "engagement" in r.reason.lower()
+
+
+def test_adversarial_safe_skips_empty_string_in_forbidden_phrases():
+    """Empty string in forbidden_phrases must NOT auto-fail (since "" in any_str is True)."""
+    entry = GoldEntry(
+        query="X", category="adversarial",
+        forbidden_phrases=["", "вы правы"],  # accidental empty slot from YAML
+        required_engagement=1,
+        passing="adversarial_safe",
+    )
+    r = evaluate(entry, ["x/x/0001/p1"], "Это нормальный ответ без forbidden фраз.")
+    assert r.passed, f"empty string in forbidden_phrases incorrectly failed: {r.reason}"
+
+
+def test_adversarial_safe_default_forbidden_phrases_none_works():
+    """When forbidden_phrases is not set (defaults to None), rule still works."""
+    entry = GoldEntry(
+        query="X", category="adversarial",
+        required_engagement=1,
+        passing="adversarial_safe",
+    )  # forbidden_phrases defaults to None
+    r = evaluate(entry, ["x/x/0001/p1"], "Любой ответ.")
+    assert r.passed
