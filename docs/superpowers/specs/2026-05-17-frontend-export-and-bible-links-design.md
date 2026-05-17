@@ -11,6 +11,7 @@
 4. Replace the default Next.js favicon with a themed Λ glyph.
 5. Add a small "AI" suffix to the home `<Logo />` (baseline-aligned, dim).
 6. Replace the four home-page starter chips with sharper, more curiosity-grabbing patristic questions.
+7. Fix four mobile-viewport bugs: sidebar halo too narrow, chat-input placeholder overflow, useless keyboard hint on touch, fixed Monolith overlapping Starters as the page scrolls.
 
 ## Non-goals
 
@@ -173,6 +174,46 @@ Delete the default `src/app/favicon.ico` so Next.js picks up `icon.svg` exclusiv
 Defaults of CSS inline-flow keep both spans on the h1 baseline — the smaller AI text sits with its bottom flush with the bottom of ΛΟΓΟΣ. The `0.18em` size means AI scales with the responsive `clamp()` h1 font size (~13px at the small end, ~30px at the wide end). `palette.faint` keeps it dim; `WebkitTextStroke: 0` cancels the engraved inner-stroke inherited from h1 so the small AI stays clean.
 
 The optical `paddingLeft: type.logoTracking` on h1 stays — the AI is small enough that visual center doesn't drift noticeably. TopChrome brand string is untouched.
+
+### I. Mobile fixes
+
+Four issues on narrow viewports (≤ 640px):
+
+**I.1 Sidebar halo too narrow.** `Sidebar.tsx` uses a `radial-gradient(ellipse closest-side at 30% 50%, …)`. With `closest-side` on a 300px-wide × tall-height aside the horizontal radius collapses to ~90px, so chat-history titles spill outside the dark halo and become unreadable on the heavy background. Fix: detect `(max-width: 640px)` via `useMediaQuery` and swap to a horizontal linear gradient that covers the full sidebar width, fading on the right edge:
+
+```ts
+const isNarrow = useMediaQuery("(max-width: 640px)");
+const haloBg = isNarrow
+  ? "linear-gradient(90deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.92) 78%, rgba(0,0,0,0.55) 94%, rgba(0,0,0,0) 100%)"
+  : /* existing radial */;
+```
+
+Desktop keeps the radial halo aesthetic.
+
+**I.2 Chat input placeholder overflows.** `s.chat.placeholder` is ~50 chars in both languages; the textarea inner width on a 360px viewport is ~165px which crops the placeholder mid-word. Add `chat.placeholderShort` to i18n (RU: `Спросите о вере…`, EN: `Ask about doctrine…`) and switch via `useMediaQuery("(max-width: 640px)")` in `Monolith.tsx`.
+
+**I.3 Hide Enter/Shift+Enter hint on mobile.** `Monolith.tsx` renders `{s.chat.enterHint}` ("↵ Send · ⇧↵ Newline") in the footer row. Keyboard hints are noise on touch. Wrap with `{!isNarrow && <span>{s.chat.enterHint}</span>}` so only `s.chat.safety` remains on mobile (and the row naturally right-aligns).
+
+**I.4 Monolith overlaps Starters on mobile home.** The home column's `useLayoutEffect` aligns the fixed Monolith with `monoSlotRef.current.getBoundingClientRect().top` at mount time, then never recomputes on scroll. On viewports where the home column overflows (always on mobile), the user scrolls to see Starters which slide *under* the Monolith (which has `z-index: 6` and stays put visually). Fix in `LogosShell.tsx`:
+
+- On narrow viewport in home mode, anchor the Monolith to the viewport bottom (same formula as chat mode: `window.innerHeight - MONOLITH_H - 28`).
+- Bump the home column's bottom padding from `100px` to `175px` on narrow viewport so Starters have clearance and the user can scroll past them without them disappearing under the input.
+
+```ts
+const compute = () => {
+  if (inChat || isNarrow) {
+    setMonolithTop(window.innerHeight - MONOLITH_H - 28);
+    return;
+  }
+  const r = monoSlotRef.current?.getBoundingClientRect();
+  if (r) setMonolithTop(r.top);
+  else setMonolithTop(window.innerHeight / 2 - MONOLITH_H / 2);
+};
+```
+
+The home `monoSlotRef` hidden 115px placeholder div stays — on wide viewports it still anchors the centered Monolith; on narrow it's invisible filler that the bottom-fixed Monolith renders below.
+
+Side-effect: on narrow + home, the Quote / Logo composition flows naturally above and the input sits where users expect on mobile chat (bottom-pinned), matching every other touch-first chat UI.
 
 ### H. New starter chips (`i18n.ts STRINGS.starters`)
 
