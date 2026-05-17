@@ -130,4 +130,23 @@ describe("groupMessagesIntoTurns", () => {
     expect(turns[0].toolCalls[0].name).toBe("search");
     expect(turns[0].toolCalls[0].args).toEqual({ q: "палама" });
   });
+
+  it("filters out invoke_skill tool calls from the ThinkingTrace", () => {
+    const turns = groupMessagesIntoTurns(
+      [
+        human("h1", "ислам?"),
+        ai("a1", "Отвечаю...", [
+          { name: "invoke_skill", id: "tc1", args: { name: "apologetics" } },
+          { name: "semantic_search", id: "tc2", args: { query: "ислам" } },
+        ]),
+        tool("t1", "invoke_skill", "tc1", "BODY..."),
+        tool("t2", "semantic_search", "tc2", "[]"),
+      ],
+      false,
+    );
+    expect(turns).toHaveLength(1);
+    // Only semantic_search survives; invoke_skill is filtered.
+    expect(turns[0].toolCalls).toHaveLength(1);
+    expect(turns[0].toolCalls[0].name).toBe("semantic_search");
+  });
 });

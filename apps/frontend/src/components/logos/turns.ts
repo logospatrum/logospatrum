@@ -150,6 +150,7 @@ export function groupMessagesIntoTurns(
     for (const ai of turn.ais) {
       for (const tc of extractToolCalls(ai)) {
         if (!tc.id) continue;
+        if (tc.name === "invoke_skill") continue;   // hide skill-loading from the user
         const t = toolByCallId.get(tc.id);
         const raw = t ? getRawContent(t.content) : null;
         const parsed = raw != null ? tryParse(raw) : null;
