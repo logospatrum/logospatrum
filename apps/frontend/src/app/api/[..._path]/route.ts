@@ -3,10 +3,19 @@ import crypto from "node:crypto";
 
 export const runtime = "nodejs";
 
-const BACKEND = process.env.LANGGRAPH_API_URL ?? "http://localhost:2024";
+const BACKEND = process.env.LANGGRAPH_API_URL ?? "http://localhost:8000";
 const SECRET = process.env.PAT_SESSION_SECRET ?? "";
 
-const RUN_START_RE = /(?:^|\/)runs(?:\/(?:stream|wait))?\/?$/;
+// Public paths — forwarded without HMAC verify. MCP is the product feature;
+// the others are diagnostic / public corpus index. See
+// docs/superpowers/specs/2026-05-17-mcp-feature-and-prod-rollout-design.md
+// section 2.
+const PUBLIC_RE = /^(info|catalog(\/.*)?|openapi\.json|mcp(\/.*)?)$/;
+
+// Run-start paths — full HMAC verify + budget guard + subject inject.
+// Frontend uses stateless `runs/stream`. The threads/{id}/runs/stream
+// variant is pre-allowed for future stateful threading.
+const RUN_START_RE = /^(threads\/[^/]+\/)?runs\/stream$/;
 
 function todayUtc(): string {
   return new Date().toISOString().slice(0, 10);
@@ -54,114 +63,11 @@ function forwardHeaders(req: NextRequest): Headers {
   return h;
 }
 
-async function handle(
+async function passthrough(
   req: NextRequest,
-  { params }: { params: Promise<{ _path: string[] }> },
-) {
-  if (req.method === "OPTIONS") {
-    return new NextResponse(null, { status: 204 });
-  }
-
-  const { _path } = await params;
-  const pathStr = _path.join("/");
-  const url = `${BACKEND}/${pathStr}${req.nextUrl.search}`;
-
-  // 1) HMAC verify (skipped only by OPTIONS above; /api/session has its own
-  //    route at apps/frontend/src/app/api/session/route.ts so it never reaches
-  //    this catch-all). Diagnostic /info is whitelisted so checkGraphStatus
-  //    works for unauthenticated probes from the browser.
-  const isUnauthenticated = pathStr === "info";
-  if (!isUnauthenticated) {
-    const patUid = req.cookies.get("pat_uid")?.value ?? "";
-    const sessionToken = req.headers.get("x-pat-session") ?? "";
-    if (!verifyHmac(patUid, sessionToken)) {
-      return NextResponse.json({ error: "session_invalid" }, { status: 401 });
-    }
-  }
-
-  const subject = subjectKeyFor(req);
-  const isRunStart =
-    (req.method === "POST" || req.method === "PUT") &&
-    RUN_START_RE.test(pathStr);
-
-  let warnHeader: string | null = null;
-
-  if (isRunStart) {
-    // 2) Global month kill-switch first
-    try {
-      const gRes = await fetch(`${BACKEND}/budget/check?subject=__global_month`);
-      const g = await gRes.json();
-      if (!g.allowed) {
-        return NextResponse.json(
-          { error: "service_paused_global_budget", reset_at: g.reset_at },
-          {
-            status: 503,
-            headers: { "Retry-After": secondsUntil(g.reset_at).toString() },
-          },
-        );
-      }
-    } catch (e) {
-      // If the budget endpoint is unreachable, fail open in dev but log loud.
-      console.error("budget /check global_month failed:", e);
-    }
-
-    // 3) Per-subject daily gate
-    try {
-      const dRes = await fetch(
-        `${BACKEND}/budget/check?subject=${encodeURIComponent(subject)}`,
-      );
-      const d = await dRes.json();
-      if (!d.allowed) {
-        return NextResponse.json(
-          {
-            error: "daily_budget_exceeded",
-            used_rub: d.used_rub,
-            limit_rub: d.limit_rub,
-            reset_at: d.reset_at,
-          },
-          {
-            status: 429,
-            headers: { "Retry-After": secondsUntil(d.reset_at).toString() },
-          },
-        );
-      }
-      if (d.warn) {
-        warnHeader = `used=${d.used_rub};limit=${d.limit_rub}`;
-      }
-    } catch (e) {
-      console.error("budget /check subject failed:", e);
-    }
-
-    // 4) Inject subject_key into config.configurable
-    const bodyText = await req.text();
-    let bodyJson: Record<string, unknown> = {};
-    try {
-      bodyJson = bodyText ? JSON.parse(bodyText) : {};
-    } catch {
-      /* leave empty — upstream will reject malformed bodies on its own */
-    }
-    const config = ((bodyJson.config as Record<string, unknown>) ?? {}) as Record<string, unknown>;
-    const configurable = ((config.configurable as Record<string, unknown>) ?? {}) as Record<string, unknown>;
-    configurable.subject_key = subject;
-    config.configurable = configurable;
-    bodyJson.config = config;
-
-    const upstream = await fetch(url, {
-      method: req.method,
-      headers: forwardHeaders(req),
-      body: JSON.stringify(bodyJson),
-      // @ts-expect-error duplex is required by undici for streaming bodies
-      duplex: "half",
-    });
-    const headers = new Headers(upstream.headers);
-    if (warnHeader) headers.set("x-budget-warning", warnHeader);
-    return new NextResponse(upstream.body, {
-      status: upstream.status,
-      headers,
-    });
-  }
-
-  // 5) Non-run-start path: plain pass-through
+  url: string,
+): Promise<NextResponse> {
+  // Plain forward, preserves SSE streaming. No HMAC, no budget logic.
   const init: RequestInit & { duplex?: string } = {
     method: req.method,
     headers: forwardHeaders(req),
@@ -175,6 +81,128 @@ async function handle(
     status: upstream.status,
     headers: new Headers(upstream.headers),
   });
+}
+
+async function runStart(
+  req: NextRequest,
+  url: string,
+): Promise<NextResponse> {
+  // 1) HMAC verify
+  const patUid = req.cookies.get("pat_uid")?.value ?? "";
+  const sessionToken = req.headers.get("x-pat-session") ?? "";
+  if (!verifyHmac(patUid, sessionToken)) {
+    return NextResponse.json({ error: "session_invalid" }, { status: 401 });
+  }
+
+  const subject = subjectKeyFor(req);
+  let warnHeader: string | null = null;
+
+  // 2) Global month kill-switch
+  try {
+    const gRes = await fetch(`${BACKEND}/budget/check?subject=__global_month`);
+    const g = await gRes.json();
+    if (!g.allowed) {
+      return NextResponse.json(
+        { error: "service_paused_global_budget", reset_at: g.reset_at },
+        {
+          status: 503,
+          headers: { "Retry-After": secondsUntil(g.reset_at).toString() },
+        },
+      );
+    }
+  } catch (e) {
+    // If the budget endpoint is unreachable, fail open in dev but log loud.
+    console.error("budget /check global_month failed:", e);
+  }
+
+  // 3) Per-subject daily gate
+  try {
+    const dRes = await fetch(
+      `${BACKEND}/budget/check?subject=${encodeURIComponent(subject)}`,
+    );
+    const d = await dRes.json();
+    if (!d.allowed) {
+      return NextResponse.json(
+        {
+          error: "daily_budget_exceeded",
+          used_rub: d.used_rub,
+          limit_rub: d.limit_rub,
+          reset_at: d.reset_at,
+        },
+        {
+          status: 429,
+          headers: { "Retry-After": secondsUntil(d.reset_at).toString() },
+        },
+      );
+    }
+    if (d.warn) {
+      warnHeader = `used=${d.used_rub};limit=${d.limit_rub}`;
+    }
+  } catch (e) {
+    console.error("budget /check subject failed:", e);
+  }
+
+  // 4) Inject subject_key into config.configurable
+  const bodyText = await req.text();
+  let bodyJson: Record<string, unknown> = {};
+  try {
+    bodyJson = bodyText ? JSON.parse(bodyText) : {};
+  } catch {
+    /* leave empty — upstream will reject malformed bodies on its own */
+  }
+  const config = ((bodyJson.config as Record<string, unknown>) ?? {}) as Record<string, unknown>;
+  const configurable = ((config.configurable as Record<string, unknown>) ?? {}) as Record<string, unknown>;
+  configurable.subject_key = subject;
+  config.configurable = configurable;
+  bodyJson.config = config;
+
+  const upstream = await fetch(url, {
+    method: req.method,
+    headers: forwardHeaders(req),
+    body: JSON.stringify(bodyJson),
+    // @ts-expect-error duplex is required by undici for streaming bodies
+    duplex: "half",
+  });
+  const headers = new Headers(upstream.headers);
+  if (warnHeader) headers.set("x-budget-warning", warnHeader);
+  return new NextResponse(upstream.body, {
+    status: upstream.status,
+    headers,
+  });
+}
+
+export async function handle(
+  req: NextRequest,
+  { params }: { params: Promise<{ _path: string[] }> },
+) {
+  if (req.method === "OPTIONS") {
+    return new NextResponse(null, { status: 204 });
+  }
+
+  const { _path } = await params;
+  const pathStr = _path.join("/");
+  const url = `${BACKEND}/${pathStr}${req.nextUrl.search}`;
+
+  // 1) Public paths — forwarded without HMAC verify. MCP is the product
+  //    feature; the others are diagnostic / public corpus index. See
+  //    docs/superpowers/specs/2026-05-17-mcp-feature-and-prod-rollout-design.md
+  //    section 2.
+  if (PUBLIC_RE.test(pathStr)) {
+    return passthrough(req, url);
+  }
+
+  // 2) Run-start paths — full HMAC verify + budget guard + subject inject.
+  //    Frontend uses stateless `runs/stream`. The threads/{id}/runs/stream
+  //    variant is pre-allowed for future stateful threading.
+  if (
+    RUN_START_RE.test(pathStr) &&
+    (req.method === "POST" || req.method === "PUT")
+  ) {
+    return runStart(req, url);
+  }
+
+  // 3) Whitelist closes by default — everything else is 404.
+  return new NextResponse(null, { status: 404 });
 }
 
 export const GET = handle;
