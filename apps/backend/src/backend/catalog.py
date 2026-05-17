@@ -11,9 +11,17 @@ from .db import conn
 
 app = FastAPI(title="Patristic Catalog")
 
+# NOTE: ALLOWED_ORIGIN must be explicit comma-separated origins, not "*".
+# Starlette rejects allow_credentials=True with wildcard origins (silently
+# drops Access-Control-Allow-Credentials), which breaks the auth cookie path.
+_origins = [o.strip() for o in settings.allowed_origin.split(",") if o.strip() and o.strip() != "*"]
+if not _origins:
+    # Defensive default: localhost dev. Production must set ALLOWED_ORIGIN.
+    _origins = ["http://localhost:3000"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in settings.allowed_origin.split(",") if o.strip()],
+    allow_origins=_origins,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
     allow_credentials=True,
@@ -83,6 +91,23 @@ def _next_month_msk_iso() -> str:
 
 @app.get("/budget/check")
 async def budget_check(subject: str) -> dict:
+    """Pre-run budget gate. subject: 'cookie:<uuid>' | 'ip:<addr>' | '__global_month'."""
+    # Rollback knob — when BUDGET_GUARD_ENABLED=false, the gate is fully open.
+    # Symmetric with the post-run accounting node (Task 3.1) which also no-ops
+    # when the flag is off. Together they make the env flag a clean kill-switch.
+    if not settings.budget_guard_enabled:
+        if subject == "__global_month":
+            return {
+                "allowed": True, "used_rub": 0.0,
+                "limit_rub": settings.global_monthly_kill_rub,
+                "warn": False, "reset_at": _next_month_msk_iso(),
+            }
+        limit = (settings.daily_rub_per_cookie if subject.startswith("cookie:")
+                 else settings.daily_rub_per_ip)
+        return {
+            "allowed": True, "used_rub": 0.0, "limit_rub": limit,
+            "warn": False, "reset_at": _tomorrow_msk_iso(),
+        }
     if subject == "__global_month":
         used = await storage.get_used_rub(subject, storage._this_month_msk())
         limit = settings.global_monthly_kill_rub

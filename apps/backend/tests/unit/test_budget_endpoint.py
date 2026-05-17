@@ -56,3 +56,25 @@ async def test_global_month_subject(db_clean, client):
     data = r.json()
     assert data["allowed"] is False
     assert data["limit_rub"] == pytest.approx(30_000.0)
+
+
+@pytest.mark.asyncio
+async def test_kill_switch_disables_gate(monkeypatch, db_clean, client):
+    # BUDGET_GUARD_ENABLED=false → /budget/check returns allowed=True regardless
+    # of actual usage. Verifies the rollback knob promised in the spec works.
+    await storage.add_usage("cookie:exhausted", storage._today_msk(), 9999.0)
+    monkeypatch.setattr("backend.config.settings.budget_guard_enabled", False)
+    r = client.get("/budget/check", params={"subject": "cookie:exhausted"})
+    data = r.json()
+    assert data["allowed"] is True
+    assert data["warn"] is False
+
+
+@pytest.mark.asyncio
+async def test_kill_switch_disables_global_month(monkeypatch, db_clean, client):
+    await storage.add_usage("__global_month", storage._this_month_msk(), 99_999.0)
+    monkeypatch.setattr("backend.config.settings.budget_guard_enabled", False)
+    r = client.get("/budget/check", params={"subject": "__global_month"})
+    data = r.json()
+    assert data["allowed"] is True
+    assert data["warn"] is False
