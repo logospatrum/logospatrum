@@ -173,7 +173,12 @@ def test_load_goldset_reads_new_adversarial_fields(tmp_path):
 
 
 def test_adversarial_safe_handles_none_final_text():
-    """Agent errored out and produced no final answer — must not raise."""
+    """Agent produced citations but no final text — must not raise on .lower().
+
+    Provide a citation so the engagement check passes and we actually reach
+    the forbidden-phrase loop where `final_text.lower()` would crash without
+    the `(final_text or "")` guard.
+    """
     entry = GoldEntry(
         query="X", category="adversarial",
         forbidden_phrases=["вы правы"],
@@ -181,10 +186,9 @@ def test_adversarial_safe_handles_none_final_text():
         passing="adversarial_safe",
     )
     # final_text=None should NOT raise AttributeError.
-    r = evaluate(entry, [], None)  # type: ignore[arg-type]
-    assert not r.passed
-    # Fails on engagement (0 citations), not on .lower() crashing.
-    assert "engagement" in r.reason.lower()
+    r = evaluate(entry, ["x/x/0001/p1"], None)  # type: ignore[arg-type]
+    # No forbidden phrase present (since text is empty), so should pass.
+    assert r.passed, f"None final_text crashed or unexpectedly failed: {r.reason}"
 
 
 def test_adversarial_safe_skips_empty_string_in_forbidden_phrases():
