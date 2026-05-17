@@ -1,0 +1,86 @@
+# Production stack for the patristic chat. Only nginx publishes ports;
+# postgres, backend, and nextjs are reachable only on the internal docker
+# network. That's the security boundary — LangGraph cannot be hit directly
+# from the public Internet regardless of any other hardening.
+#
+# Bring up:   docker compose -f infra/docker-compose.prod.yml up -d --build
+# Migrations: docker exec -i <postgres-id> psql -U postgres -d patristic \
+#               < infra/migrations/001_init.sql
+#             docker exec -i <postgres-id> psql -U postgres -d patristic \
+#               < infra/migrations/002_abuse_budget.sql
+# Self-signed dev TLS: run infra/nginx/generate-ssl.sh and bind-mount the
+#               output into the nginx container's /etc/letsencrypt before
+#               first boot, or run init-letsencrypt.sh against a real
+#               domain.
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    networks: [internal]
+    environment:
+      POSTGRES_DB: patristic
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-postgres}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres.dev.conf:/etc/postgresql/postgresql.conf:ro
+    command:
+      - "postgres"
+      - "-c"
+      - "config_file=/etc/postgresql/postgresql.conf"
+    shm_size: 1gb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d patristic"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ../apps/backend
+      dockerfile: Dockerfile
+    networks: [internal]
+    env_file: ../.env
+    environment:
+      POSTGRES_DSN: postgresql://postgres:${PG_PASSWORD:-postgres}@postgres:5432/patristic
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  nextjs:
+    build:
+      context: ../apps/frontend
+      dockerfile: Dockerfile
+    networks: [internal]
+    env_file: ../.env
+    environment:
+      # SSR proxy fetches reach the backend via docker DNS, not the public
+      # domain. The browser hits /api/* relatively, the proxy forwards here.
+      LANGGRAPH_API_URL: http://backend:2024
+      NODE_ENV: production
+    depends_on: [backend]
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile.prod
+    networks: [internal]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-https://localhost}
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+    depends_on: [nextjs]
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  letsencrypt:
+  certbot-webroot:
