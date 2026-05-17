@@ -31,5 +31,14 @@ class Settings(BaseSettings):
     glossary_path: Path = REPO_ROOT / "packages" / "pipeline" / "glossary.json"
     cs_dict_path: Path = REPO_ROOT / "packages" / "pipeline" / "cs_dict.json"
 
+    # === anti-abuse / budget ===
+    pat_session_secret: str = ""  # 32-byte hex; required in prod
+    allowed_origin: str = "http://localhost:3000"
+    daily_rub_per_cookie: float = 500.0
+    daily_rub_per_ip: float = 250.0
+    soft_warn_ratio: float = 0.8
+    global_monthly_kill_rub: float = 30_000.0
+    budget_guard_enabled: bool = True
+
 
 settings = Settings()
