@@ -41,9 +41,10 @@ jobs:
       - name: Build backend image
         working-directory: apps/backend
         run: |
-          langgraph build \
-            -t ${{ env.REGISTRY }}/${{ env.ORG }}/backend:${{ github.sha }} \
-            -t ${{ env.REGISTRY }}/${{ env.ORG }}/backend:latest
+          langgraph build -t ${{ env.REGISTRY }}/${{ env.ORG }}/backend:${{ github.sha }}
+          docker tag \
+            ${{ env.REGISTRY }}/${{ env.ORG }}/backend:${{ github.sha }} \
+            ${{ env.REGISTRY }}/${{ env.ORG }}/backend:latest
 
       - name: Push backend image
         run: |
