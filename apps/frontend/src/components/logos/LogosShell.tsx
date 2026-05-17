@@ -28,6 +28,7 @@ import { TopChrome } from "./TopChrome";
 import { BottomChrome } from "./BottomChrome";
 import { Sidebar, type SidebarThread } from "./Sidebar";
 import { ChatBackdrop } from "./ChatBackdrop";
+import { BudgetBanner } from "./BudgetBanner";
 import { Logo } from "./Logo";
 import { Quote } from "./Quote";
 import { Monolith } from "./Monolith";
@@ -66,6 +67,29 @@ function LogosInner() {
 
   const [inputFocused, setInputFocused] = useState(false);
   const [prefill, setPrefill] = useState<string | undefined>(undefined);
+  // Anti-abuse RUB-budget UX state. Populated by useStatelessStream when API
+  // responses carry the X-Budget-Warning header (>=80% of daily limit) or
+  // when the proxy returns 503 (global month kill-switch).
+  // See: docs/superpowers/specs/2026-05-16-anti-abuse-rate-limits-design.md
+  const [budgetWarning, setBudgetWarning] = useState<
+    { used: number; limit: number } | null
+  >(null);
+  const [globalPaused, setGlobalPaused] = useState<boolean>(false);
+  useEffect(() => {
+    function onWarn(e: Event) {
+      const d = (e as CustomEvent<{ used: number; limit: number }>).detail;
+      if (d) setBudgetWarning(d);
+    }
+    function onPause() {
+      setGlobalPaused(true);
+    }
+    window.addEventListener("patristic:budget-warning", onWarn);
+    window.addEventListener("patristic:global-paused", onPause);
+    return () => {
+      window.removeEventListener("patristic:budget-warning", onWarn);
+      window.removeEventListener("patristic:global-paused", onPause);
+    };
+  }, []);
   // Monolith is rendered once as a fixed-positioned overlay. On home it
   // visually sits where a placeholder div would land inside the flex-
   // centered home layout — we measure that placeholder's top to keep the
@@ -343,6 +367,36 @@ function LogosInner() {
         onLangChange={setLang}
         librarySlot={librarySlot}
       />
+
+      {budgetWarning && !globalPaused && (
+        <BudgetBanner
+          used={budgetWarning.used}
+          limit={budgetWarning.limit}
+          onClose={() => setBudgetWarning(null)}
+        />
+      )}
+
+      {globalPaused && (
+        <div
+          role="alert"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1000,
+            padding: "12px 24px",
+            background: "rgba(120,30,30,0.18)",
+            borderBottom: "1px solid rgba(180,60,60,0.6)",
+            color: "#e8a8a8",
+            fontSize: 14,
+            textAlign: "center",
+            fontFamily: "Inter, sans-serif",
+          }}
+        >
+          {s.budget.globalPaused}
+        </div>
+      )}
 
       {/* BottomChrome — always mounted; visibility fades with home mode
           so the corpus/clock strip doesn't flash on mount/unmount when

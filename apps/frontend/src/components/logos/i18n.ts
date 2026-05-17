@@ -80,6 +80,12 @@ export const STRINGS = {
         `Проверьте, что бэкенд запущен на ${url}.`,
       generic: "Произошла ошибка. Попробуйте ещё раз.",
     },
+    budget: {
+      warning: (used: number, limit: number) =>
+        `Осталось ${(limit - used).toFixed(0)} ₽ из дневного лимита ${limit.toFixed(0)} ₽. После 0 ₽ запросы будут отклонены до завтра.`,
+      globalPaused: "Сервис временно приостановлен — превышен месячный бюджет. Возвращайтесь позже.",
+      dismissAria: "Скрыть предупреждение",
+    },
   },
   en: {
     tagline: "Orthodox Theological Research Assistant",
@@ -155,6 +161,12 @@ export const STRINGS = {
       streamConnectDesc: (url: string) =>
         `Make sure the backend is running at ${url}.`,
       generic: "Something went wrong. Please try again.",
+    },
+    budget: {
+      warning: (used: number, limit: number) =>
+        `${(limit - used).toFixed(0)} ₽ left of today's ${limit.toFixed(0)} ₽ limit. At 0 ₽ requests are rejected until tomorrow.`,
+      globalPaused: "Service is paused — monthly budget exceeded. Please come back later.",
+      dismissAria: "Dismiss warning",
     },
   },
 } as const;
