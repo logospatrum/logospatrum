@@ -6,7 +6,7 @@ LangGraph Server graph plus a FastAPI catalog endpoint for the patristic chat. B
 
 Two-tier agent in `src/backend/graph.py`:
 
-- **Main agent** (`anthropic/claude-sonnet-4-6`) — orchestrator. Tools: `read_passage`, `list_authors`, `list_works`, `expand_concept`, `lexical_search`, `semantic_search`, plus the deepagents `task` tool to delegate.
+- **Main agent** (`anthropic/claude-sonnet-4-6`) — orchestrator. Tools: `read_passage`, `list_authors`, `list_works`, `expand_concept`, `lexical_search`, `semantic_search`, `invoke_skill` (see Skills mechanism), plus the deepagents `task` tool to delegate.
 - **Search subagent** named `search` (`anthropic/claude-haiku-4-5`) — invoked via `task`. Same tools minus `read_passage`. Returns 3–8 candidates with citations + snippets capped at 200 chars.
 - Rule: main MUST call `read_passage` before quoting (anti-hallucination); search NEVER quotes directly.
 - Citation markup: main agent emits `[[<citation_slug>|«<short verbatim quote>»]]` inline in answers (rule 4 in `MAIN_AGENT_PROMPT`). The slug is the exact `citation` it passed to `read_passage`; the `«»`-wrapped quote is a verbatim substring of `read_passage.text`. The frontend parses these markers into `[N]` pills + a citations panel (see `apps/frontend/CLAUDE.md`). Author/work/§/azbyka URL are resolved on the frontend by joining slug to the matching `read_passage` result — agents don't repeat that metadata in prose.
@@ -35,6 +35,19 @@ Thin async `@tool` wrappers over Postgres. Read each source before assuming beha
 - `list_works.py` — works for one `author_slug`, with `topics` JSON parsed.
 
 Shared helpers: `tools/_citation.py` (`parse_citation` / `make_citation`).
+
+## Skills mechanism (`src/backend/skills/`)
+
+Domain-specific posture skills loaded by the main agent on demand. Ported from `trading-mcp/terminal/agent`. **Main agent only** — search subagent has no access (retrieval is its job, posture is the main agent's). Design spec: [docs/superpowers/specs/2026-05-17-skills-and-adversarial-tests-design.md](../../docs/superpowers/specs/2026-05-17-skills-and-adversarial-tests-design.md).
+
+- **`skills_registry.py`** — `scan_skills(dir)` reads `*.md` with YAML frontmatter (`name`, `description` required; files missing either are silently skipped — one malformed file shouldn't break boot). `render_skills_registry_for_prompt(skills)` returns a compact `- name: description` block for prompt injection. Empty list → empty string.
+- **`skill_tools.py`** — `build_skill_tools(*, skills) -> [invoke_skill]`. Only `invoke_skill` is exposed (registry already lives in the system prompt; runtime `list_skills` would duplicate context — explicit YAGNI). **`invoke_skill` MUST NOT raise on miss** — returns `"Skill 'X' not found. Available: [...]"` string. Same load-bearing contract as `read_passage` (langgraph cancels sibling parallel tool calls on raise → run hangs).
+- **`skills/*.md`** — current skills: `apologetics.md`, `pastoral.md`. Each: YAML frontmatter (`description` = triggering signal for the agent), then sections: Когда вызывать / Posture / Запрещённые ходы / Пример. **`pastoral.md` Posture rule #3 is a safety-load-bearing guardrail**: crisis mentions (suicide, threat to life, active violence) → hotline (Russia 8-800-2000-122) + priest FIRST, citations later. Don't soften this rule. See commit `18b6d92`.
+- **`graph.py:36-41`** — `_SKILLS`, `_SKILL_TOOLS`, `_MAIN_PROMPT` all computed **once at module import**. Restart `langgraph dev` to pick up new/edited skill files. Substitution uses `str.replace`, NOT `.format` — the prompt has literal `{found: false, ...}` braces that `.format` would crash on.
+- **`graph.py:57`** — `*_SKILL_TOOLS` spread into the main agent's tools list. Search subagent dict untouched.
+- **`prompts.py:98`** — `{{SKILLS_REGISTRY}}` sentinel literal at the end of `MAIN_AGENT_PROMPT`. Substituted by graph.py at module import. If you rename the sentinel in one file, `.replace()` silently no-ops in the other — `tests/unit/test_prompts_wiring.py` defends the contract (sentinel-present, substitution-replaces-it, braces-preserved).
+- **Frontend filter** at `apps/frontend/src/components/logos/turns.ts:153` hides `invoke_skill` tool calls from the `ThinkingTrace` collapse. Skill-loading is plumbing; the user doesn't need to see it.
+- **Adding a new skill**: drop `name.md` with valid frontmatter into `src/backend/skills/`, restart `langgraph dev`. The registry render in the system prompt updates automatically; the agent decides on its own when to call `invoke_skill('name')` based on the description.
 
 ## Config (`src/backend/config.py`)
 
@@ -71,8 +84,8 @@ double-checked-locking cache. The fix lives in `expand_concept._load`,
 ## Tests
 
 Two suites:
-- `tests/unit/` — ~33 tool tests, no live LLM. Uses `patristic_test` DB (NOT `patristic`). Files: `test_catalog`, `test_embeddings_service`, `test_eval_runner`, `test_expand_concept`, `test_lexical_search`, `test_list_authors`, `test_list_works`, `test_read_passage`, `test_semantic_search`.
-- `tests/integration/` — `test_smoke.py`, `test_goldset.py`, `smoke_goldset.py`. Require a running `langgraph dev` server and a real Timeweb key.
+- `tests/unit/` — ~80 tests, no live LLM. DB-touching ones (`test_catalog`, `test_embeddings_service`, `test_eval_runner` adjacent DB cases, `test_expand_concept`, `test_lexical_search`, `test_list_authors`, `test_list_works`, `test_read_passage`, `test_semantic_search`) use `patristic_test` DB (NOT `patristic`). DB-free ones (`test_session_hmac`, `test_skills_registry`, `test_skill_tools`, `test_prompts_wiring`, the `adversarial_safe`-rule cases in `test_eval_runner`) run anywhere.
+- `tests/integration/` — `test_smoke.py`, `test_goldset.py`, `smoke_goldset.py`. Require a running `langgraph dev` server and a real Timeweb key. Goldset categories + thresholds: `addressed ≥80%`, `thematic ≥60%`, `cross ≥70%`, `negative =100%`, `adversarial ≥80%` (the last one mechanically checks `forbidden_phrases` substring absence + `required_engagement` citation floor — see `eval_runner.adversarial_safe`).
 
 **Critical: `tests/conftest.py` sets `POSTGRES_DSN=patristic_test` BEFORE `import backend`** (see lines 8–18). Otherwise tools and fixtures hit different DBs (and historically, `db_clean` wiped the production corpus — incident, see git log `ae119d5`). The TRUNCATE fixture is destructive: it runs `TRUNCATE authors, works, chapters, paragraphs, embeddings CASCADE` before and after each test. Never point it at `patristic`.
 
@@ -88,7 +101,7 @@ Run unit tests: `cd apps/backend && PYTHONUTF8=1 .venv/Scripts/python -m pytest 
 
 ## Smoke harness for goldset debugging
 
-`tests/integration/smoke_goldset.py` picks one random goldset entry per category (`addressed`, `thematic`, `cross`, `negative`) with `SEED=42`, streams each run via `langgraph_sdk` with `stream_subgraphs=True`, then `client.runs.join` + `threads.get_state(subgraphs=True)`. Writes to `apps/backend/_smoke/`:
+`tests/integration/smoke_goldset.py` picks one random goldset entry per category (`addressed`, `thematic`, `cross`, `negative`) with `SEED=42`, streams each run via `langgraph_sdk` with `stream_subgraphs=True`, then `client.runs.join` + `threads.get_state(subgraphs=True)`. Writes to `apps/backend/_smoke/`. **Note**: the per-category sampler does NOT yet include `adversarial` — extend `CATEGORIES` in `smoke_goldset.py:38` if you want adversarial sampled too.
 
 - `qN_<category>.txt` — pretty transcript (main + subagent interleaved, indented)
 - `qN_<category>.json` — raw stream events
