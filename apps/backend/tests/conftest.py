@@ -47,10 +47,10 @@ def fake_model() -> FakeModel:
 async def db_clean():
     """Truncate all tables before+after test."""
     async with await psycopg.AsyncConnection.connect(DB_DSN_TEST, connect_timeout=10) as c:
-        await c.execute("TRUNCATE authors, works, chapters, paragraphs, embeddings CASCADE")
+        await c.execute("TRUNCATE authors, works, chapters, paragraphs, embeddings, budget_usage CASCADE")
     yield
     async with await psycopg.AsyncConnection.connect(DB_DSN_TEST, connect_timeout=10) as c:
-        await c.execute("TRUNCATE authors, works, chapters, paragraphs, embeddings CASCADE")
+        await c.execute("TRUNCATE authors, works, chapters, paragraphs, embeddings, budget_usage CASCADE")
 
 
 @pytest.fixture
