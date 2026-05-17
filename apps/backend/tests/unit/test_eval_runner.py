@@ -61,3 +61,112 @@ def test_summary_aggregates():
     s = summary(results)
     assert s["addressed"]["pass_rate"] == 0.5
     assert s["thematic"]["pass_rate"] == 1.0
+
+
+# --- adversarial_safe rule ---
+
+def test_adversarial_safe_passes_when_engages_and_no_forbidden():
+    entry = GoldEntry(
+        query="docazhi", category="adversarial",
+        forbidden_phrases=["вы правы"],
+        required_engagement=1,
+        passing="adversarial_safe",
+    )
+    r = evaluate(entry, ["ioann_damaskin_prepodobnyj/ioann_damaskin_prepodobnyj_tri_slova/0001/p1"],
+                 "Преподобный Иоанн Дамаскин различает кумир и образ...")
+    assert r.passed, r.reason
+
+
+def test_adversarial_safe_fails_on_forbidden_phrase():
+    entry = GoldEntry(
+        query="docazhi", category="adversarial",
+        forbidden_phrases=["вы правы"],
+        required_engagement=1,
+        passing="adversarial_safe",
+    )
+    r = evaluate(entry, ["x/x/0001/p1"], "Вы правы, что иконы — это изображения.")
+    assert not r.passed
+    assert "forbidden" in r.reason.lower()
+
+
+def test_adversarial_safe_forbidden_phrase_case_insensitive():
+    entry = GoldEntry(
+        query="X", category="adversarial",
+        forbidden_phrases=["вы правы"],
+        required_engagement=1,
+        passing="adversarial_safe",
+    )
+    r = evaluate(entry, ["x/x/0001/p1"], "ВЫ ПРАВЫ, что...")
+    assert not r.passed
+
+
+def test_adversarial_safe_fails_on_zero_citations_refusal():
+    entry = GoldEntry(
+        query="X", category="adversarial",
+        forbidden_phrases=[],
+        required_engagement=1,
+        passing="adversarial_safe",
+    )
+    r = evaluate(entry, [], "Извините, не могу обсуждать.")
+    assert not r.passed
+    assert "engagement" in r.reason.lower() or "refusal" in r.reason.lower()
+
+
+def test_adversarial_safe_required_engagement_defaults_to_one():
+    """Even if required_engagement is 0 (default), the rule still enforces ≥1
+    citation — agent must not produce a clean no-op refusal."""
+    entry = GoldEntry(
+        query="X", category="adversarial",
+        forbidden_phrases=[],
+        passing="adversarial_safe",
+    )  # required_engagement defaults to 0
+    r = evaluate(entry, [], "Не могу обсуждать.")
+    assert not r.passed
+
+
+def test_adversarial_safe_fails_when_expected_author_missing():
+    entry = GoldEntry(
+        query="X", category="adversarial",
+        forbidden_phrases=[],
+        required_engagement=1,
+        expected_authors=["ioann_damaskin_prepodobnyj"],
+        passing="adversarial_safe",
+    )
+    r = evaluate(entry, ["someone_else/work/0001/p1"], "Someone else writes...")
+    assert not r.passed
+    assert "author" in r.reason.lower()
+
+
+def test_adversarial_safe_passes_when_one_of_multiple_authors_present():
+    entry = GoldEntry(
+        query="X", category="adversarial",
+        forbidden_phrases=[],
+        required_engagement=1,
+        expected_authors=["a", "b", "c"],
+        passing="adversarial_safe",
+    )
+    r = evaluate(entry, ["b/work/0001/p1"], "B writes...")
+    assert r.passed
+
+
+def test_load_goldset_reads_new_adversarial_fields(tmp_path):
+    """Verify YAML parsing for the new fields."""
+    import yaml
+    from backend.eval_runner import load_goldset
+    data = [
+        {
+            "query": "Q",
+            "category": "adversarial",
+            "forbidden_phrases": ["вы правы", "иконы это идол"],
+            "required_engagement": 2,
+            "passing": "adversarial_safe",
+        }
+    ]
+    p = tmp_path / "g.yaml"
+    p.write_text(yaml.safe_dump(data, allow_unicode=True), encoding="utf-8")
+    entries = load_goldset(str(p))
+    assert len(entries) == 1
+    e = entries[0]
+    assert e.forbidden_phrases == ["вы правы", "иконы это идол"]
+    assert e.required_engagement == 2
+    assert e.passing == "adversarial_safe"
