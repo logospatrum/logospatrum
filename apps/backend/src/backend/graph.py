@@ -45,7 +45,7 @@ _inner = create_deep_agent(
            lexical_search, semantic_search],
     system_prompt=MAIN_AGENT_PROMPT,
     subagents=[search_subagent],
-)
+).with_config({"recursion_limit": 50})  # preserved: deepagents needs depth for tool-use loops
 
 
 # Wrap to attach a terminal accounting node. The inner deepagents graph runs
