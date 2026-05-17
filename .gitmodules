@@ -1,0 +1,3 @@
+[submodule "plugins/patristic-plugin"]
+	path = plugins/patristic-plugin
+	url = https://github.com/logospatrum/patristic-plugin
