@@ -25,7 +25,7 @@ Two related gaps in current MVP:
 
 Two tightly-coupled additions delivered in one spec, three implementation phases:
 
-### Track A — Skills infrastructure
+### Track A — Skills infrastructure (2 skills in v1)
 
 Port from `trading-mcp/terminal/agent` (already proven, ~100 LOC total):
 
@@ -43,7 +43,7 @@ Port from `trading-mcp/terminal/agent` (already proven, ~100 LOC total):
   - `invoke_skill(name: str) -> str` — returns body of the named skill or the literal string `"Skill 'X' not found. Available: [...]"` on miss. **Never raises** (same contract as `read_passage` — protects from langgraph parallel tool_call cancellation).
   - `list_skills` is **NOT** exposed (we only have 4 skills, registry is already in system prompt, runtime discovery is YAGNI).
 
-- **`apps/backend/src/backend/skills/`** — directory with 4 markdown files. Each ≤100 lines, structured as:
+- **`apps/backend/src/backend/skills/`** — directory with 2 markdown files. Each ≤100 lines, structured as:
   - YAML frontmatter: `name`, `description` (triggering — under what conditions the agent should invoke);
   - `## When to invoke` — concrete signals (keywords, question patterns);
   - `## Posture` — how to position the answer (tone, framing rules);
@@ -51,11 +51,11 @@ Port from `trading-mcp/terminal/agent` (already proven, ~100 LOC total):
   - `## Forbidden moves` — what NOT to do in this domain;
   - `## Example` — one good answer sketch.
 
-  Initial skills:
-  - **`apologetics.md`** — inter-confessional/inter-religious/atheist challenges. Posture: do not accept the false frame; translate to positive patristic witness; do not polemicize. Prefer: Дамаскин "Точное изложение", "О ересях" (gl.100=Ishmaelites, gl.7=Judaism, gl.83=Iconoclasts); Палама на Варлаама; Григорий Богослов на Юлиана.
-  - **`dogmatics.md`** — Trinitarian/Christological/iconological/filioque questions. Posture: always anchor in Conciliar definitions and Cappadocians/Damascene; distinguish technical terms (усия/ипостась/природа/энергия). Prefer: Григорий Богослов (Слова о богословии), Василий Великий (О Святом Духе), Дамаскин (Точное изложение), Палама (Триады).
-  - **`ascetics.md`** — questions on prayer, fasting, struggle with passions, mourning/penitence, spiritual delusion. Prefer-by-passion mapping: гордость→Лествичник, страсти-8→Кассиан/Евагрий, прелесть→Брянчанинов, трезвение/внимание→Феофан, любовь/слёзы→Исаак Сирин.
+  Initial skills (v1 = 2 skills, not 4):
+  - **`apologetics.md`** — inter-confessional/inter-religious/atheist challenges. Posture: do not accept the false frame; translate to positive patristic witness; do not polemicize. Prefer: Дамаскин «Точное изложение», «О ересях» (gl.100=Ishmaelites, gl.7=Judaism, gl.83=Iconoclasts); Палама на Варлаама; Григорий Богослов на Юлиана.
   - **`pastoral.md`** — personal grief/illness/family/forgiveness questions. Posture: empathy first; never give medical/therapeutic/legal advice; gently remind about consultation with a parish priest; comforting sources (Златоуст on grief, Феофан letters, Брянчанинов on skorbi).
+
+  **Why only 2:** `apologetics` and `pastoral` are domains where _default_ behavior is actively wrong (the agent will either accept the opponent's frame, or open with a cold citation on top of someone's grief). `dogmatics` and `ascetics` would impose a rigid frame on what is essentially the bulk of normal corpus questions — overengineering for v1. Add later if a clear failure pattern emerges.
 
 - **Wiring in `apps/backend/src/backend/graph.py`**:
   - At module import: `_SKILLS = scan_skills(Path(__file__).parent / "skills")`.
@@ -134,14 +134,15 @@ User question
 
 ## Implementation phases (for the plan, not for the spec)
 
-1. **Phase 1 — Skills infra + 4 skill bodies + frontend filter.** Independent, mergeable on its own. Verified by `test_skills_registry.py` and a manual `langgraph dev` run.
+1. **Phase 1 — Skills infra + 2 skill bodies (apologetics, pastoral) + frontend filter.** Independent, mergeable on its own. Verified by `test_skills_registry.py` and a manual `langgraph dev` run.
 2. **Phase 2 — Adversarial eval-runner extension.** Schema fields + new passing rule + unit tests. Independent of phase 1.
 3. **Phase 3 — Adversarial test cases (~20 entries) + iterate skills until pass rate ≥ 80%.** Depends on phases 1+2.
 
 ## Non-goals (YAGNI)
 
+- **`dogmatics` and `ascetics` skills.** Considered for v1, dropped: they'd impose a rigid frame on what is essentially the bulk of ordinary corpus questions. Add later if a clear failure pattern emerges (e.g., agent confusing усия/ипостась in goldset failures, or recommending unguarded умная молитва).
 - **LLM-judge** for semantic frame-resistance. Mechanical phrase-checks are cheaper, deterministic, sufficient for v1. Revisit if false-negative rate is high.
-- **`list_skills` tool.** Registry is in system prompt; 4 skills don't need runtime discovery.
+- **`list_skills` tool.** Registry is in system prompt; 2 skills don't need runtime discovery.
 - **Auto-classifier for skill selection.** Agent decides based on registry descriptions; we trust Sonnet's judgement.
 - **Skills for search-subagent.** Search does retrieval, not posture-aware composition.
 - **Hot-reload / skill versioning.** Restart `langgraph dev` is enough during dev; prod redeploys anyway.
@@ -214,108 +215,7 @@ description: Use when the question is a challenge from another faith/confession/
 > Я не могу обсуждать вопросы других конфессий. [refusal-trap]
 ```
 
-### A.2 `dogmatics.md`
-
-```markdown
----
-name: dogmatics
-description: Use for technical theological questions about Trinity, Christology, iconology, filioque, soteriology, Mariology, eschatology — anything requiring precision on усия/ипостась/природа/энергия or anchoring on Соборы. Triggers: "что значит единосущный", "филиокве", "две природы Христа", "обожение", "почитание Богородицы", упоминания Соборов, термины из догматики.
----
-
-# Dogmatics
-
-## Когда вызывать
-
-- Технический догматический вопрос (Троица, христология, иконопочитание, филиокве, сотериология, мариология, эсхатология)
-- Запрос определения термина (усия, ипостась, природа, энергия, благодать, обожение, кенозис)
-- Сравнение позиций (православие vs католичество vs протестантизм по конкретному пункту)
-- Ссылка на Собор или Символ веры
-
-## Posture
-
-1. **Анкорь на Соборах и Каппадокийцах/Дамаскине.** Не личное мнение, а соборное определение.
-2. **Различай термины.** Усия ≠ ипостась ≠ природа в техническом смысле; пользователь часто их путает — поправь явно.
-3. **Школьные споры внутри Православия** (например, разные акценты у Паламы и ранних отцов) — обозначь как разные акценты, не выноси одного «правильного» ответа.
-4. **Цитируй технически точно.** В догматике перефразирование = потеря смысла; держись подстроки `read_passage`.
-
-## Источники
-
-- **Иоанн Дамаскин**, «Точное изложение православной веры» — энциклопедия догматики
-- **Григорий Богослов**, Слова 27–31 («Слова о богословии») — Троица
-- **Василий Великий**, «О Святом Духе» — пневматология, филиокве
-- **Афанасий Великий**, «О воплощении», «На ариан» — христология
-- **Григорий Нисский**, «Об устроении человека», «Большое огласительное слово» — антропология, сотериология
-- **Максим Исповедник** — две воли, обожение, христология
-- **Григорий Палама**, «Триады», «Сто пятьдесят глав» — сущность/энергии, обожение, исихазм
-- **Кирилл Александрийский** — христология, евхаристия
-
-## Запрещённые ходы
-
-- «По моему мнению» / «я считаю» — нет, ты транслируешь корпус
-- Упрощения, теряющие технический смысл («Троица — это как вода-лёд-пар»)
-- Смешение терминологий (католической / протестантской / православной) без явного разграничения
-- Использование одного автора как «единственно верного» в спорном внутрипатристическом вопросе
-
-## Пример
-
-**Q:** «Что значит "единосущный" (ὁμοούσιος)?»
-
-**Хорошо:**
-> Термин ὁμοούσιος («единосущный») закреплён I Никейским Собором (325) в Символе веры для выражения единства сущности Отца и Сына — против арианского учения о Сыне как высшем творении. Каппадокийцы — Василий Великий, Григорий Богослов, Григорий Нисский — развили формулу: одна сущность (οὐσία) — три ипостаси (ὑποστάσεις) [[…|«…»]]. Это различение _сущности_ и _ипостаси_ — ключ к тринитарному богословию…
-```
-
-### A.3 `ascetics.md`
-
-```markdown
----
-name: ascetics
-description: Use when user asks о духовной жизни — молитва, пост, борьба со страстями, уныние, прелесть, плач, послушание, трезвение, безмолвие. Triggers: "как бороться с X" (страсть), "как молиться", "что значит трезвение/прелесть/память смертная", "как поститься", "что такое страсти", "об умной молитве".
----
-
-# Ascetics
-
-## Когда вызывать
-
-- Практический вопрос о молитве, посте, борьбе со страстями, послушании
-- Запрос на различение духовных состояний (трезвение, прелесть, утешение, охлаждение, плач)
-- «Как мне X» в духовном смысле (не личный пастырский запрос — для того есть `pastoral`)
-
-## Posture
-
-1. **Корпус богат — выбирай источник по теме**, а не по узнаваемости автора. Карта ниже.
-2. **Никаких «я рекомендую».** Только «отцы советуют», «святитель X пишет».
-3. **Предупреждай** про опасность аскетики без рассуждения и духовника — особенно для умной молитвы, безмолвия, поста сверх меры. Брянчанинов о прелести — базовая защита в любой теме созерцания.
-
-## Какой автор для какой темы
-
-- **Гордость, тщеславие, общий путь восхождения** → Иоанн Лествичник («Лествица»)
-- **Восемь страстей, классификация помыслов** → Иоанн Кассиан, Евагрий Понтийский
-- **Прелесть, духовное обольщение** → Игнатий Брянчанинов (прежде всего «О прелести»)
-- **Трезвение, внимание, Иисусова молитва** → Феофан Затворник, Игнатий Брянчанинов, Григорий Палама
-- **Любовь, слёзы, плач** → Исаак Сирин
-- **Послушание, отсечение воли** → Авва Дорофей, Варсонофий Великий и Иоанн Пророк
-- **Уныние** → Евагрий Понтийский, Иоанн Кассиан, Авва Дорофей
-- **Бесы, духи злобы, борьба с помыслами** → Антоний Великий, Брянчанинов, Евагрий
-- **Память смертная** → Лествичник, Брянчанинов, Исаак Сирин
-- **Безмолвие, исихия** → Лествичник, Палама, Исаак Сирин
-- **Пост, чревоугодие** → Кассиан, Василий Великий, Лествичник
-
-## Запрещённые ходы
-
-- «Я рекомендую…» / «вам нужно…» — нет. «Отцы советуют…»
-- Конкретное молитвенное правило или мера поста для пользователя — это к духовнику
-- Подача Иисусовой молитвы / умного делания как техники без предупреждения о духовнике
-- Игнорировать Брянчанинова о прелести в темах созерцания и высокой молитвы
-
-## Пример
-
-**Q:** «Как бороться с унынием?»
-
-**Хорошо:**
-> Уныние (ἀκηδία) — один из восьми главных помыслов в классификации Евагрия и преподобного Иоанна Кассиана [[…|«…»]]. Авва Дорофей советует терпение и понуждение себя на молитву [[…|«…»]]. Святитель Игнатий Брянчанинов указывает на телесный труд, чтение Писания и общение с духовно опытными как противоядие [[…|«…»]]…
-```
-
-### A.4 `pastoral.md`
+### A.2 `pastoral.md`
 
 ```markdown
 ---
