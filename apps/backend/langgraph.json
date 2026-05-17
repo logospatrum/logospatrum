@@ -7,5 +7,6 @@
   "http": {
     "app": "backend.catalog:app"
   },
-  "image_distro": "wolfi"
+  "image_distro": "wolfi",
+  "python_version": "3.12"
 }
