@@ -23,19 +23,12 @@ env:
 
 jobs:
   backend:
-    name: Build backend (langgraph build, Wolfi distro)
+    name: Build backend (custom slim FastAPI, no langgraph-api runtime)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-        with:
-          submodules: recursive
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Install langgraph-cli
-        run: pip install -U "langgraph-cli[inmem]"
+      - uses: docker/setup-buildx-action@v4
 
       - uses: docker/login-action@v4
         with:
@@ -43,18 +36,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build backend image
-        working-directory: apps/backend
+      - name: Build and push backend image
         run: |
-          langgraph build -t ${{ env.REGISTRY }}/${{ env.ORG }}/backend:${{ github.sha }}
-          docker tag \
-            ${{ env.REGISTRY }}/${{ env.ORG }}/backend:${{ github.sha }} \
-            ${{ env.REGISTRY }}/${{ env.ORG }}/backend:latest
-
-      - name: Push backend image
-        run: |
-          docker push ${{ env.REGISTRY }}/${{ env.ORG }}/backend:${{ github.sha }}
-          docker push ${{ env.REGISTRY }}/${{ env.ORG }}/backend:latest
+          docker buildx build \
+            --push \
+            --platform linux/amd64 \
+            -f apps/backend/Dockerfile \
+            -t ${{ env.REGISTRY }}/${{ env.ORG }}/backend:${{ github.sha }} \
+            -t ${{ env.REGISTRY }}/${{ env.ORG }}/backend:latest \
+            apps/backend
 
   frontend:
     name: Build frontend (Next.js 15 multi-stage)
