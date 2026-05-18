@@ -124,8 +124,17 @@ export function useStatelessStream(
       return res;
     }
 
+    // LangGraph SDK builds request URLs via `new URL(path, apiUrl)`, which
+    // throws "Invalid URL" when apiUrl is relative (e.g. our default "/api").
+    // Promote to absolute against window.location.origin so the SDK is happy
+    // while the browser still resolves the actual fetch same-origin.
+    const absoluteApiUrl =
+      typeof window !== "undefined" && apiUrl.startsWith("/")
+        ? `${window.location.origin}${apiUrl}`
+        : apiUrl;
+
     return new Client({
-      apiUrl,
+      apiUrl: absoluteApiUrl,
       callerOptions: { fetch: wrappedFetch },
     });
   }, [apiUrl]);
