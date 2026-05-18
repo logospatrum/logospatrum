@@ -494,6 +494,8 @@ function LogosInner() {
             opacity: inChat ? 1 : 0,
             pointerEvents: inChat ? "auto" : "none",
             transition: "opacity 360ms ease",
+            transform: "translateZ(0)",
+            willChange: "transform",
           }}
         >
           <div
@@ -582,7 +584,15 @@ function ChatTurn({
     turn.answerText.trim().length > 0 ||
     turn.inProgress;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 22,
+        contentVisibility: "auto",
+        containIntrinsicSize: "0 320px",
+      }}
+    >
       {humanText && <HumanLine text={humanText} onEdit={onEditHuman} />}
       {showAssistant && (
         <AssistantTurn

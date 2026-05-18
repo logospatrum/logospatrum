@@ -62,7 +62,6 @@ button:focus-visible, textarea:focus-visible, a:focus-visible {
   line-height: 1.65;
   color: #ece6d6;
   letter-spacing: 0.003em;
-  text-wrap: pretty;
 }
 .logos-answer .markdown-content > * + * { margin-top: 0.9em; }
 .logos-answer p { margin: 0; color: #ece6d6; }
