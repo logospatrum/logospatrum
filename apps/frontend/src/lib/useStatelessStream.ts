@@ -178,13 +178,31 @@ export function useStatelessStream(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } as any);
 
+          // Event taxonomy (with subgraphs=True):
+          //   "values"                                   root wrapper graph,
+          //                                              fires only at start
+          //                                              + final tick
+          //   "values|agent_inner:<uuid>"                deepagents main loop
+          //                                              state — fires after
+          //                                              every tool call / LLM
+          //                                              response. THIS is the
+          //                                              live progress stream.
+          //   "values|agent_inner:<uuid>/tools:<uuid>"   nested subagent
+          //                                              (search) — its own
+          //                                              private thread; we
+          //                                              DON'T want to splice
+          //                                              its messages into the
+          //                                              user-facing chat.
+          // Filter accepts top-level + main-loop, skips the deeper subagent
+          // path. Result: UI updates incrementally instead of waiting for the
+          // entire run (~minute) to complete before redrawing.
+          const MAIN_EVENT_RE = /^values(\|agent_inner:[^/]+)?$/;
           for await (const chunk of iter as AsyncIterable<{
             event: string;
             data: unknown;
           }>) {
             if (ac.signal.aborted) break;
-            if (chunk.event === "values") {
-              // Top-level state from the root graph.
+            if (MAIN_EVENT_RE.test(chunk.event)) {
               const data = chunk.data as { messages?: Message[] };
               if (Array.isArray(data.messages)) {
                 setMessagesState(data.messages);
@@ -194,8 +212,9 @@ export function useStatelessStream(
               setError(new Error(data.message ?? "stream error"));
               break;
             }
-            // Anything else (subgraph values like "values|search", "metadata",
-            // tool progress…) is ignored: it doesn't represent root state.
+            // Subagent (`values|agent_inner:.../tools:...`), metadata, and
+            // any other event types are silently dropped — they don't carry
+            // user-visible chat state.
           }
         } catch (e) {
           if ((e as Error).name !== "AbortError") {
