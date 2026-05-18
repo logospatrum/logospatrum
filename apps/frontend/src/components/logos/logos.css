@@ -635,3 +635,61 @@ a.citation-pill[data-active="true"] {
   outline: 1px solid rgba(238, 232, 218, 0.36);
   outline-offset: 2px;
 }
+
+/* Confirm dialog — reuses the overlay + rise keyframe of the passage modal
+   but is much smaller and never scrolls (single question + two buttons). */
+.logos-confirm-modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(420px, 92vw);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: #0b0c0e;
+  border: 0.5px solid rgba(238, 232, 218, 0.12);
+  border-radius: 8px;
+  padding: 26px 28px 22px;
+  z-index: 51;
+  animation: logos-passage-modal-rise 320ms cubic-bezier(.22,.61,.36,1) both;
+  font-family: var(--font-eb-garamond), "EB Garamond", Georgia, serif;
+  color: #ece6d6;
+}
+.logos-confirm-modal-content :focus-visible {
+  outline: 1px solid rgba(238, 232, 218, 0.36);
+  outline-offset: 2px;
+}
+.logos-confirm-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+.logos-confirm-modal-btn {
+  appearance: none;
+  border: 0.5px solid rgba(238, 232, 218, 0.14);
+  background: transparent;
+  color: rgba(236, 230, 214, 0.78);
+  font-family: var(--font-inter), Inter, sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+.logos-confirm-modal-btn:hover {
+  color: #ece6d6;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(238, 232, 218, 0.24);
+}
+.logos-confirm-modal-btn--danger {
+  color: #e9b6a8;
+  border-color: rgba(217, 119, 87, 0.36);
+}
+.logos-confirm-modal-btn--danger:hover {
+  color: #fff;
+  background: rgba(217, 119, 87, 0.18);
+  border-color: rgba(217, 119, 87, 0.6);
+}

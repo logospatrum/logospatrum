@@ -15,6 +15,11 @@ export const STRINGS = {
       empty:       "История пуста. Задайте первый вопрос — он сохранится здесь.",
       home:        "На главную",
       exportAria:  "Экспортировать в Markdown",
+      deleteAria:  "Удалить разговор",
+      deleteTitle: "Удалить разговор?",
+      deleteBody:  "Это действие нельзя отменить — все сообщения будут безвозвратно стёрты.",
+      deleteConfirm: "Удалить",
+      deleteCancel:  "Отмена",
     },
     top: {
       homeLabel:    "Новый разговор",
@@ -117,6 +122,11 @@ export const STRINGS = {
       empty:       "History is empty. Ask your first question — it will be saved here.",
       home:        "Back to home",
       exportAria:  "Export to Markdown",
+      deleteAria:  "Delete conversation",
+      deleteTitle: "Delete this conversation?",
+      deleteBody:  "This action cannot be undone — all messages will be permanently erased.",
+      deleteConfirm: "Delete",
+      deleteCancel:  "Cancel",
     },
     top: {
       homeLabel:    "New conversation",

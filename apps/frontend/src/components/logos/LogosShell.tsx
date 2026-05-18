@@ -9,7 +9,7 @@ import { useQueryState } from "nuqs";
 import type { Message } from "@langchain/langgraph-sdk";
 
 import { useStreamContext } from "@/providers/Stream";
-import { useThreads } from "@/providers/Thread";
+import { useThreads, useThreadStore } from "@/providers/Thread";
 import { ensureToolCallsHaveResponses } from "@/lib/ensure-tool-responses";
 import { sliceForRegenerate, sliceForEdit } from "@/lib/chat-history-slice";
 import { loadThreads, newThreadId } from "@/lib/local-thread-store";
@@ -60,6 +60,7 @@ function LogosInner() {
   const { s, lang, setLang } = useStrings();
   const stream = useStreamContext();
   const { threads } = useThreads();
+  const { removeThread } = useThreadStore();
   const isNarrow = useMediaQuery("(max-width: 640px)");
 
   // URL-driven threadId (matches upstream agent-chat-ui behavior so the
@@ -265,6 +266,16 @@ function LogosInner() {
     [lang],
   );
 
+  // Delete a thread from sidebar. If it's the active one, also clear the
+  // URL threadId so Stream.tsx unmounts the messages and we land back on home.
+  const handleDeleteThread = useCallback(
+    (id: string) => {
+      removeThread(id);
+      if (id === threadId) setThreadId(null);
+    },
+    [removeThread, threadId, setThreadId],
+  );
+
   // Auto-scroll the chat list when new content arrives — but only if the
   // user is already near the bottom. If they've scrolled up to re-read,
   // don't yank the viewport. The ScrollToBottom pill lets them re-engage.
@@ -360,6 +371,7 @@ function LogosInner() {
         onPick={(id) => setThreadId(id)}
         onNew={goHome}
         onExport={handleExportThread}
+        onDelete={handleDeleteThread}
       />
 
       <TopChrome

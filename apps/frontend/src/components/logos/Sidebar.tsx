@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { palette, type } from "./tokens";
 import { useStrings } from "./i18n";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
 
 export interface SidebarThread {
   id: string;
@@ -16,11 +17,13 @@ interface Props {
   onPick: (id: string) => void;
   onNew: () => void;
   onExport: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-export function Sidebar({ threads, activeId, onPick, onNew, onExport }: Props) {
+export function Sidebar({ threads, activeId, onPick, onNew, onExport, onDelete }: Props) {
   const { s } = useStrings();
   const [hover, setHover] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<SidebarThread | null>(null);
   const isTouch = useMediaQuery("(hover: none)");
   const isNarrow = useMediaQuery("(max-width: 640px)");
 
@@ -207,12 +210,25 @@ export function Sidebar({ threads, activeId, onPick, onNew, onExport }: Props) {
                 active={active}
                 onPick={onPick}
                 onExport={onExport}
+                onRequestDelete={(t) => setPendingDelete(t)}
                 exportAria={s.sidebar.exportAria}
+                deleteAria={s.sidebar.deleteAria}
               />
             );
           })}
         </nav>
       </aside>
+
+      <ConfirmDeleteModal
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        threadTitle={pendingDelete?.title ?? ""}
+        onConfirm={() => {
+          if (pendingDelete) onDelete(pendingDelete.id);
+        }}
+      />
     </>
   );
 }
@@ -222,16 +238,26 @@ interface RowProps {
   active: boolean;
   onPick: (id: string) => void;
   onExport: (id: string) => void;
+  onRequestDelete: (t: SidebarThread) => void;
   exportAria: string;
+  deleteAria: string;
 }
 
-function ThreadRow({ thread, active, onPick, onExport, exportAria }: RowProps) {
+function ThreadRow({
+  thread,
+  active,
+  onPick,
+  onExport,
+  onRequestDelete,
+  exportAria,
+  deleteAria,
+}: RowProps) {
   const [rowHover, setRowHover] = useState(false);
   const isTouch = useMediaQuery("(hover: none)");
   const isNarrow = useMediaQuery("(max-width: 640px)");
-  // On touch / narrow viewports there is no reliable hover; the icon
+  // On touch / narrow viewports there is no reliable hover; the icons
   // should be permanently discoverable instead of fading in.
-  const showExport = isTouch || isNarrow || rowHover;
+  const showActions = isTouch || isNarrow || rowHover;
   return (
     <div
       onMouseEnter={() => setRowHover(true)}
@@ -239,7 +265,7 @@ function ThreadRow({ thread, active, onPick, onExport, exportAria }: RowProps) {
       style={{
         position: "relative",
         display: "grid",
-        gridTemplateColumns: "1fr 28px",
+        gridTemplateColumns: "1fr auto",
         alignItems: "center",
         background: active ? "rgba(255,255,255,0.05)" : "transparent",
         borderRadius: 6,
@@ -275,45 +301,88 @@ function ThreadRow({ thread, active, onPick, onExport, exportAria }: RowProps) {
       >
         {thread.title}
       </button>
-      <button
-        type="button"
-        aria-label={exportAria}
-        title={exportAria}
-        onClick={(e) => {
-          e.stopPropagation();
-          onExport(thread.id);
-        }}
+      <div
         style={{
-          appearance: "none",
-          border: 0,
-          cursor: "default",
-          background: "transparent",
-          color: palette.faint,
-          padding: 4,
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
           marginRight: 4,
-          borderRadius: 4,
-          display: "grid",
-          placeItems: "center",
-          opacity: showExport ? 1 : 0,
-          transition: "opacity 200ms ease, color 200ms ease",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = palette.text;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = palette.faint;
+          opacity: showActions ? 1 : 0,
+          transition: "opacity 200ms ease",
         }}
       >
-        <svg width={12} height={12} viewBox="0 0 12 12" fill="none">
-          <path
-            d="M6 1v7M3 5l3 3 3-3M2 10h8"
-            stroke="currentColor"
-            strokeWidth={1.2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
+        <RowIconButton
+          ariaLabel={exportAria}
+          onClick={() => onExport(thread.id)}
+        >
+          <svg width={12} height={12} viewBox="0 0 12 12" fill="none">
+            <path
+              d="M6 1v7M3 5l3 3 3-3M2 10h8"
+              stroke="currentColor"
+              strokeWidth={1.2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </RowIconButton>
+        <RowIconButton
+          ariaLabel={deleteAria}
+          onClick={() => onRequestDelete(thread)}
+          danger
+        >
+          <svg width={12} height={12} viewBox="0 0 12 12" fill="none">
+            <path
+              d="M2 3h8M4.5 3V2.25a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 .75.75V3M3 3l.6 7.2a.75.75 0 0 0 .75.7h3.3a.75.75 0 0 0 .75-.7L9 3M5 5.5v3.25M7 5.5v3.25"
+              stroke="currentColor"
+              strokeWidth={1.2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </RowIconButton>
+      </div>
     </div>
+  );
+}
+
+interface RowIconButtonProps {
+  ariaLabel: string;
+  onClick: () => void;
+  children: ReactNode;
+  danger?: boolean;
+}
+
+function RowIconButton({ ariaLabel, onClick, children, danger }: RowIconButtonProps) {
+  const hoverColor = danger ? "#e9b6a8" : palette.text;
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      title={ariaLabel}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      style={{
+        appearance: "none",
+        border: 0,
+        cursor: "default",
+        background: "transparent",
+        color: palette.faint,
+        padding: 4,
+        borderRadius: 4,
+        display: "grid",
+        placeItems: "center",
+        transition: "color 200ms ease",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.color = hoverColor;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.color = palette.faint;
+      }}
+    >
+      {children}
+    </button>
   );
 }
