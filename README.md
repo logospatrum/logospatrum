@@ -104,8 +104,8 @@ contributors: [CLAUDE.md](CLAUDE.md), with deeper guides at
 ## Tech stack
 
 LangGraph Server with [deepagents](https://github.com/langchain-ai/deepagents)
-two-tier graph (Claude Sonnet 4.6 main + Haiku 4.5 search subagent, via
-Timeweb AI proxy) · Postgres 16 + pgvector (HNSW) + tsvector ·
+two-tier graph (Claude Sonnet 4.6 main + Haiku 4.5 search subagent) ·
+Postgres 16 + pgvector (HNSW) + tsvector ·
 [bge-m3](https://huggingface.co/BAAI/bge-m3) embeddings · Next.js 15
 frontend forked from [agent-chat-ui](https://github.com/langchain-ai/agent-chat-ui)
 · MCP server bundled into the LangGraph app.
