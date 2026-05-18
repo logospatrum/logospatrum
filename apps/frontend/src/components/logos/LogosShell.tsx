@@ -22,7 +22,7 @@ import {
 import { LibraryBrowser } from "@/components/library/LibraryBrowser";
 import { ConnectAgent } from "@/components/connect/ConnectAgent";
 
-import { palette, tweaks, type } from "./tokens";
+import { tweaks } from "./tokens";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { LangContext, useLangState, useStrings } from "./i18n";
 import { Background, type LightSource } from "./Background";

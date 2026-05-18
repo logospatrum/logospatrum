@@ -215,7 +215,6 @@ export function useStatelessStream(
             streamMode: ["values", "messages-tuple"],
             streamSubgraphs: true,
             signal: ac.signal,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } as any);
 
           // Event taxonomy with subgraphs=True + the two stream modes above:
