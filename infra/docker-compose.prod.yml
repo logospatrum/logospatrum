@@ -54,7 +54,12 @@ services:
     networks: [internal]
     env_file: ../.env
     environment:
+      # Our app reads POSTGRES_DSN; the underlying langgraph-api runtime in
+      # the base image reads DATABASE_URI (falls back to POSTGRES_URI). Set
+      # all three to the same DSN so both layers find the DB.
       POSTGRES_DSN: postgresql://postgres:${PG_PASSWORD:-postgres}@postgres:5432/patristic
+      DATABASE_URI: postgresql://postgres:${PG_PASSWORD:-postgres}@postgres:5432/patristic
+      POSTGRES_URI: postgresql://postgres:${PG_PASSWORD:-postgres}@postgres:5432/patristic
     depends_on:
       postgres:
         condition: service_healthy
