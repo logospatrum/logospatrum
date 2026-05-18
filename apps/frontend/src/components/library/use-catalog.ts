@@ -63,15 +63,15 @@ export function useCatalog() {
       setData(cached);
       return;
     }
-    // Catalog FastAPI is mounted into langgraph dev via langgraph.json
-    // ("http": { "app": "backend.catalog:app" }), so it lives on the same
-    // port as the agent API. Fall back through the same env vars as
-    // StreamProvider, defaulting to langgraph dev's 2024.
+    // Catalog FastAPI is now part of our custom backend.server:app and is
+    // exposed via the nginx /api/catalog whitelist (no HMAC, public GET).
+    // Default to the same /api proxy StreamProvider uses so prod builds
+    // work without any explicit NEXT_PUBLIC_* env vars baked in.
     const url =
       process.env.NEXT_PUBLIC_CATALOG_API_URL ||
       process.env.NEXT_PUBLIC_API_URL ||
       process.env.NEXT_PUBLIC_LANGGRAPH_API_URL ||
-      "http://localhost:2024";
+      "/api";
     setLoading(true);
     fetch(`${url}/catalog`)
       .then((r) => {
