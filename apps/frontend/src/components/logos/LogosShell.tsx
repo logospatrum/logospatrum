@@ -609,8 +609,6 @@ function ChatTurn({
         display: "flex",
         flexDirection: "column",
         gap: 22,
-        contentVisibility: "auto",
-        containIntrinsicSize: "0 320px",
       }}
     >
       {humanText && <HumanLine text={humanText} onEdit={onEditHuman} />}

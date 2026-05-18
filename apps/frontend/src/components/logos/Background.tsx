@@ -103,6 +103,12 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
   const cursorDiffRef = useRef<SVGFEDiffuseLightingElement | null>(null);
   const cursorSpecRef = useRef<SVGFESpecularLightingElement | null>(null);
 
+  // Ambient pass — fixed at boot, but driven through a master envelope in
+  // the rAF loop so it fades to 0 in lockstep with cursor/flame when the
+  // user kills the LIGHT toggle. Without this the rock would still show a
+  // dim ambient slab right up to the moment we unmount the heavy SVG.
+  const ambientDiffRef = useRef<SVGFEDiffuseLightingElement | null>(null);
+
   // Cross-shadow group — opacity + tiny x-translation driven by the flame
   // envelope each frame so the shadow on the rock pulses with the flames.
   const crossShadowRef = useRef<SVGGElement | null>(null);
@@ -111,12 +117,22 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
   const flameEnvRef = useRef(0);
   const cursorEnvRef = useRef(1);
   const pressedRef = useRef(false);
+  // Master envelope for the LIGHT toggle. 1 = full scene (current default),
+  // 0 = scene dimmed to nothing. Multiplied into ambient + cursor + flame
+  // peaks so all three converge to zero at the same lerp rate before we
+  // tear down the heavy SVG. Starts at 1 to match the initial-mount
+  // expectation that the rock is visible on first paint.
+  const masterEnvRef = useRef(1);
 
   // Refs that mirror props so the long-lived rAF loop reads fresh values
   // without re-creating its closure on every prop change.
   const dimCursorRef = useRef(false);
   const lightOnRef = useRef(true);
   const lightSourceRef = useRef<LightSource>(lightSource);
+  // Mirror ambient peak intensity into a ref so the rAF loop reads its
+  // current value (recomputed per render from lightSource + chatCount)
+  // without re-creating the closure.
+  const ambientPeakRef = useRef(0.20);
   useEffect(() => {
     dimCursorRef.current = dimCursor;
   }, [dimCursor]);
@@ -126,6 +142,28 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
   useEffect(() => {
     lightSourceRef.current = lightSource;
   }, [lightSource]);
+
+  // GPU optimization: when the LIGHT toggle is OFF we unmount the heavy
+  // SVG (turbulence + displacement + 7 lighting passes + 8 blends — the
+  // bulk of background paint cost). On toggle-on we remount IMMEDIATELY
+  // so the rock starts rendering BEFORE the light envelope swells in;
+  // on toggle-off we wait ~1.5s for the masterEnv lerp to take ambient/
+  // cursor/flame to ~0 before tearing the SVG down, so the rock fades to
+  // black instead of popping out. Reduced-motion users get the instant
+  // unmount (no animation expectation).
+  const [renderHeavy, setRenderHeavy] = useState(lightOn);
+  useEffect(() => {
+    if (lightOn) {
+      setRenderHeavy(true);
+      return undefined;
+    }
+    if (reducedMotion) {
+      setRenderHeavy(false);
+      return undefined;
+    }
+    const t = window.setTimeout(() => setRenderHeavy(false), 1500);
+    return () => window.clearTimeout(t);
+  }, [lightOn, reducedMotion]);
 
   const registerLight = useCallback((el: SVGFEPointLightElement | null) => {
     if (el && !lightsRef.current.includes(el)) lightsRef.current.push(el);
@@ -190,12 +228,16 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
     : lightSource === "reading"
       ? 0.18
       : 0.10; // thinking — flames will brighten the rest
+  ambientPeakRef.current = ambientIntensity;
   const specExponent = 48;
 
-  // ── Cursor follow ── only runs while lightSource === "cursor".
+  // ── Cursor follow ── only runs while lightSource === "cursor" AND the
+  // heavy SVG is mounted. Without `renderHeavy` in deps the loop would
+  // keep running after we tear the filter down, writing to dead refs.
   useEffect(() => {
     if (lightSource !== "cursor") return undefined;
     if (reducedMotion) return undefined;
+    if (!renderHeavy) return undefined;
     let raf = 0;
     let tx = VBW * 0.5, ty = VBH * 0.4;
     let cx = tx, cy = ty;
@@ -252,12 +294,15 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
       window.removeEventListener("pointercancel", onUp, true);
       cancelAnimationFrame(raf);
     };
-  }, [lightSource, reducedMotion]);
+  }, [lightSource, reducedMotion, renderHeavy]);
 
-  // ── Flame + cross-shadow + cursor envelope ── runs always so fades
-  // don't snap on mode transitions.
+  // ── Flame + cross-shadow + cursor + master envelopes ── runs whenever
+  // the heavy SVG is mounted. Tearing down with renderHeavy=false lets us
+  // stop the rAF entirely (and stop writing setAttribute into refs that
+  // are about to vanish).
   useEffect(() => {
     if (reducedMotion) return undefined;
+    if (!renderHeavy) return undefined;
     const baseLX = VBW * 0.30, baseRX = VBW * 0.70;
     const baseY = VBH * 1.15;
     let raf = 0;
@@ -284,9 +329,27 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
       const target =
         lightSourceRef.current === "thinking" && lightOnRef.current ? 1 : 0;
       let env = flameEnvRef.current;
-      env += (target - env) * 0.04;
+      // Faster fade-out (0.12 vs the cinematic 0.04) when the user kills
+      // LIGHT — otherwise the flames would still be at ~55% intensity by
+      // the time we unmount the heavy SVG and produce a visible pop.
+      const flameLerp = lightOnRef.current ? 0.04 : 0.12;
+      env += (target - env) * flameLerp;
       if (Math.abs(target - env) < 0.0005) env = target;
       flameEnvRef.current = env;
+
+      // Master envelope — fades ambient/cursor/flame TOGETHER when the
+      // user kills the LIGHT toggle so all three sources hit 0 in step.
+      // Without this, ambient stays at its constant JSX-prop value right
+      // up to unmount and "pops" off when the SVG tears down.
+      const mTarget = lightOnRef.current ? 1 : 0;
+      let mEnv = masterEnvRef.current;
+      mEnv += (mTarget - mEnv) * 0.12;
+      if (Math.abs(mTarget - mEnv) < 0.001) mEnv = mTarget;
+      masterEnvRef.current = mEnv;
+      ambientDiffRef.current?.setAttribute(
+        "diffuseConstant",
+        (ambientPeakRef.current * mEnv).toFixed(3),
+      );
 
       const t = now - t0;
       const fL = Math.max(0, Math.min(1, flicker(t, 1.0)));
@@ -364,7 +427,72 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [cursorPeakDiff, cursorPeakSpec, reducedMotion]);
+  }, [cursorPeakDiff, cursorPeakSpec, reducedMotion, renderHeavy]);
+
+  // When LIGHT is off and the fade-out timer has fired, drop the heavy
+  // filter graph but keep a minimal SVG carrying ONLY:
+  //   - black background — matches what the filter outputs at env=0
+  //     (ambient * albedo with ambient=0 → pure #000)
+  //   - the same top-off-screen beam (`logosBeam` radial gradient) and
+  //     the same edge vignette as the heavy version
+  //
+  // Critical: use the SAME `viewBox` and `preserveAspectRatio="xMidYMid
+  // slice"` as the heavy SVG. The SVG aspect-mapping math then resolves
+  // the gradient's `cx/cy/r` percentages against the SAME object-
+  // bounding-box and applies the SAME slice scaling — so the beam lands
+  // at the EXACT same screen coordinates and the EXACT same ellipse
+  // shape regardless of LIGHT toggle state or viewport resize.
+  //
+  // CSS radial-gradient fallback was tried first but doesn't match: it
+  // resolves percentages against the viewport rather than an SVG bbox,
+  // and uses viewport aspect instead of viewBox aspect — both shift the
+  // beam's center and stretch its ellipse differently from the SVG one.
+  //
+  // GPU cost: two gradient rects, no filter, no compositing layer —
+  // ~1-2 % of the heavy-mode paint cost.
+  if (!renderHeavy) {
+    return (
+      <svg
+        viewBox={`${VB_VIEW_X0} ${VB_VIEW_Y0} ${VB_VIEW_W} ${VB_VIEW_H}`}
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          inset: 0,
+          width: "100vw",
+          height: "100vh",
+          zIndex: 0,
+          pointerEvents: "none",
+          background: "#000",
+        }}
+      >
+        <defs>
+          <radialGradient id="logosBeamOff" cx="50%" cy="-5%" r="60%">
+            <stop offset="0%" stopColor={palette.stoneLit} stopOpacity={0.14 * lightK} />
+            <stop offset="60%" stopColor={palette.stoneLit} stopOpacity={0} />
+          </radialGradient>
+          <radialGradient id="logosVignetteOff" cx="50%" cy="50%" r="75%">
+            <stop offset="55%" stopColor="#000" stopOpacity={0} />
+            <stop offset="100%" stopColor="#000" stopOpacity={0.55} />
+          </radialGradient>
+        </defs>
+        <rect
+          x={VB_VIEW_X0}
+          y={VB_VIEW_Y0}
+          width={VB_VIEW_W}
+          height={VB_VIEW_H}
+          fill="url(#logosBeamOff)"
+        />
+        <rect
+          x={VB_VIEW_X0}
+          y={VB_VIEW_Y0}
+          width={VB_VIEW_W}
+          height={VB_VIEW_H}
+          fill="url(#logosVignetteOff)"
+        />
+      </svg>
+    );
+  }
 
   return (
     <>
@@ -463,8 +591,11 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
             />
 
             {/* Ambient key from above-left — dim, so the cursor light
-                dominates and the unlit side reads near-black. */}
+                dominates and the unlit side reads near-black. diffuseConstant
+                is driven by the master envelope in the rAF loop so ambient
+                fades alongside cursor/flame when the LIGHT toggle drops. */}
             <feDiffuseLighting
+              ref={ambientDiffRef}
               in="rockSharp"
               surfaceScale={surfaceScale}
               diffuseConstant={ambientIntensity}
@@ -561,7 +692,7 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
           </filter>
 
           <radialGradient id="logosBeam" cx="50%" cy="-5%" r="60%">
-            <stop offset="0%" stopColor={palette.stoneLit} stopOpacity={0.10 * lightK} />
+            <stop offset="0%" stopColor={palette.stoneLit} stopOpacity={0.14 * lightK} />
             <stop offset="60%" stopColor={palette.stoneLit} stopOpacity={0} />
           </radialGradient>
           <radialGradient id="logosVignette" cx="50%" cy="50%" r="75%">

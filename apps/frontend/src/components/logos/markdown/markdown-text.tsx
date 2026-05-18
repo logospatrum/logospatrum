@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import { remarkCitation } from "@/lib/remark-citation";
+import { stripTrailingPartialMarker } from "@/lib/citation-marker";
 import { CitationPill } from "@/components/logos/CitationPill";
 import {
   FC,
@@ -365,9 +366,19 @@ const MarkdownBlock = memo(function MarkdownBlock({
 const MarkdownTextImpl: FC<{ children: string }> = ({ children }) => {
   // Smooth typewriter playback over batched SDK chunks.
   const smoothed = useSmoothText(children);
+  // The typewriter walks char-by-char toward `children`, so even when the
+  // upstream `children` already had partial `[[…` stripped, the smoothed
+  // value still passes through intermediate states like `… [[a/b/0001`
+  // before reaching the closing `]]`. ReactMarkdown would render those as
+  // raw text. Strip again at this layer so the typewriter never reveals a
+  // half-typed marker.
+  const stripped = useMemo(
+    () => stripTrailingPartialMarker(smoothed),
+    [smoothed],
+  );
   // Defer markdown re-parse so React can yield to high-priority work
   // (scroll, animations, input) during streaming.
-  const deferredChildren = useDeferredValue(smoothed);
+  const deferredChildren = useDeferredValue(stripped);
   const blocks = useMemo(
     () => splitMarkdownBlocks(deferredChildren),
     [deferredChildren],

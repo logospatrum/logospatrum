@@ -64,6 +64,14 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, style
     <div
       style={{
         position: "relative",
+        // Sit above the ScrollToBottom pill (zIndex 6 in the same wrapper).
+        // backdrop-filter + transform on this div already establish a
+        // stacking context — without an explicit z-index it would stack
+        // at z=auto≈0, and the StyleSelect popover (z=50 inside this
+        // context) would paint *below* the pill at the outer-context
+        // level. Bumping to 7 puts the whole Monolith context (popover
+        // included) above the pill when it opens upward.
+        zIndex: 7,
         width: "min(720px, 92vw)",
         borderRadius: 20,
         background: `linear-gradient(180deg,
