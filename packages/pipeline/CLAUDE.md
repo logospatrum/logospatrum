@@ -13,8 +13,8 @@ The typer app exposes ONLY these subcommands:
 - `paragraphs` — parses every md (patristic + Bible) and writes `paragraphs`/`works`/`authors`/`chapters` in one big transaction. Both flows live in `pipeline/paragraphs.py`; Bible branch is `_ingest_bible`.
 - `bible-markdown` — Bible-specific epub→md (verse-per-md). Skip-if-exists per book. `pipeline/bible_md_convert.py`.
 - `embed` — bge-m3 encoding + HNSW/GIN build. See perf section below. `pipeline/embed.py`.
-- `concepts-bootstrap` — generates `glossary.json` (synonyms/related/greek per concept) via Timeweb-proxied Haiku from `seed_concepts.json`. Resumable. Currently 79/79 done. `pipeline/concepts_bootstrap.py`.
-- `enrich` — populates `works.topics` via LLM (Timeweb or LM Studio per `ENRICH_PROVIDER`). Post-MVP. `pipeline/enrich.py`.
+- `concepts-bootstrap` — generates `glossary.json` (synonyms/related/greek per concept) via the configured OpenAI-compatible endpoint (Haiku) from `seed_concepts.json`. Resumable. Currently 79/79 done. `pipeline/concepts_bootstrap.py`.
+- `enrich` — populates `works.topics` via LLM (remote OpenAI-compatible or LM Studio, per `ENRICH_PROVIDER`). Post-MVP. `pipeline/enrich.py`.
 
 NOT wired to typer (despite the file names): `pipeline/scrape.py` (`Scraper` class), `pipeline/download.py` (`Downloader` class), `pipeline/markdown_convert.py` (`MarkdownConverter` class). They live as importable classes only — if you need them from CLI you must add a typer command yourself. They take a `Config` instance, not the global `settings` (legacy code path).
 
@@ -67,7 +67,7 @@ Pool `min_size=1, max_size=8`. Embed uses `db_workers=2` by default so 2 active 
 
 `packages/pipeline/.env` is separate from repo root `.env`. Don't sync them. Pipeline-local keeps `EMBEDDING_DEVICE=cuda` (this venv has torch+cu128). Backend keeps `cpu` (cpu-only torch).
 
-Vars read by `Settings` (`config.py`): `POSTGRES_DSN`, `TIMEWEB_AI_KEY`, `TIMEWEB_BASE_URL`, `ENRICH_MODEL`, `ENRICH_PROVIDER`, `LMSTUDIO_BASE_URL`, `LMSTUDIO_MODEL`, `EMBEDDING_MODEL`, `EMBEDDING_DEVICE`, `EMBEDDING_BATCH_SIZE`. Also `OUTPUT_DIR` from os.environ overrides `output/` for subset runs.
+Vars read by `Settings` (`config.py`): `POSTGRES_DSN`, `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `ENRICH_MODEL`, `ENRICH_PROVIDER` (`"openai"` | `"local"`), `LMSTUDIO_BASE_URL`, `LMSTUDIO_MODEL`, `EMBEDDING_MODEL`, `EMBEDDING_DEVICE`, `EMBEDDING_BATCH_SIZE`. Also `OUTPUT_DIR` from os.environ overrides `output/` for subset runs.
 
 ## Tests
 

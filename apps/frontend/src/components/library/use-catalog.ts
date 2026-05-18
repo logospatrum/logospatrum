@@ -63,15 +63,11 @@ export function useCatalog() {
       setData(cached);
       return;
     }
-    // Catalog FastAPI is now part of our custom backend.server:app and is
-    // exposed via the nginx /api/catalog whitelist (no HMAC, public GET).
-    // Default to the same /api proxy StreamProvider uses so prod builds
+    // Catalog lives on the same FastAPI as the chat agent (backend.server:app)
+    // and is exposed via the nginx /api/catalog whitelist (no HMAC, public GET).
+    // Defaults to the same /api proxy StreamProvider uses, so prod builds
     // work without any explicit NEXT_PUBLIC_* env vars baked in.
-    const url =
-      process.env.NEXT_PUBLIC_CATALOG_API_URL ||
-      process.env.NEXT_PUBLIC_API_URL ||
-      process.env.NEXT_PUBLIC_LANGGRAPH_API_URL ||
-      "/api";
+    const url = process.env.NEXT_PUBLIC_API_URL || "/api";
     setLoading(true);
     fetch(`${url}/catalog`)
       .then((r) => {

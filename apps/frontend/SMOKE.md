@@ -5,8 +5,8 @@
 
 Prereq:
 - `wsl -e bash -c "cd ~/christian_rag/infra && docker compose -f docker-compose.dev.yml up -d postgres"` запущен
-- `cd apps/backend && PYTHONUTF8=1 .venv/Scripts/langgraph dev --port 2024 --no-browser --allow-blocking` запущен
-- `cd apps/frontend && npm run dev` запущен
+- `cd apps/backend && PYTHONUTF8=1 .venv/Scripts/uvicorn backend.server:app --port 8000 --reload` запущен
+- `cd apps/frontend && PORT=3001 npm run dev` запущен
 
 ## Главная страница (зашли без `?threadId=...`)
 

@@ -68,7 +68,7 @@ describe("API proxy whitelist", () => {
     fetchMock.mockReset();
     fetchMock.mockResolvedValue(new Response("ok", { status: 200 }));
     process.env.PAT_SESSION_SECRET = "test-secret-64-chars-long-test-secret-64-chars-long-test-se";
-    process.env.LANGGRAPH_API_URL = "http://backend:8000";
+    process.env.BACKEND_URL = "http://backend:8000";
   });
 
   // --- Public paths (no HMAC required) ---

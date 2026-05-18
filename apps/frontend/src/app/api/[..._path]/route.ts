@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 
 export const runtime = "nodejs";
 
-const BACKEND = process.env.LANGGRAPH_API_URL ?? "http://localhost:8000";
+const BACKEND = process.env.BACKEND_URL ?? "http://localhost:8000";
 const SECRET = process.env.PAT_SESSION_SECRET ?? "";
 
 // Public paths — forwarded without HMAC verify. MCP is the product feature;

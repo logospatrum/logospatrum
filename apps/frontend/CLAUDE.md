@@ -53,24 +53,28 @@ The agent-marker pipeline lives in `src/lib/`:
 
 ## Environment
 
-`.env.local` is auto-loaded. Only `NEXT_PUBLIC_*` variables reach the browser.
+Two layers of env vars:
+
+- `apps/frontend/.env.local` — **browser-visible** (`NEXT_PUBLIC_*` only) and server-side defaults for `next dev`. Auto-loaded.
+- Process env at runtime — Next.js SSR proxy at `src/app/api/[..._path]/route.ts` reads `BACKEND_URL` (defaults to `http://localhost:8000`) to know where to forward.
+
+Typical `.env.local` for local dev (frontend on :3001 → Next proxy → backend on :8000):
 
 ```
-NEXT_PUBLIC_API_URL=http://localhost:2024
-NEXT_PUBLIC_LANGGRAPH_API_URL=http://localhost:2024
-NEXT_PUBLIC_ASSISTANT_ID=agent
-NEXT_PUBLIC_CATALOG_API_URL=http://localhost:8001
+NEXT_PUBLIC_API_URL=/api          # browser hits /api, the proxy forwards
+NEXT_PUBLIC_ASSISTANT_ID=patristic
 NEXT_PUBLIC_AUTH_SCHEME=
+BACKEND_URL=http://localhost:8000  # Next.js SSR proxy target
 ```
 
-`StreamProvider` reads `NEXT_PUBLIC_API_URL || NEXT_PUBLIC_LANGGRAPH_API_URL`, defaults to `http://localhost:2024`. Assistant id defaults to `agent`. **Verify the `langgraph dev` port** — it cycles when an old port hangs in `TIME_WAIT`.
+To bypass the proxy and hit the backend directly from the browser (no HMAC, no budget guard), set `NEXT_PUBLIC_API_URL=http://localhost:8000`.
 
-**Catalog URL mismatch (real):** `.env.local` says `:8001` but `apps/backend/langgraph.json` mounts `backend.catalog:app` on the same port as `langgraph dev` (`:2024`). Pick one and align `apps/frontend/.env.local` with `apps/backend/`.
+`StreamProvider` reads `NEXT_PUBLIC_API_URL`, defaults to `/api`. Assistant id defaults to `patristic`.
 
-Smoke-checks against a running `langgraph dev`:
+Smoke-checks against a running backend:
 ```
-curl http://localhost:2024/info       # langgraph status (used by Stream.tsx)
-curl http://localhost:2024/catalog    # FastAPI catalog mount
+curl http://localhost:8000/info       # FastAPI /info endpoint
+curl http://localhost:8000/catalog    # authors+works dump
 ```
 
 ## Running locally
@@ -83,7 +87,7 @@ PORT=3001 npm run dev   # http://localhost:3001
 
 **Port 3001, not 3000.** 3000 is reserved by other tooling on this machine — DO NOT use it. Always start the frontend with `PORT=3001`. The default Next.js port (3000) is hands-off.
 
-Prereqs: `langgraph dev` running at the configured URL, Postgres up (catalog hits `authors` + `works` tables).
+Prereqs: backend running (`uvicorn backend.server:app --port 8000 --reload` from `apps/backend/`), Postgres up (catalog hits `authors` + `works` tables).
 
 ## Tests + build
 
@@ -101,7 +105,7 @@ Manual QA — run `SMOKE.md` after any PR touching `src/components/logos/*`, `sr
 - **Logos shell uses inline-style objects + raw CSS classes**, not Tailwind. The `@import "tailwindcss"` in `globals.css` only exists for the few non-Logos surfaces (Sonner Toaster, Radix Dialog backdrop). If you find yourself reaching for `cn()` or `class-variance-authority`, you're probably writing in the wrong style — match the surrounding component.
 - **NBSP characters** appear in some i18n strings ("Вы —" / "You —"). The Edit tool occasionally can't anchor on Cyrillic lines that contain them — fall back to `Write` to rewrite the block, or use Powershell/sed with explicit code points.
 - TS strict mode is on. Run `npm run lint` (and ideally `npm run format`) before committing.
-- Clearing browser storage drops all chat history. `langgraph dev` is in-memory in dev too — no recovery.
+- Clearing browser storage drops all chat history. The backend is stateless (no thread persistence), so there's nothing to recover from server-side either.
 - `LibraryBrowser` filter is pure client-side over the full catalog. Fine at current scale; reconsider past ~10K works.
 - `read_passage` tool-result shape is consumed by `CitationsList` (via slug-matching) and by `PassageModal` (via the `ReadPassageSuccess` type). Backend changes to the return shape must keep `text`, `para_start`, `window_size`, `author`, `work_title`, `source_url`, `chapter_num`/`chapter_title`, `context_before`/`context_after` (success) or `{found:false, error, citation, work_exists?}` (failure) — or update `src/components/logos/CitationsList.tsx` and `PassageModal.tsx` in lockstep.
 - The agent's `[[slug|«quote»]]` marker syntax is a load-bearing contract between `prompts.py` rule 4 and `src/lib/citation-marker.ts` (`AGENT_MARKER_RE`). Don't change the regex on one side without the other.

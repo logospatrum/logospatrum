@@ -11,7 +11,7 @@ transcripts and raw JSON event dumps under `apps/backend/_smoke/`.
 
 Run:
     cd apps/backend
-    # in another terminal, langgraph dev --port 2024 --no-browser must be running
+    # in another terminal: uvicorn backend.server:app --port 8000 --reload
     PYTHONUTF8=1 .venv/Scripts/python -m tests.integration.smoke_goldset
 """
 from __future__ import annotations
@@ -30,7 +30,7 @@ from langgraph_sdk import get_client
 from backend.eval_runner import load_goldset
 
 
-LANGGRAPH_URL = os.environ.get("LANGGRAPH_URL", "http://localhost:2024")
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000")
 REPO_ROOT = Path(__file__).resolve().parents[4]
 GOLDSET_PATH = REPO_ROOT / "tests" / "eval" / "gold.yaml"
 OUT_DIR = Path(__file__).resolve().parents[2] / "_smoke"
@@ -229,7 +229,7 @@ async def main() -> None:
     print(f"Picked {len(picked)} queries with seed={SEED}")
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    client = get_client(url=LANGGRAPH_URL)
+    client = get_client(url=BACKEND_URL)
 
     for i, entry in enumerate(picked, 1):
         try:

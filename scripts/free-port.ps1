@@ -1,12 +1,13 @@
 # Frees a TCP port by killing every owning process tree.
 #
-# Why: Windows + npm/langgraph dev frequently leave orphan node/uvicorn
-# children that keep the port in LISTEN after the parent (terminal, Ctrl+C)
-# is gone. Re-running the dev server then fails with EADDRINUSE.
+# Why: Windows + npm / uvicorn dev servers frequently leave orphan
+# node/python children that keep the port in LISTEN after the parent
+# (terminal, Ctrl+C) is gone. Re-running the dev server then fails with
+# EADDRINUSE.
 #
 # Usage:
-#   pwsh scripts/free-port.ps1 3001
-#   pwsh scripts/free-port.ps1 2024
+#   pwsh scripts/free-port.ps1 3001        # frontend
+#   pwsh scripts/free-port.ps1 8000        # backend uvicorn
 #
 # This is safe to run when nothing holds the port — it silently no-ops.
 

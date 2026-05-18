@@ -43,7 +43,7 @@ def _save(d: ConceptDict) -> None:
 async def run() -> None:
     seed: list[str] = json.loads(settings.seed_concepts_path.read_text(encoding="utf-8"))
     existing = _load_existing()
-    client = OpenAI(api_key=settings.timeweb_ai_key, base_url=settings.timeweb_base_url)
+    client = OpenAI(api_key=settings.openai_api_key, base_url=settings.openai_base_url)
 
     with Progress() as progress:
         task = progress.add_task("Concepts", total=len(seed))

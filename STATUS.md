@@ -26,7 +26,7 @@ MVP done **only when** `tests/eval/gold.yaml` (53 entries) passes through full a
 - Author slug = `avrelij_avgustin_blazhennyj`, work slug = `avrelij_avgustin_blazhennyj_ispoved`
 
 ### Tasks 16-26 — Backend
-- `apps/backend/` — pyproject (deepagents 0.6), langgraph.json (mounts FastAPI /catalog), Dockerfile
+- `apps/backend/` — pyproject (deepagents 0.6), FastAPI app (`backend.server:app`), Dockerfile
 - 6 agent tools + embedding queue worker + catalog + observability + prompts + graph + eval_runner
 - **32 unit tests all pass** (`pytest tests/unit/ -v` in 18:43)
 - Graph imports cleanly (`CompiledStateGraph`)
@@ -72,10 +72,10 @@ Started 2026-05-15 10:11. Currently:
 ### Task 39 — Goldset acceptance gate
 ```bash
 # Terminal A
-cd apps/backend && PYTHONUTF8=1 .venv/Scripts/langgraph dev --port 2024 --no-browser
+cd apps/backend && PYTHONUTF8=1 .venv/Scripts/uvicorn backend.server:app --port 8000 --reload
 
 # Terminal B (after server says "Ready"):
-cd apps/backend && PYTHONUTF8=1 .venv/Scripts/python -m pytest tests/integration/test_goldset.py -v -s
+cd apps/backend && BACKEND_URL=http://localhost:8000 PYTHONUTF8=1 .venv/Scripts/python -m pytest tests/integration/test_goldset.py -v -s
 ```
 
 Per-iteration tuning loop (max 10):
@@ -90,8 +90,8 @@ Each iteration commits.
 ```bash
 # Three terminals
 wsl -e bash -c "cd ... && docker compose ... up -d postgres"   # if not running
-cd apps/backend && PYTHONUTF8=1 .venv/Scripts/langgraph dev --port 2024
-cd apps/frontend && npm run dev
+cd apps/backend && PYTHONUTF8=1 .venv/Scripts/uvicorn backend.server:app --port 8000 --reload
+cd apps/frontend && PORT=3001 npm run dev
 ```
 Open http://localhost:3000. Walk through: welcome → submit → see CitationCard → click azbyka → open Library → search → click 💬 → preset in input.
 

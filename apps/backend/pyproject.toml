@@ -21,9 +21,6 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    # langgraph-cli[inmem] is only needed for local `langgraph dev`.
-    # Production runs `uvicorn backend.server:app` directly — no CLI required.
-    "langgraph-cli[inmem]>=0.1.65",
     "pytest>=8.2",
     "pytest-asyncio>=0.23",
     "pytest-cov>=5.0",

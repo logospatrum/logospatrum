@@ -1,9 +1,10 @@
 """Goldset acceptance test (Task 39).
 
-Loads tests/eval/gold.yaml, runs each query through the live LangGraph agent,
-extracts read_passage citations, evaluates per-entry, reports thresholds.
+Loads tests/eval/gold.yaml, runs each query through the live agent, extracts
+read_passage citations, evaluates per-entry, reports thresholds.
 
-REQUIRES: langgraph dev server running on $LANGGRAPH_URL with full corpus indexed.
+REQUIRES: backend running on $BACKEND_URL (default http://localhost:8000) with
+full corpus indexed.
 
 Run: pytest apps/backend/tests/integration/test_goldset.py -v -s
 """
@@ -17,7 +18,7 @@ from langgraph_sdk import get_client
 
 from backend.eval_runner import load_goldset, evaluate, summary
 
-LANGGRAPH_URL = os.environ.get("LANGGRAPH_URL", "http://localhost:2024")
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000")
 GOLDSET_PATH = Path(__file__).resolve().parents[3] / "tests" / "eval" / "gold.yaml"
 
 pytestmark = pytest.mark.integration
@@ -61,7 +62,7 @@ async def test_goldset_meets_thresholds():
     entries = load_goldset(str(GOLDSET_PATH))
     assert len(entries) >= 50, f"Goldset must have ≥50 entries; got {len(entries)}"
 
-    client = get_client(url=LANGGRAPH_URL)
+    client = get_client(url=BACKEND_URL)
     results = []
 
     for i, entry in enumerate(entries, 1):

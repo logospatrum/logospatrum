@@ -4,7 +4,7 @@ Prereqs: Docker, Python 3.13, Node 20.
 
 Two Python virtualenvs by design — keep them separate:
 
-- `apps/backend/.venv` — CPU torch (LangGraph dev server, FastAPI).
+- `apps/backend/.venv` — CPU torch (FastAPI agent server).
 - `packages/pipeline/.venv` — CUDA torch (bge-m3 embedding on GPU).
 
 Two `.env` files by design — do **not** sync them:
@@ -26,14 +26,14 @@ docker exec -i patristic-postgres-dev psql -U postgres -d patristic_test < infra
 # repeat for 002_abuse_budget.sql
 ```
 
-## Backend (LangGraph dev server)
+## Backend (FastAPI / uvicorn)
 
 ```bash
 cd apps/backend
-.venv/bin/langgraph dev --port 2024 --no-browser
+.venv/bin/uvicorn backend.server:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Open http://localhost:2024 for LangGraph Studio.
+Same entry point as production (`backend.server:app`) — only `--reload` differs. Smoke: `curl http://localhost:8000/info`.
 
 ## Frontend (Next.js)
 
@@ -64,10 +64,10 @@ Backend unit tests:
 cd apps/backend && .venv/bin/python -m pytest tests/unit/ -v
 ```
 
-Goldset (integration, requires `langgraph dev` running):
+Goldset (integration, requires the backend running on `$BACKEND_URL` — default `http://localhost:8000`):
 
 ```bash
-cd apps/backend && .venv/bin/python -m pytest tests/integration/test_goldset.py -v -s
+cd apps/backend && BACKEND_URL=http://localhost:8000 .venv/bin/python -m pytest tests/integration/test_goldset.py -v -s
 ```
 
 53-query acceptance set at [`tests/eval/gold.yaml`](../tests/eval/gold.yaml).
@@ -77,5 +77,5 @@ Pass thresholds: addressed ≥80%, thematic ≥60%, cross ≥70%, negative =100%
 
 Development was done on Windows with WSL2 Docker. If you're on Windows,
 see the Windows-specific notes in [`CLAUDE.md`](../CLAUDE.md) — event-loop
-policy, psycopg-pool timeout, `PYTHONUTF8=1` for Cyrillic, `langgraph dev`
-orphan workers, venv `Scripts/` vs `bin/`.
+policy, psycopg-pool timeout, `PYTHONUTF8=1` for Cyrillic, dev-server
+orphan-worker cleanup, venv `Scripts/` vs `bin/`.

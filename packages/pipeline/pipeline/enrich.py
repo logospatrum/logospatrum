@@ -1,7 +1,8 @@
 """Enrich md files with topics extracted by an LLM, write to frontmatter AND works.topics.
 
-Provider switch: ENRICH_PROVIDER=timeweb uses Timeweb proxy (Haiku);
-ENRICH_PROVIDER=local uses LM Studio at LMSTUDIO_BASE_URL.
+Provider switch: ENRICH_PROVIDER=openai uses a remote OpenAI-compatible API
+(OPENAI_API_KEY / OPENAI_BASE_URL); ENRICH_PROVIDER=local uses LM Studio at
+LMSTUDIO_BASE_URL.
 """
 import json
 import re
@@ -55,7 +56,7 @@ def _make_client_and_model() -> tuple[OpenAI, str]:
             settings.lmstudio_model,
         )
     return (
-        OpenAI(api_key=settings.timeweb_ai_key, base_url=settings.timeweb_base_url),
+        OpenAI(api_key=settings.openai_api_key, base_url=settings.openai_base_url),
         settings.enrich_model,
     )
 

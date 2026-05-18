@@ -4,7 +4,7 @@ import re
 import pytest
 from langgraph_sdk import get_client
 
-LANGGRAPH_URL = os.environ.get("LANGGRAPH_URL", "http://localhost:2024")
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000")
 pytestmark = pytest.mark.integration
 
 
@@ -44,7 +44,7 @@ def _extract_quotes(text: str) -> list[str]:
 
 @pytest.mark.asyncio
 async def test_smoke_thematic_with_citations():
-    client = get_client(url=LANGGRAPH_URL)
+    client = get_client(url=BACKEND_URL)
     thread = await client.threads.create()
     run = await client.runs.wait(
         thread["thread_id"],
@@ -66,7 +66,7 @@ async def test_smoke_thematic_with_citations():
 
 @pytest.mark.asyncio
 async def test_smoke_negative_query_says_not_found():
-    client = get_client(url=LANGGRAPH_URL)
+    client = get_client(url=BACKEND_URL)
     thread = await client.threads.create()
     run = await client.runs.wait(
         thread["thread_id"],

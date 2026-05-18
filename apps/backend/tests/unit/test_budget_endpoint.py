@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.catalog import app
+from backend.server import app
 from backend.budget import storage
 
 

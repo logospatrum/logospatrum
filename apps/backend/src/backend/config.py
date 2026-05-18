@@ -15,10 +15,10 @@ class Settings(BaseSettings):
 
     postgres_dsn: str = "postgresql://postgres:postgres@localhost:5432/patristic"
 
-    timeweb_ai_key: str = ""
-    timeweb_base_url: str = "https://api.timeweb.ai/v1"
-    # Timeweb AI proxy supports up to claude-sonnet-4-6 (no 4-7 yet).
-    # Confirmed via GET /v1/models on 2026-05-16.
+    # OpenAI-compatible model endpoint. Generic names so the repo is provider-
+    # agnostic; the actual cloud is configured via env, not code.
+    openai_api_key: str = ""
+    openai_base_url: str = "https://api.openai.com/v1"
     main_agent_model: str = "anthropic/claude-sonnet-4-6"
     search_agent_model: str = "anthropic/claude-haiku-4-5"
 

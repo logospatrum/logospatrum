@@ -27,8 +27,8 @@ async function checkGraphStatus(apiUrl: string): Promise<boolean> {
 }
 
 // Default to the Next.js proxy at /api so the HMAC + budget guard chain
-// is always engaged (dev frontend 3001 → /api/* → backend 2024 via
-// LANGGRAPH_API_URL server-side env). To bypass, set NEXT_PUBLIC_API_URL.
+// is always engaged (dev frontend 3001 → /api/* → backend 8000 via
+// BACKEND_URL server-side env). To bypass, set NEXT_PUBLIC_API_URL.
 const DEFAULT_API_URL = "/api";
 const DEFAULT_ASSISTANT_ID = "patristic";
 
@@ -96,9 +96,7 @@ const StreamSession = ({
 export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const envApiUrl: string | undefined =
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_LANGGRAPH_API_URL;
+  const envApiUrl: string | undefined = process.env.NEXT_PUBLIC_API_URL;
   const envAssistantId: string | undefined =
     process.env.NEXT_PUBLIC_ASSISTANT_ID;
 

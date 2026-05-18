@@ -9,14 +9,15 @@ class Settings(BaseSettings):
 
     postgres_dsn: str = "postgresql://postgres:postgres@localhost:5432/patristic"
 
-    timeweb_ai_key: str = ""
-    timeweb_base_url: str = "https://api.timeweb.ai/v1"
+    # OpenAI-compatible model endpoint for enrich + concepts-bootstrap.
+    openai_api_key: str = ""
+    openai_base_url: str = "https://api.openai.com/v1"
     enrich_model: str = "anthropic/claude-haiku-4-5"
 
     # Local LLM (LM Studio) for bulk enrich
     lmstudio_base_url: str = "http://localhost:1234/v1"
     lmstudio_model: str = "qwen/qwen3.5-9b"
-    enrich_provider: str = "timeweb"  # "timeweb" | "local"
+    enrich_provider: str = "openai"  # "openai" | "local"
 
     embedding_model: str = "BAAI/bge-m3"
     embedding_device: str = "cuda"

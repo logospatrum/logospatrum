@@ -1,8 +1,8 @@
 # Production stack for the patristic chat. nginx publishes 80/443 publicly;
 # postgres publishes 55432 (non-default port) for ingest from the external
 # pipeline. backend and nextjs are reachable only on the internal docker
-# network — LangGraph cannot be hit directly from the public Internet
-# regardless of any other hardening.
+# network — the backend FastAPI cannot be hit directly from the public
+# Internet regardless of any other hardening.
 #
 # Bring up:   docker compose -f infra/docker-compose.prod.yml up -d --build
 # Migrations: docker exec -i <postgres-id> psql -U postgres -d patristic \
@@ -46,9 +46,8 @@ services:
 
   backend:
     image: ghcr.io/logospatrum/backend:latest
-    # Custom slim image built from apps/backend/Dockerfile (FastAPI + our
-    # graph, no langgraph-api runtime). Pulled from GHCR in steady state;
-    # also buildable on the VPS with:
+    # Custom slim FastAPI image built from apps/backend/Dockerfile. Pulled
+    # from GHCR in steady state; also buildable on the VPS with:
     #   docker compose -f infra/docker-compose.prod.yml build backend
     build:
       context: ../apps/backend
@@ -68,7 +67,7 @@ services:
     environment:
       # SSR proxy fetches reach the backend via docker DNS, not the public
       # domain. The browser hits /api/* relatively, the proxy forwards here.
-      LANGGRAPH_API_URL: http://backend:8000
+      BACKEND_URL: http://backend:8000
       NODE_ENV: production
     depends_on: [backend]
 
