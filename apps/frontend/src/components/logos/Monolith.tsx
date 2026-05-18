@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { palette, type } from "./tokens";
 import { useStrings } from "./i18n";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { StyleSelect } from "./StyleSelect";
+import type { StyleId } from "./styles";
 
 interface Props {
   /** Called when the user hits Enter (without shift) or clicks the send arrow. */
@@ -18,9 +20,14 @@ interface Props {
   onFocusChange?: (focused: boolean) => void;
   /** External prefill (e.g. from LibraryBrowser → "ask about this work"). */
   prefill?: string;
+  /** Currently selected response-style preset (forwarded to the backend
+   *  via config.configurable.style_id on every submit). */
+  styleId: StyleId;
+  /** Setter for the response-style preset. */
+  onStyleChange: (id: StyleId) => void;
 }
 
-export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill }: Props) {
+export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, styleId, onStyleChange }: Props) {
   const { s } = useStrings();
   const isNarrow = useMediaQuery("(max-width: 640px)");
   const [value, setValue] = useState("");
@@ -213,7 +220,8 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill }: Pro
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "0 26px 16px",
+          gap: 12,
+          padding: "0 18px 14px",
           fontFamily: type.mono,
           fontSize: 10,
           letterSpacing: "0.18em",
@@ -221,8 +229,11 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill }: Pro
           color: palette.faint,
         }}
       >
-        {!isNarrow && <span>{s.chat.enterHint}</span>}
-        <span style={isNarrow ? { marginLeft: "auto" } : undefined}>{s.chat.safety}</span>
+        {!isNarrow && <span style={{ padding: "0 8px" }}>{s.chat.enterHint}</span>}
+        <div style={isNarrow ? { marginRight: "auto" } : undefined}>
+          <StyleSelect styleId={styleId} onChange={onStyleChange} />
+        </div>
+        <span style={{ padding: "0 8px" }}>{s.chat.safety}</span>
       </div>
     </div>
   );

@@ -66,6 +66,11 @@ export const STRINGS = {
       saveEdit: "Сохранить",
       toBottom: "К концу",
       toBottomAria: "Прокрутить к последнему сообщению",
+      style: {
+        heading: "Стиль ответа",
+        triggerAria: "Сменить стиль ответа",
+        currentLabel: (label: string) => `Стиль: ${label}`,
+      },
     },
     starters: [
       "Сущность и энергия у свт. Григория Паламы",
@@ -173,6 +178,11 @@ export const STRINGS = {
       saveEdit: "Save",
       toBottom: "To end",
       toBottomAria: "Scroll to the latest message",
+      style: {
+        heading: "Response style",
+        triggerAria: "Change response style",
+        currentLabel: (label: string) => `Style: ${label}`,
+      },
     },
     starters: [
       "Essence and energies in St. Gregory Palamas",

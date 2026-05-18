@@ -9,11 +9,20 @@ export interface UseStatelessStreamOptions {
   assistantId: string;
 }
 
+export interface SubmitConfig {
+  /** Forwarded to LangGraph as `config.configurable` — proxy preserves keys
+   *  added here (it only injects `subject_key`, doesn't strip others). */
+  configurable?: Record<string, unknown>;
+}
+
 export interface UseStatelessStreamApi {
   messages: Message[];
   isLoading: boolean;
   error: Error | null;
-  submit: (input: { messages: Message[] }) => void;
+  submit: (
+    input: { messages: Message[] },
+    options?: { config?: SubmitConfig },
+  ) => void;
   stop: () => void;
   setMessages: (msgs: Message[]) => void;
 }
@@ -155,7 +164,10 @@ export function useStatelessStream(
   }, []);
 
   const submit = useCallback(
-    (input: { messages: Message[] }) => {
+    (
+      input: { messages: Message[] },
+      options?: { config?: SubmitConfig },
+    ) => {
       // Cancel any in-flight run before starting a new one.
       abortRef.current?.abort();
 
@@ -215,6 +227,10 @@ export function useStatelessStream(
             streamMode: ["values", "messages-tuple"],
             streamSubgraphs: true,
             signal: ac.signal,
+            // Forwarded to the graph as RunnableConfig — the Next.js proxy
+            // adds `subject_key` to configurable and passes other keys
+            // (style_id, etc.) through to the backend untouched.
+            config: options?.config,
           } as any);
 
           // Event taxonomy with subgraphs=True + the two stream modes above:

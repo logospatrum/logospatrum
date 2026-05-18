@@ -34,6 +34,7 @@ import { BudgetBanner } from "./BudgetBanner";
 import { Logo } from "./Logo";
 import { Quote } from "./Quote";
 import { Monolith } from "./Monolith";
+import { useStyle, type StyleId } from "./styles";
 import { ScrollToBottom } from "./ScrollToBottom";
 import { PerfPanel } from "./PerfPanel";
 import { Starters } from "./Starters";
@@ -122,6 +123,20 @@ function LogosInner() {
     });
   }, []);
 
+  // Global response-style selection — written to localStorage by useStyle on
+  // every change. Forwarded as config.configurable.style_id on every submit
+  // (new message, regenerate, edit-and-resubmit) so the backend's
+  // StyleMiddleware can append the right SystemMessage suffix.
+  const { styleId, setStyleId } = useStyle();
+  const styleIdRef = useRef<StyleId>(styleId);
+  useEffect(() => {
+    styleIdRef.current = styleId;
+  }, [styleId]);
+  const buildSubmitConfig = useCallback(
+    () => ({ config: { configurable: { style_id: styleIdRef.current } } }),
+    [],
+  );
+
   // Effective chat count drives the "cave lights up over time" progression.
   const chatCount = threads.length;
 
@@ -209,13 +224,16 @@ function LogosInner() {
         content: [{ type: "text", text: trimmed }] as Message["content"],
       };
       const toolStubs = ensureToolCallsHaveResponses(stream.messages);
-      stream.submit({
-        messages: [...stream.messages, ...toolStubs, newHumanMessage],
-      });
+      stream.submit(
+        {
+          messages: [...stream.messages, ...toolStubs, newHumanMessage],
+        },
+        buildSubmitConfig(),
+      );
       reachGoal("question_asked");
       setPrefill(undefined);
     },
-    [stream, threadId, setThreadId],
+    [stream, threadId, setThreadId, buildSubmitConfig],
   );
 
   // Regenerate the last assistant turn by re-submitting the conversation
@@ -224,8 +242,8 @@ function LogosInner() {
   const handleRegenerate = useCallback(() => {
     const sliced = sliceForRegenerate(stream.messages);
     if (sliced.length === 0) return;
-    stream.submit({ messages: sliced });
-  }, [stream]);
+    stream.submit({ messages: sliced }, buildSubmitConfig());
+  }, [stream, buildSubmitConfig]);
 
   // Edit a previous human message: replace its content and drop every
   // message after it, then re-submit the sliced history.
@@ -234,9 +252,9 @@ function LogosInner() {
       if (!humanId) return;
       const sliced = sliceForEdit(stream.messages, humanId, newText);
       if (sliced === stream.messages) return; // id not found
-      stream.submit({ messages: sliced });
+      stream.submit({ messages: sliced }, buildSubmitConfig());
     },
-    [stream],
+    [stream, buildSubmitConfig],
   );
 
   const goHome = useCallback(() => {
@@ -558,6 +576,8 @@ function LogosInner() {
             onStop={() => stream.stop()}
             onFocusChange={setInputFocused}
             prefill={prefill}
+            styleId={styleId}
+            onStyleChange={setStyleId}
           />
         </div>
       </div>

@@ -10,6 +10,8 @@ from .config import settings
 from .prompts import MAIN_AGENT_PROMPT, SEARCH_AGENT_PROMPT
 from .skill_tools import build_skill_tools
 from .skills_registry import scan_skills, render_skills_registry_for_prompt
+from .styles_middleware import StyleMiddleware
+from .styles_registry import scan_styles
 from .tools.list_authors import list_authors
 from .tools.list_works import list_works
 from .tools.expand_concept import expand_concept
@@ -48,6 +50,12 @@ _MAIN_PROMPT = MAIN_AGENT_PROMPT.replace(
     render_skills_registry_for_prompt(_SKILLS),
 )
 
+# Response-style presets — appended to MAIN_AGENT_PROMPT per-run by
+# StyleMiddleware, based on `config.configurable.style_id`. The middleware is
+# attached to the main agent only; the search subagent is unaffected (style
+# does not bleed into retrieval).
+_STYLES = scan_styles(Path(__file__).parent / "styles")
+
 
 search_subagent = {
     "name": "search",
@@ -65,6 +73,7 @@ _inner = create_deep_agent(
            lexical_search, semantic_search, *_SKILL_TOOLS],
     system_prompt=_MAIN_PROMPT,
     subagents=[search_subagent],
+    middleware=[StyleMiddleware(_STYLES)],
 ).with_config({"recursion_limit": 50})  # preserved: deepagents needs depth for tool-use loops
 
 
