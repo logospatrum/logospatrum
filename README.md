@@ -1,70 +1,122 @@
-# Logospatrum — Theological Research Assistant
+# Logospatrum — Λόγος Πατρῶν
 
-![ΛΟΓΟΣ main screen](docs/screenshots/main-screen.png)
+![Logospatrum main screen](docs/screenshots/main-screen.png)
 
-Russian Orthodox patristic chat. Agentic RAG over ~2,100 works / 86 authors /
-726K paragraphs / 1.98M embedding windows from azbyka.ru. Two-tier deepagents
-graph (Claude Sonnet 4.6 main + Haiku 4.5 search subagent via Timeweb AI),
-Postgres 16 + pgvector (semantic) + tsvector (lexical), bge-m3 embeddings,
-Next.js 15 frontend.
+Theological research assistant over a ~2,100-work patristic corpus.
+Ask in any language; the agent retrieves and quotes the Fathers
+verbatim with full citation provenance.
 
 **Live:** https://logospatrum.com
 
-## What's here
+## What it does
+
+Logospatrum is an agentic RAG over the patristic corpus mirrored from
+[azbyka.ru](https://azbyka.ru) — 86 authors, ~2,100 works, 726K paragraphs
+indexed both semantically (multilingual bge-m3 + pgvector) and lexically
+(Postgres tsvector). The agent answers three kinds of questions well:
+
+- **Addressed** — "what does Climacus say about obedience", "Palamas
+  on the Tabor Light". Find what a specific Father wrote on a topic.
+- **Thematic** — "patristic teaching on nepsis", "what is theosis".
+  Pull across multiple authors.
+- **Cross-author** — "compare Chrysostom and Augustine on free will".
+  Contrast positions.
+
+Quoted passages are returned in the corpus language (Russian
+translation); the agent reads and replies in whatever language you
+write to it.
+
+The contract is strict: the search subagent (Haiku 4.5) returns
+candidate citations only; the main agent (Sonnet 4.6) quotes verbatim
+via a dedicated `read_passage` tool. The model never paraphrases the
+Fathers in its own words — every quoted line is a real paragraph from
+the corpus, addressable by an immutable citation slug. A 53-query
+goldset gates regressions before each release.
+
+## Use it from your own agent (MCP)
+
+Logospatrum exposes its search and citation tools over MCP at
+`https://logospatrum.com/api/mcp` (public, no auth, rate-limited per
+IP). Any MCP-capable client can use it.
+
+**Claude Code** — install the plugin (recommended, ships a focused
+subagent + skill that enforces the search-then-quote pattern):
+
+```
+/plugin marketplace add https://github.com/logospatrum/patristic-plugin
+/plugin install patristic
+```
+
+Or just register the MCP server without the plugin:
+
+```
+claude mcp add --transport http patristic https://logospatrum.com/api/mcp
+```
+
+**Cursor / Cline / langchain-mcp-adapters / custom agent** — paste into
+your `mcpServers` config:
+
+```json
+{
+  "patristic": {
+    "type": "http",
+    "url": "https://logospatrum.com/api/mcp"
+  }
+}
+```
+
+**Six tools** exposed: `read_passage` (verbatim paragraph by citation
+slug), `lexical_search` (tsvector), `semantic_search` (pgvector
+cosine), `list_authors`, `list_works`, `expand_concept` (Church-Slavonic
+/ archaic synonym resolver). Full reference and the "why a subagent +
+skill" rationale: [plugins/patristic-plugin/README.md](plugins/patristic-plugin/README.md).
+
+## Limitations
+
+- Snapshot of azbyka.ru taken in spring 2026 — not auto-refreshed.
+- Quoted passages are in their published Russian translation. The agent
+  understands and answers in other languages, but the source text stays
+  as published.
+- The agent retrieves and cites; it does not adjudicate theology. Treat
+  output as a research aid, not a magisterial answer.
+- Public chat at logospatrum.com runs on a tight per-IP / per-cookie
+  daily budget. Heavy users should self-host or use the MCP from their
+  own LLM account.
+
+## Repo layout
 
 - `apps/backend/` — LangGraph graph + FastAPI catalog/budget endpoints.
-- `apps/frontend/` — Next.js 15 chat UI (Logos shell).
-- `packages/pipeline/` — corpus ingest CLI (scrape, markdown, chapters,
-  paragraphs, embed).
-- `plugins/patristic-plugin/` — git submodule → [logospatrum/patristic-plugin](https://github.com/logospatrum/patristic-plugin).
-  The Claude Code plugin third-party agents install to use our MCP.
-- `infra/` — docker-compose, nginx, migrations.
-- `docs/superpowers/{specs,plans}/` — design docs + implementation plans.
+- `apps/frontend/` — Next.js 15 chat UI ("Logos" shell).
+- `packages/pipeline/` — corpus ingest CLI.
+- `plugins/patristic-plugin/` — git submodule →
+  [logospatrum/patristic-plugin](https://github.com/logospatrum/patristic-plugin).
+- `infra/` — docker-compose, nginx, SQL migrations.
 - `tests/eval/gold.yaml` — 53-query acceptance set.
+- `docs/superpowers/{specs,plans}/` — design docs.
 
-## Quick links
+## Local development
 
-- **Connect your agent (MCP):** https://logospatrum.com — click "Подключить"
-  in the top bar. Or directly:
-  `claude mcp add --transport http patristic https://logospatrum.com/api/mcp`.
-- **Plugin repo:** https://github.com/logospatrum/patristic-plugin
-- **Backend internals:** [apps/backend/CLAUDE.md](apps/backend/CLAUDE.md)
-- **Frontend internals:** [apps/frontend/CLAUDE.md](apps/frontend/CLAUDE.md)
-- **Pipeline (data ingest):** [packages/pipeline/](packages/pipeline/)
-- **Root project notes:** [CLAUDE.md](CLAUDE.md)
+See [docs/local-dev.md](docs/local-dev.md). Day-to-day repo notes for
+contributors: [CLAUDE.md](CLAUDE.md), with deeper guides at
+[apps/backend/CLAUDE.md](apps/backend/CLAUDE.md) and
+[apps/frontend/CLAUDE.md](apps/frontend/CLAUDE.md).
 
-## Local dev
+## Tech stack
 
-Prereqs: Docker + WSL2 (Windows), Python 3.13, Node 20.
+LangGraph Server with [deepagents](https://github.com/langchain-ai/deepagents)
+two-tier graph (Claude Sonnet 4.6 main + Haiku 4.5 search subagent, via
+Timeweb AI proxy) · Postgres 16 + pgvector (HNSW) + tsvector ·
+[bge-m3](https://huggingface.co/BAAI/bge-m3) embeddings · Next.js 15
+frontend forked from [agent-chat-ui](https://github.com/langchain-ai/agent-chat-ui)
+· MCP server bundled into the LangGraph app.
 
-```bash
-# Postgres (pgvector)
-wsl -e bash -c "cd $(pwd)/infra && docker compose -f docker-compose.dev.yml up -d postgres"
+## Corpus credit
 
-# Backend (LangGraph dev server)
-cd apps/backend && PYTHONUTF8=1 .venv/Scripts/langgraph dev --port 2024 --no-browser
-
-# Frontend (note: PORT=3001, not 3000 — see apps/frontend/CLAUDE.md)
-cd apps/frontend && PORT=3001 npm run dev
-```
-
-## Production deploy
-
-CI (`.github/workflows/build-and-push.yml`) builds + pushes to GHCR on every
-push to `master` / tag `v*`. VPS pulls with:
-
-```bash
-ssh root@<vps>
-cd /opt/logospatrum
-git pull
-docker login ghcr.io -u $GHCR_USERNAME -p $GHCR_TOKEN   # read:packages PAT
-docker compose -f infra/docker-compose.prod.yml pull
-docker compose -f infra/docker-compose.prod.yml up -d
-```
-
-See `docs/superpowers/specs/2026-05-17-mcp-feature-and-prod-rollout-design.md`
-for the full architecture (whitelist API surface, Wolfi-based langgraph-built
-backend, MCP-as-public-feature).
+All patristic texts are sourced from **[azbyka.ru](https://azbyka.ru)**.
+Logospatrum is an independent research tool and is not affiliated with,
+endorsed by, or maintained by Azbuka Very. The corpus is reproduced for
+study and citation; copyright on the underlying translations rests with
+their respective publishers.
 
 ## License
 
