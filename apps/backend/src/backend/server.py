@@ -126,6 +126,20 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="patristic-backend", version=__version__, lifespan=lifespan)
 if _MCP_APP is not None:
+    # MCP sub-app's internal route lives at "/", mounted under "/mcp". A bare
+    # external "/mcp" would normally provoke Starlette's slash-redirect (307
+    # to "/mcp/" with an *absolute* internal Location), which downstream
+    # proxies cannot follow. Rewrite the ASGI scope so the mount always sees
+    # the trailing-slash form — both /mcp and /mcp/ reach the handler with
+    # zero redirects. Must run BEFORE the mount registration so the rewritten
+    # path is what the router sees.
+    @app.middleware("http")
+    async def _mcp_path_normalize(request: Request, call_next):
+        if request.url.path == "/mcp":
+            request.scope["path"] = "/mcp/"
+            request.scope["raw_path"] = b"/mcp/"
+        return await call_next(request)
+
     app.mount("/mcp", _MCP_APP)
 
 _origins = [o.strip() for o in settings.allowed_origin.split(",") if o.strip() and o.strip() != "*"]
