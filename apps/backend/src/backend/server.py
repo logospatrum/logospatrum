@@ -282,7 +282,15 @@ def _mount_mcp() -> None:
         log.warning("mcp package not installed — /mcp endpoint disabled")
         return
 
-    mcp = FastMCP("logospatrum")
+    # streamable_http_path="/" so the sub-app's route lives at its root;
+    # mounted under "/mcp", external URL is exactly /mcp (matches plugin URL).
+    # Without this, default "/mcp" path + mount "/mcp" = /mcp/mcp.
+    mcp = FastMCP("logospatrum", streamable_http_path="/")
+    # FastMCP's default transport_security only allows localhost Host headers
+    # (DNS-rebinding protection meant for the dev `mcp run` server). In prod
+    # the Host is logospatrum.com (or the internal backend:8000), so the
+    # check would 421 every request. nginx already enforces Origin/UA upstream.
+    mcp.settings.transport_security.enable_dns_rebinding_protection = False
 
     @mcp.tool()
     async def semantic_search_tool(
