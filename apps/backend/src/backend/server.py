@@ -35,16 +35,98 @@ from .tools.semantic_search import semantic_search
 log = logging.getLogger(__name__)
 
 
+def _build_mcp():
+    """Construct FastMCP + register tools. Returns (mcp, sub_app) or (None, None)."""
+    try:
+        from mcp.server.fastmcp import FastMCP
+    except Exception:
+        log.warning("mcp package not installed — /mcp endpoint disabled")
+        return None, None
+
+    # streamable_http_path="/" so the sub-app's route lives at its root;
+    # mounted under "/mcp", external URL is exactly /mcp.
+    mcp = FastMCP("logospatrum", streamable_http_path="/")
+    # Default transport_security only allows localhost Host headers. In prod
+    # the Host is logospatrum.com (or the internal backend:8000), so the
+    # check would 421 every request. nginx enforces Origin/UA upstream.
+    mcp.settings.transport_security.enable_dns_rebinding_protection = False
+
+    @mcp.tool()
+    async def semantic_search_tool(
+        query: str,
+        author_slug: list[str] | str | None = None,
+        work_slug: list[str] | str | None = None,
+        section: str | None = None,
+        limit: int = 10,
+    ) -> dict:
+        """Cosine-similarity ANN over bge-m3 embeddings of the patristic corpus."""
+        return await semantic_search.ainvoke({
+            "query": query, "author_slug": author_slug, "work_slug": work_slug,
+            "section": section, "limit": limit,
+        })
+
+    @mcp.tool()
+    async def lexical_search_tool(
+        query: str,
+        author_slug: list[str] | str | None = None,
+        work_slug: list[str] | str | None = None,
+        section: str | None = None,
+        limit: int = 10,
+    ) -> dict:
+        """Postgres tsvector + ts_rank lexical search."""
+        return await lexical_search.ainvoke({
+            "query": query, "author_slug": author_slug, "work_slug": work_slug,
+            "section": section, "limit": limit,
+        })
+
+    @mcp.tool()
+    async def read_passage_tool(citation: str, context_n: int = 2) -> dict:
+        """Read a passage by canonical citation `author_slug/work_slug/NNNN/pX[-Y]`."""
+        return await read_passage.ainvoke({"citation": citation, "context_n": context_n})
+
+    @mcp.tool()
+    async def list_authors_tool(q: str | None = None, limit: int = 20) -> dict:
+        """List authors, optionally filtered by display-name substring."""
+        return await list_authors.ainvoke({"q": q, "limit": limit})
+
+    @mcp.tool()
+    async def list_works_tool(author_slug: str, q: str | None = None, limit: int = 30) -> dict:
+        """List works for a given author_slug."""
+        return await list_works.ainvoke({"author_slug": author_slug, "q": q, "limit": limit})
+
+    @mcp.tool()
+    async def expand_concept_tool(term: str) -> dict:
+        """Look up a Russian Orthodox theological term in the glossary."""
+        return await expand_concept.ainvoke({"term": term})
+
+    # streamable_http_app() lazily creates mcp.session_manager — call it now
+    # so we can wire its run() into our lifespan.
+    sub_app = mcp.streamable_http_app()
+    return mcp, sub_app
+
+
+_MCP, _MCP_APP = _build_mcp()
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     await init_pool()
     try:
-        yield
+        if _MCP is not None:
+            # FastMCP session manager owns a task group used by streaming
+            # handlers; without entering its run() context the handler raises
+            # "Task group is not initialized" on every request.
+            async with _MCP.session_manager.run():
+                yield
+        else:
+            yield
     finally:
         await close_pool()
 
 
 app = FastAPI(title="patristic-backend", version=__version__, lifespan=lifespan)
+if _MCP_APP is not None:
+    app.mount("/mcp", _MCP_APP)
 
 _origins = [o.strip() for o in settings.allowed_origin.split(",") if o.strip() and o.strip() != "*"]
 if not _origins:
@@ -273,74 +355,5 @@ async def thread_runs_stream(thread_id: str, req: RunRequest, request: Request) 
     return await _run_stream(req, request)
 
 
-# ---------- /mcp ----------
-def _mount_mcp() -> None:
-    """Expose the corpus tools as an MCP streamable-HTTP server at /mcp."""
-    try:
-        from mcp.server.fastmcp import FastMCP
-    except Exception:
-        log.warning("mcp package not installed — /mcp endpoint disabled")
-        return
-
-    # streamable_http_path="/" so the sub-app's route lives at its root;
-    # mounted under "/mcp", external URL is exactly /mcp (matches plugin URL).
-    # Without this, default "/mcp" path + mount "/mcp" = /mcp/mcp.
-    mcp = FastMCP("logospatrum", streamable_http_path="/")
-    # FastMCP's default transport_security only allows localhost Host headers
-    # (DNS-rebinding protection meant for the dev `mcp run` server). In prod
-    # the Host is logospatrum.com (or the internal backend:8000), so the
-    # check would 421 every request. nginx already enforces Origin/UA upstream.
-    mcp.settings.transport_security.enable_dns_rebinding_protection = False
-
-    @mcp.tool()
-    async def semantic_search_tool(
-        query: str,
-        author_slug: list[str] | str | None = None,
-        work_slug: list[str] | str | None = None,
-        section: str | None = None,
-        limit: int = 10,
-    ) -> dict:
-        """Cosine-similarity ANN over bge-m3 embeddings of the patristic corpus."""
-        return await semantic_search.ainvoke({
-            "query": query, "author_slug": author_slug, "work_slug": work_slug,
-            "section": section, "limit": limit,
-        })
-
-    @mcp.tool()
-    async def lexical_search_tool(
-        query: str,
-        author_slug: list[str] | str | None = None,
-        work_slug: list[str] | str | None = None,
-        section: str | None = None,
-        limit: int = 10,
-    ) -> dict:
-        """Postgres tsvector + ts_rank lexical search."""
-        return await lexical_search.ainvoke({
-            "query": query, "author_slug": author_slug, "work_slug": work_slug,
-            "section": section, "limit": limit,
-        })
-
-    @mcp.tool()
-    async def read_passage_tool(citation: str, context_n: int = 2) -> dict:
-        """Read a passage by canonical citation `author_slug/work_slug/NNNN/pX[-Y]`."""
-        return await read_passage.ainvoke({"citation": citation, "context_n": context_n})
-
-    @mcp.tool()
-    async def list_authors_tool(q: str | None = None, limit: int = 20) -> dict:
-        """List authors, optionally filtered by display-name substring."""
-        return await list_authors.ainvoke({"q": q, "limit": limit})
-
-    @mcp.tool()
-    async def list_works_tool(author_slug: str, q: str | None = None, limit: int = 30) -> dict:
-        """List works for a given author_slug."""
-        return await list_works.ainvoke({"author_slug": author_slug, "q": q, "limit": limit})
-
-    @mcp.tool()
-    async def expand_concept_tool(term: str) -> dict:
-        """Look up a Russian Orthodox theological term in the glossary."""
-        return await expand_concept.ainvoke({"term": term})
-
-    app.mount("/mcp", mcp.streamable_http_app())
-
-
-_mount_mcp()
+# MCP setup happens at module load above (_build_mcp). The sub-app is
+# already mounted at /mcp and its lifespan is folded into the parent.
