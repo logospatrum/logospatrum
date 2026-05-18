@@ -23,6 +23,13 @@ main_model = ChatOpenAI(
     base_url=settings.timeweb_base_url,
     model=settings.main_agent_model,
     temperature=0.2,
+    # Without streaming=True, ChatOpenAI does a synchronous request and dumps
+    # the entire completion as a single chunk through .astream() — verified
+    # against the Timeweb proxy: first chunk arrives at t=2s (whole response)
+    # vs t=0.12s (real tokens) with the flag on. langgraph stream_mode
+    # messages-tuple events only fire when the underlying model actually
+    # streams, so this flag is load-bearing for token-by-token chat rendering.
+    streaming=True,
 )
 
 search_model = ChatOpenAI(
@@ -30,6 +37,7 @@ search_model = ChatOpenAI(
     base_url=settings.timeweb_base_url,
     model=settings.search_agent_model,
     temperature=0.1,
+    streaming=True,
 )
 
 
