@@ -1,7 +1,7 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { palette, type } from "@/components/logos/tokens";
 import { useStrings } from "@/components/logos/i18n";
 import { Copyable } from "./Copyable";
@@ -38,16 +38,12 @@ export function ConnectAgent() {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"claude" | "json">("claude");
 
-  // Build the MCP URL once the dialog opens — on SSR `window` is undefined,
-  // so we read it lazily on the client. Falls back to the prod domain for
-  // the first render so the JSON tab isn't empty if someone reads it before
-  // any open event.
-  const [mcpUrl, setMcpUrl] = useState("https://logospatrum.com/api/mcp");
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setMcpUrl(`${window.location.origin}/api/mcp`);
-    }
-  }, [open]);
+  // Hardcoded to the prod domain. We always advertise logospatrum.com here,
+  // even when running locally — these snippets are meant to be shared with
+  // third-party agents that need to reach our public MCP endpoint, not the
+  // local dev server. See plugins/patristic-plugin/.claude-plugin/plugin.json
+  // for the matching domain pin in the plugin marketplace.
+  const mcpUrl = "https://logospatrum.com/api/mcp";
 
   const pluginInstall =
     `/plugin marketplace add ${PLUGIN_REPO}\n/plugin install patristic`;
