@@ -52,7 +52,7 @@ describe("useStatelessStream", () => {
     expect(thread).toBeNull();
     expect(assistantId).toBe("agent");
     expect(opts.input).toEqual({ messages: [human("h1", "hi")] });
-    expect(opts.streamMode).toEqual(["values"]);
+    expect(opts.streamMode).toEqual(["values", "messages-tuple"]);
     expect(opts.streamSubgraphs).toBe(true);
   });
 
