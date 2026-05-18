@@ -44,6 +44,19 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    # Required by the langgraph-api base image (used for pubsub between
+    # checkpointers). No persistence — pubsub only.
+    image: redis:7-alpine
+    networks: [internal]
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "PING"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   backend:
     image: ghcr.io/logospatrum/backend:latest
     # NOTE: listens on :8000 (langgraph-built image default), not :2024.
@@ -55,13 +68,16 @@ services:
     env_file: ../.env
     environment:
       # Our app reads POSTGRES_DSN; the underlying langgraph-api runtime in
-      # the base image reads DATABASE_URI (falls back to POSTGRES_URI). Set
-      # all three to the same DSN so both layers find the DB.
+      # the base image reads DATABASE_URI (falls back to POSTGRES_URI) +
+      # REDIS_URI. Point all of them at the in-stack services.
       POSTGRES_DSN: postgresql://postgres:${PG_PASSWORD:-postgres}@postgres:5432/patristic
       DATABASE_URI: postgresql://postgres:${PG_PASSWORD:-postgres}@postgres:5432/patristic
       POSTGRES_URI: postgresql://postgres:${PG_PASSWORD:-postgres}@postgres:5432/patristic
+      REDIS_URI: redis://redis:6379
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   nextjs:
