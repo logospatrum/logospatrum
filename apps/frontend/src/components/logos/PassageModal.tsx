@@ -3,6 +3,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { palette, type } from "./tokens";
 import { useStrings } from "./i18n";
+import { reachGoal } from "@/lib/metrika";
 import type { ReadPassageSuccess } from "@/components/citation-card";
 
 interface Props {
@@ -157,6 +158,7 @@ export function PassageModal({
                 href={passage.source_url}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => reachGoal("azbyka_clicked")}
                 style={{
                   color: palette.muted,
                   textDecoration: "none",

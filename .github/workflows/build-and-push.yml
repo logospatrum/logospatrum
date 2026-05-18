@@ -65,6 +65,7 @@ jobs:
           docker buildx build \
             --push \
             --platform linux/amd64 \
+            --build-arg NEXT_PUBLIC_YM_COUNTER_ID=109275789 \
             -f apps/frontend/Dockerfile \
             -t ${{ env.REGISTRY }}/${{ env.ORG }}/frontend:${{ github.sha }} \
             -t ${{ env.REGISTRY }}/${{ env.ORG }}/frontend:latest \

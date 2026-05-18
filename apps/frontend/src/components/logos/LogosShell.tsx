@@ -13,6 +13,7 @@ import { useThreads } from "@/providers/Thread";
 import { ensureToolCallsHaveResponses } from "@/lib/ensure-tool-responses";
 import { sliceForRegenerate, sliceForEdit } from "@/lib/chat-history-slice";
 import { loadThreads, newThreadId } from "@/lib/local-thread-store";
+import { reachGoal } from "@/lib/metrika";
 import {
   downloadMarkdown,
   exportFilename,
@@ -210,6 +211,7 @@ function LogosInner() {
       stream.submit({
         messages: [...stream.messages, ...toolStubs, newHumanMessage],
       });
+      reachGoal("question_asked");
       setPrefill(undefined);
     },
     [stream, threadId, setThreadId],

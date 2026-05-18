@@ -17,6 +17,7 @@ import {
   bibleShortRef,
   workSlugFromCitation,
 } from "@/lib/bible-books";
+import { reachGoal } from "@/lib/metrika";
 import type { Lang } from "./i18n";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
@@ -174,7 +175,10 @@ function CitationRowSuccess({ row }: { row: Extract<RowKind, { kind: "success" }
         </div>
         <button
           type="button"
-          onClick={() => setModalOpen(true)}
+          onClick={() => {
+            reachGoal("citation_opened");
+            setModalOpen(true);
+          }}
           style={{
             appearance: "none",
             border: 0,
@@ -222,6 +226,7 @@ function CitationRowSuccess({ row }: { row: Extract<RowKind, { kind: "success" }
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => reachGoal("azbyka_clicked")}
                 style={{
                   color: palette.muted,
                   textDecoration: "none",
@@ -253,6 +258,7 @@ function CitationRowSuccess({ row }: { row: Extract<RowKind, { kind: "success" }
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => reachGoal("azbyka_clicked")}
                 style={{
                   color: palette.muted,
                   textDecoration: "none",

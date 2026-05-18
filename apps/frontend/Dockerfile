@@ -15,6 +15,8 @@ COPY . .
 # also be present at build time so they get baked into the client bundle.
 # Pass them in via `docker build --build-arg` if you customize, or set them
 # in .env loaded by the compose `env_file:`.
+ARG NEXT_PUBLIC_YM_COUNTER_ID=""
+ENV NEXT_PUBLIC_YM_COUNTER_ID=$NEXT_PUBLIC_YM_COUNTER_ID
 ENV NODE_ENV=production
 RUN npm run build
 

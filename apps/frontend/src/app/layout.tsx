@@ -7,9 +7,15 @@ import {
   Inter,
 } from "next/font/google";
 import React from "react";
+import Script from "next/script";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { cookies } from "next/headers";
 import crypto from "node:crypto";
+
+// Yandex Metrika counter ID. Inlined by `next build` from
+// NEXT_PUBLIC_YM_COUNTER_ID — empty/unset means the counter never loads,
+// which is the desired dev default.
+const YM_COUNTER_ID = process.env.NEXT_PUBLIC_YM_COUNTER_ID ?? "";
 
 /**
  * Compute the daily HMAC session token. Symmetric with
@@ -85,6 +91,22 @@ export default async function RootLayout({
       </head>
       <body className={inter.className}>
         <NuqsAdapter>{children}</NuqsAdapter>
+        {YM_COUNTER_ID && (
+          <>
+            <Script id="ym-counter" strategy="afterInteractive">
+              {`(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,"script","https://mc.yandex.ru/metrika/tag.js?id=${YM_COUNTER_ID}","ym");ym(${YM_COUNTER_ID},"init",{ssr:true,clickmap:true,referrer:document.referrer,url:location.href,accurateTrackBounce:true,trackLinks:true});`}
+            </Script>
+            <noscript>
+              <div>
+                <img
+                  src={`https://mc.yandex.ru/watch/${YM_COUNTER_ID}`}
+                  style={{ position: "absolute", left: "-9999px" }}
+                  alt=""
+                />
+              </div>
+            </noscript>
+          </>
+        )}
       </body>
     </html>
   );

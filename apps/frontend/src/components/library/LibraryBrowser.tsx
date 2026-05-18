@@ -14,6 +14,7 @@ import {
   type CatalogAuthor,
   type CatalogWork,
 } from "./use-catalog";
+import { reachGoal } from "@/lib/metrika";
 
 interface Props {
   onAskAboutWork: (author: string, work: string) => void;
@@ -65,7 +66,10 @@ export function LibraryBrowser({ onAskAboutWork }: Props) {
   return (
     <Dialog.Root
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={(next) => {
+        if (next && !open) reachGoal("library_opened");
+        setOpen(next);
+      }}
     >
       <Dialog.Trigger asChild>
         <button
