@@ -11,9 +11,9 @@ services:
       - "5432:5432"
     volumes:
       - postgres-dev-data:/var/lib/postgresql/data
-      # Tuned config (work_mem, shared_buffers, etc — see postgres.dev.conf).
+      # Tuned config (work_mem, shared_buffers, etc — see postgres.conf).
       # Without this the defaults make analytics queries spill to disk.
-      - ./postgres.dev.conf:/etc/postgresql/postgresql.conf:ro
+      - ./postgres.conf:/etc/postgresql/postgresql.conf:ro
     command:
       - "postgres"
       - "-c"
