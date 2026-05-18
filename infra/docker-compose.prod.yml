@@ -1,7 +1,8 @@
-# Production stack for the patristic chat. Only nginx publishes ports;
-# postgres, backend, and nextjs are reachable only on the internal docker
-# network. That's the security boundary — LangGraph cannot be hit directly
-# from the public Internet regardless of any other hardening.
+# Production stack for the patristic chat. nginx publishes 80/443 publicly;
+# postgres publishes 55432 (non-default port) for ingest from the external
+# pipeline. backend and nextjs are reachable only on the internal docker
+# network — LangGraph cannot be hit directly from the public Internet
+# regardless of any other hardening.
 #
 # Bring up:   docker compose -f infra/docker-compose.prod.yml up -d --build
 # Migrations: docker exec -i <postgres-id> psql -U postgres -d patristic \
@@ -17,6 +18,11 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     networks: [internal]
+    # Non-default port published for external pipeline ingest. ufw should
+    # restrict 55432/tcp to the workstation IP (or keep it public + rely on
+    # the strong PG_PASSWORD + fail2ban for postgres if exposed worldwide).
+    ports:
+      - "55432:5432"
     environment:
       POSTGRES_DB: patristic
       POSTGRES_USER: postgres
