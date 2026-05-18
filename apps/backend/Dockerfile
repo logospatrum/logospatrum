@@ -27,10 +27,17 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends gcc libpq-dev build-essential \
  && rm -rf /var/lib/apt/lists/*
 
+# Pre-install torch+cpu from PyTorch's CPU-only wheel index BEFORE pip
+# resolves the rest. Without this, sentence-transformers's torch dependency
+# pulls the default GPU build with the full nvidia/CUDA stack (~5 GB of
+# wheels we never load — the VPS has no GPU). With it, the subsequent
+# `pip install .` sees torch is already satisfied and skips the CUDA pull.
+RUN pip install --upgrade pip \
+ && pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch
+
 COPY pyproject.toml ./
 COPY src/ ./src/
-RUN pip install --upgrade pip \
- && pip install --no-cache-dir .
+RUN pip install --no-cache-dir .
 
 # --- runtime stage: copy site-packages + the app ---
 FROM base AS runtime
