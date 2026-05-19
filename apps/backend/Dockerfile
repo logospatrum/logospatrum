@@ -55,7 +55,8 @@ ENV HF_HOME=/cache/huggingface \
 
 EXPOSE 8000
 
-# Single worker — bge-m3 model in RAM is ~2GB; multi-worker would multiply
-# that. The agent is async + I/O-bound, one process handles many concurrent
-# runs via asyncio.
+# Default to a single worker — bge-m3 in RAM is ~2GB per worker, so the
+# right worker count is RAM-dependent and best set by the deployment.
+# infra/docker-compose.prod.yml overrides this CMD with --workers 2 for
+# the 32GB VPS; smaller hosts (or dev outside docker) keep the default.
 CMD ["uvicorn", "backend.server:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info", "--proxy-headers"]

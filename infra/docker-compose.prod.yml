@@ -56,6 +56,23 @@ services:
     env_file: ../.env
     environment:
       POSTGRES_DSN: postgresql://postgres:${PG_PASSWORD:-postgres}@postgres:5432/patristic
+    # Override the image's single-worker CMD with 2 workers for prod
+    # concurrency. Each worker loads its own bge-m3 (~2GB) and its own
+    # psycopg pool (max_size=24). 32GB VPS comfortably absorbs both.
+    # The agent fires 5-10 parallel tool calls per phase, so single-worker
+    # event loop concurrency alone wasn't enough on real traffic.
+    command:
+      - "uvicorn"
+      - "backend.server:app"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "8000"
+      - "--log-level"
+      - "info"
+      - "--proxy-headers"
+      - "--workers"
+      - "2"
     depends_on:
       postgres:
         condition: service_healthy

@@ -19,7 +19,7 @@ async def init_pool() -> AsyncConnectionPool:
         _pool = AsyncConnectionPool(
             settings.postgres_dsn,
             min_size=2,
-            max_size=16,
+            max_size=24,
             open=False,
             kwargs={"connect_timeout": 10},
         )
