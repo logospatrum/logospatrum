@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { palette, type } from "./tokens";
 import { useStrings } from "./i18n";
 import { GitHubSVG } from "@/components/icons/github";
@@ -40,7 +41,19 @@ export function BottomChrome() {
       }}
     >
       <span style={{ display: "inline-flex", alignItems: "center", gap: 16, pointerEvents: "auto" }}>
-        {s.bottom.corpus}
+        <Link
+          href="/sources"
+          style={{
+            color: "inherit",
+            textDecoration: "none",
+            opacity: 0.85,
+            transition: "opacity 120ms ease",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.85")}
+        >
+          {s.bottom.corpus}
+        </Link>
         <a
           href="https://github.com/logospatrum/logospatrum"
           target="_blank"

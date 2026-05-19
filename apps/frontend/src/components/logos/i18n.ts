@@ -116,6 +116,56 @@ export const STRINGS = {
       globalPaused: "Сервис временно приостановлен — превышен месячный бюджет. Возвращайтесь позже.",
       dismissAria: "Скрыть предупреждение",
     },
+    sources: {
+      back:  "В чат",
+      title: "Об источниках",
+      lede:
+        "Логос Патрум — поисково-цитатный ассистент по русскому святоотеческому наследию. Эта страница объясняет, откуда взяты тексты и на каких принципах построен проект.",
+      origin: {
+        heading: "Источник корпуса",
+        paragraphs: [
+          "Корпус Логос Патрум полностью построен на материалах одной библиотеки — Отечник православного портала «Азбука веры» (azbyka.ru). Все цитируемые в чате творения Святых Отцов взяты оттуда. Иных источников у проекта нет.",
+          "К каждой выводимой цитате прикреплена прямая ссылка на соответствующую страницу первоисточника на azbyka.ru: одним кликом читатель переходит к полному тексту в оригинальной публикации. Внутри ответа отображается короткий фрагмент, по запросу можно открыть полный параграф со ссылкой.",
+        ],
+      },
+      principles: {
+        heading: "Принципы проекта",
+        items: [
+          "Открытый исходный код. Весь код опубликован на GitHub — любой может проверить, что и как используется.",
+          "Свободный доступ. Без рекламы, платных тарифов и ограничений по числу запросов.",
+          "Некоммерческий характер. Расходы на серверы и языковую модель автор несёт лично. Если в будущем эти расходы станут неподъёмными, я допускаю приём добровольных пожертвований исключительно на покрытие инфраструктуры — без введения платных функций.",
+          "Прозрачная атрибуция. Автор, труд и ссылка на оригинальную публикацию указаны для каждой цитаты.",
+          "Не замена чтению Отцов. Цель проекта — помочь сориентироваться в патристическом наследии и вернуть читателя к первоисточнику, а не подменить его кратким пересказом.",
+        ],
+      },
+      rights: {
+        heading: "Правообладателям переводов",
+        paragraphs: [
+          "Если вы — переводчик, наследник переводчика, издатель или иной правообладатель русского перевода текста, размещённого на azbyka.ru и попавшего в наш корпус, и не согласны с тем, что фрагменты этого перевода доступны через Логос Патрум, — напишите нам, и мы оперативно удалим соответствующий текст из корпуса.",
+          "В письме укажите, пожалуйста, имя/название правообладателя, перевод (автор и труд) и любую дополнительную информацию для идентификации. По умолчанию подтверждение и отчёт об удалении отправим тем же письмом.",
+        ],
+        contactLabel: "Контакт",
+        contactEmail: "kortev.yura1@gmail.com",
+      },
+      legal: {
+        heading: "Юридическая основа",
+        intro:
+          "Используются нормы российского законодательства об интеллектуальных правах, применимые к нашему режиму работы:",
+        items: [
+          "Свободное цитирование (ст. 1274 ГК РФ) — короткие фрагменты в учебных, научных и информационных целях с обязательным указанием автора и источника.",
+          "Использование материалов БД в личных, научных и образовательных целях (ст. 1335.1 ГК РФ) — с указанием источника и без коммерческой цели.",
+          "Тексты Святых Отцов в оригинальных языках (греческий, латинский, церковнославянский) давно находятся в общественном достоянии; авторские права на современные русские переводы охраняются 70 лет после смерти переводчика (ст. 1281 ГК РФ).",
+        ],
+        disclaimer:
+          "Если вы обнаружили в корпусе текст, по которому вы являетесь правообладателем и не желаете его присутствия — используйте контакт выше; мы реагируем без бюрократии.",
+      },
+      gratitude: {
+        heading: "С благодарностью",
+        body:
+          "Фонду «Азбука веры» и редакции библиотеки Отечник — за многолетний труд по собранию, оцифровке и публикации творений Отцов Церкви. Без этой работы такой проект был бы невозможен.",
+      },
+      colophon: "Логос Патрум · открытый некоммерческий проект",
+    },
   },
   en: {
     tagline: "Orthodox Theological Research Assistant",
@@ -227,6 +277,56 @@ export const STRINGS = {
         `${(limit - used).toFixed(0)} ₽ left of today's ${limit.toFixed(0)} ₽ limit. At 0 ₽ requests are rejected until tomorrow.`,
       globalPaused: "Service is paused — monthly budget exceeded. Please come back later.",
       dismissAria: "Dismiss warning",
+    },
+    sources: {
+      back:  "To chat",
+      title: "About the Sources",
+      lede:
+        "Logos Patrum is a search-and-quotation assistant for the Russian Orthodox patristic heritage. This page explains where the texts come from and the principles the project rests on.",
+      origin: {
+        heading: "Source of the Corpus",
+        paragraphs: [
+          "The Logos Patrum corpus is built entirely from a single library — Otechnik at the Russian Orthodox portal “Azbyka Very” (azbyka.ru). Every patristic work cited in the chat is sourced from there. The project uses no other source.",
+          "Each quotation displayed in the interface carries a direct link to the corresponding page on azbyka.ru: one click takes the reader to the full text in its original publication. A short fragment is shown inline; the full paragraph with the link can be expanded on request.",
+        ],
+      },
+      principles: {
+        heading: "Project Principles",
+        items: [
+          "Open source. The entire codebase is published on GitHub — anyone can audit what is used and how.",
+          "Free access. No ads, no paid tiers, no query limits.",
+          "Non-commercial. Server and language-model costs are paid by the author personally. If, in the future, those costs become unsustainable, the project may accept voluntary donations strictly for infrastructure — never for paid features.",
+          "Transparent attribution. Author, work, and a link to the original publication are shown for every quotation.",
+          "Not a replacement for reading the Fathers. The goal is to help readers orient themselves in the patristic heritage and to lead them back to the primary sources, not to substitute a brief summary for the originals.",
+        ],
+      },
+      rights: {
+        heading: "For Translation Rights Holders",
+        paragraphs: [
+          "If you are a translator, an heir of a translator, a publisher, or otherwise a rights holder of a Russian translation hosted on azbyka.ru that has been included in our corpus, and you object to fragments of that translation being available through Logos Patrum — please write to us and we will promptly remove the corresponding text from the corpus.",
+          "In your message, please include: the rights holder's name, the translation (author and work), and any further identifying details. Confirmation and a removal report will be sent in reply by default.",
+        ],
+        contactLabel: "Contact",
+        contactEmail: "kortev.yura1@gmail.com",
+      },
+      legal: {
+        heading: "Legal Basis",
+        intro:
+          "We rely on the following provisions of Russian intellectual-property law as applicable to our mode of operation:",
+        items: [
+          "Free quotation (Art. 1274 of the Civil Code of the Russian Federation) — short fragments for educational, scholarly, and informational purposes with mandatory attribution to author and source.",
+          "Use of database materials for personal, scholarly, and educational purposes (Art. 1335.1) — with source attribution and without commercial intent.",
+          "Patristic texts in their original languages (Greek, Latin, Church Slavonic) have long been in the public domain; copyrights on modern Russian translations are protected for 70 years after the translator's death (Art. 1281).",
+        ],
+        disclaimer:
+          "If you find in our corpus a text to which you hold the rights and to which you object — use the contact above; we respond without bureaucracy.",
+      },
+      gratitude: {
+        heading: "With Gratitude",
+        body:
+          "To the “Azbyka Very” Foundation and the editors of the Otechnik library — for many years of work collecting, digitising, and publishing the writings of the Fathers of the Church. Without that labour, this project would be impossible.",
+      },
+      colophon: "Logos Patrum · open, non-commercial project",
     },
   },
 } as const;
