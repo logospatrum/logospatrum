@@ -161,16 +161,25 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, style
             resize: "none",
             border: 0,
             outline: 0,
-            background: "transparent",
+            // Darker fill than the surrounding pill makes it visually
+            // obvious that THIS is where you type. Without it the textarea
+            // dissolves into the gradient and new visitors miss the input
+            // entirely.
+            background: focused ? "rgba(0, 0, 0, 0.38)" : "rgba(0, 0, 0, 0.28)",
+            boxShadow: focused
+              ? `inset 0 0 0 0.5px rgba(${palette.light}, 0.22)`
+              : `inset 0 0 0 0.5px ${palette.hairline}`,
+            borderRadius: 12,
             color: palette.text,
             caretColor: palette.accent,
             fontFamily: type.ui,
             fontSize: 17,
             lineHeight: 1.5,
             letterSpacing: "0.005em",
-            padding: "6px 0",
-            minHeight: 28,
+            padding: "10px 14px",
+            minHeight: 40,
             maxHeight: 200,
+            transition: "background 240ms ease, box-shadow 240ms ease",
           }}
         />
 

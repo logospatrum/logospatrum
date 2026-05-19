@@ -12,6 +12,11 @@ export function Logo() {
           fontFamily: type.mono,
           fontSize: 10.5,
           letterSpacing: "0.42em",
+          // Trailing tracking after the last glyph shifts the visible line
+          // left of its box center; the padding rebalances it. Also makes
+          // wrapped lines (mobile) centered nicely.
+          paddingLeft: "0.42em",
+          textAlign: "center",
           textTransform: "uppercase",
           color: palette.faint,
           userSelect: "none",
