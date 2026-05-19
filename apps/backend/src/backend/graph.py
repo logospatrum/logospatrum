@@ -30,6 +30,11 @@ main_model = ChatOpenAI(
     # for token-by-token chat rendering, since langgraph's messages-tuple
     # stream mode only fires when the underlying model actually streams.
     streaming=True,
+    # OpenAI-compat streaming omits `usage` in the final chunk by default;
+    # stream_usage=True forwards stream_options.include_usage=true so the
+    # provider emits token counts. Required for budget_record accounting —
+    # without it usage_metadata stays empty and add_usage never runs.
+    stream_usage=True,
 )
 
 search_model = ChatOpenAI(
@@ -38,6 +43,7 @@ search_model = ChatOpenAI(
     model=settings.search_agent_model,
     temperature=0.1,
     streaming=True,
+    stream_usage=True,
 )
 
 
