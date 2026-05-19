@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     allowed_origin: str = "http://localhost:3001,http://localhost:3000"
     daily_rub_per_cookie: float = 500.0
     daily_rub_per_ip: float = 250.0
+    # Per-day cap for the soft fingerprint bucket (UA + Accept-Language + IP/24
+    # prefix). Catches "open incognito, same browser, same network" — a single
+    # person resetting cookies. Set higher than the cookie cap because the fp
+    # bucket can legitimately collide for 2-3 family members on the same router
+    # with the same browser version.
+    daily_rub_per_fp: float = 1000.0
     soft_warn_ratio: float = 0.8
     global_monthly_kill_rub: float = 30_000.0
     budget_guard_enabled: bool = True

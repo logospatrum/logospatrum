@@ -227,6 +227,14 @@ def _next_month_msk_iso() -> str:
     return nxt.isoformat()
 
 
+def _limit_for(subject: str) -> float:
+    if subject.startswith("cookie:"):
+        return settings.daily_rub_per_cookie
+    if subject.startswith("fp:"):
+        return settings.daily_rub_per_fp
+    return settings.daily_rub_per_ip
+
+
 @app.get("/budget/check")
 async def budget_check(subject: str) -> dict:
     if not settings.budget_guard_enabled:
@@ -236,10 +244,8 @@ async def budget_check(subject: str) -> dict:
                 "limit_rub": settings.global_monthly_kill_rub,
                 "warn": False, "reset_at": _next_month_msk_iso(),
             }
-        limit = (settings.daily_rub_per_cookie if subject.startswith("cookie:")
-                 else settings.daily_rub_per_ip)
         return {
-            "allowed": True, "used_rub": 0.0, "limit_rub": limit,
+            "allowed": True, "used_rub": 0.0, "limit_rub": _limit_for(subject),
             "warn": False, "reset_at": _tomorrow_msk_iso(),
         }
     if subject == "__global_month":
@@ -252,11 +258,7 @@ async def budget_check(subject: str) -> dict:
             "warn": used >= settings.soft_warn_ratio * limit,
             "reset_at": _next_month_msk_iso(),
         }
-    limit = (
-        settings.daily_rub_per_cookie
-        if subject.startswith("cookie:")
-        else settings.daily_rub_per_ip
-    )
+    limit = _limit_for(subject)
     used = await storage.get_used_rub(subject, storage._today_msk())
     return {
         "allowed": used < limit,

@@ -32,6 +32,31 @@ async def test_node_records_sonnet_cost(db_clean):
 
 
 @pytest.mark.asyncio
+async def test_node_records_against_every_subject_key(db_clean):
+    """New shape: frontend proxy injects `subject_keys` list. Every key in
+    the list MUST get the same delta, so cookie-reset abusers still
+    accumulate against ip: and fp: buckets."""
+    state = {
+        "messages": [
+            HumanMessage(content="..."),
+            _ai("anthropic/claude-sonnet-4-6", 10_000, 1_000),  # 6.075 ₽
+        ]
+    }
+    cfg: RunnableConfig = {
+        "configurable": {
+            "subject_keys": ["cookie:abc", "ip:1.2.3.4", "fp:hashhash"],
+        }
+    }
+    await node.budget_record(state, cfg)
+    today = storage._today_msk()
+    assert await storage.get_used_rub("cookie:abc", today) == pytest.approx(6.075, rel=1e-3)
+    assert await storage.get_used_rub("ip:1.2.3.4", today) == pytest.approx(6.075, rel=1e-3)
+    assert await storage.get_used_rub("fp:hashhash", today) == pytest.approx(6.075, rel=1e-3)
+    # __global_month gets it exactly once, not per-key.
+    assert await storage.get_used_rub("__global_month", storage._this_month_msk()) == pytest.approx(6.075, rel=1e-3)
+
+
+@pytest.mark.asyncio
 async def test_node_sums_subagent_haiku_and_main_sonnet(db_clean):
     state = {
         "messages": [

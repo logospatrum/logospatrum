@@ -37,14 +37,46 @@ function verifyHmac(patUid: string, token: string): boolean {
   }
 }
 
-function subjectKeyFor(req: NextRequest): string {
-  const patUid = req.cookies.get("pat_uid")?.value;
-  if (patUid) return `cookie:${patUid}`;
-  const ip =
+function clientIp(req: NextRequest): string {
+  return (
     req.headers.get("x-real-ip") ??
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "0.0.0.0";
-  return `ip:${ip}`;
+    "0.0.0.0"
+  );
+}
+
+// Group by IPv4 /24 or IPv6 /48 — broad enough to follow a single user across
+// short ISP IP shuffles, narrow enough that fingerprint collisions stay
+// roughly "device class within a home/office network".
+function ipPrefix(ip: string): string {
+  if (ip.includes(":")) return ip.split(":").slice(0, 3).join(":");
+  return ip.split(".").slice(0, 3).join(".");
+}
+
+function fpHash(req: NextRequest, ip: string): string {
+  const ua = req.headers.get("user-agent") ?? "";
+  const lang = req.headers.get("accept-language") ?? "";
+  return crypto
+    .createHash("sha256")
+    .update(`${ua}|${lang}|${ipPrefix(ip)}`)
+    .digest("base64url")
+    .slice(0, 22);
+}
+
+// Returns the three independent budget buckets for a run-start request.
+// `runStart` guarantees `patUid` is non-empty (HMAC verify happens first), so
+// `cookie` is always populated here.
+function subjectKeysFor(req: NextRequest, patUid: string): {
+  cookie: string;
+  ip: string;
+  fp: string;
+} {
+  const ip = clientIp(req);
+  return {
+    cookie: `cookie:${patUid}`,
+    ip: `ip:${ip}`,
+    fp: `fp:${fpHash(req, ip)}`,
+  };
 }
 
 function secondsUntil(iso: string): number {
@@ -83,6 +115,27 @@ async function passthrough(
   });
 }
 
+type BudgetCheck = {
+  allowed: boolean;
+  used_rub: number;
+  limit_rub: number;
+  warn: boolean;
+  reset_at: string;
+};
+
+async function fetchCheck(subject: string): Promise<BudgetCheck | null> {
+  try {
+    const r = await fetch(
+      `${BACKEND}/budget/check?subject=${encodeURIComponent(subject)}`,
+    );
+    return (await r.json()) as BudgetCheck;
+  } catch (e) {
+    // Fail open if /budget/check is unreachable — match prior behavior.
+    console.error(`budget /check ${subject} failed:`, e);
+    return null;
+  }
+}
+
 async function runStart(
   req: NextRequest,
   url: string,
@@ -94,55 +147,60 @@ async function runStart(
     return NextResponse.json({ error: "session_invalid" }, { status: 401 });
   }
 
-  const subject = subjectKeyFor(req);
-  let warnHeader: string | null = null;
+  const keys = subjectKeysFor(req, patUid);
 
-  // 2) Global month kill-switch
-  try {
-    const gRes = await fetch(`${BACKEND}/budget/check?subject=__global_month`);
-    const g = await gRes.json();
-    if (!g.allowed) {
-      return NextResponse.json(
-        { error: "service_paused_global_budget", reset_at: g.reset_at },
-        {
-          status: 503,
-          headers: { "Retry-After": secondsUntil(g.reset_at).toString() },
-        },
-      );
-    }
-  } catch (e) {
-    // If the budget endpoint is unreachable, fail open in dev but log loud.
-    console.error("budget /check global_month failed:", e);
+  // 2) Run all four budget checks in parallel. global_month is a 503 service
+  //    kill-switch; per-subject buckets each independently 429 if exhausted.
+  //    AND-semantics: every per-subject bucket must allow the run.
+  const [globalChk, cookieChk, ipChk, fpChk] = await Promise.all([
+    fetchCheck("__global_month"),
+    fetchCheck(keys.cookie),
+    fetchCheck(keys.ip),
+    fetchCheck(keys.fp),
+  ]);
+
+  if (globalChk && !globalChk.allowed) {
+    return NextResponse.json(
+      { error: "service_paused_global_budget", reset_at: globalChk.reset_at },
+      {
+        status: 503,
+        headers: { "Retry-After": secondsUntil(globalChk.reset_at).toString() },
+      },
+    );
   }
 
-  // 3) Per-subject daily gate
-  try {
-    const dRes = await fetch(
-      `${BACKEND}/budget/check?subject=${encodeURIComponent(subject)}`,
-    );
-    const d = await dRes.json();
-    if (!d.allowed) {
+  // Pick the first denial across the three per-subject buckets.
+  const subjectChecks: Array<[string, BudgetCheck | null]> = [
+    ["cookie", cookieChk],
+    ["ip", ipChk],
+    ["fp", fpChk],
+  ];
+  for (const [bucket, chk] of subjectChecks) {
+    if (chk && !chk.allowed) {
       return NextResponse.json(
         {
           error: "daily_budget_exceeded",
-          used_rub: d.used_rub,
-          limit_rub: d.limit_rub,
-          reset_at: d.reset_at,
+          bucket,
+          used_rub: chk.used_rub,
+          limit_rub: chk.limit_rub,
+          reset_at: chk.reset_at,
         },
         {
           status: 429,
-          headers: { "Retry-After": secondsUntil(d.reset_at).toString() },
+          headers: { "Retry-After": secondsUntil(chk.reset_at).toString() },
         },
       );
     }
-    if (d.warn) {
-      warnHeader = `used=${d.used_rub};limit=${d.limit_rub}`;
-    }
-  } catch (e) {
-    console.error("budget /check subject failed:", e);
   }
 
-  // 4) Inject subject_key into config.configurable
+  // Surface the cookie bucket's warn flag (the one users care about — "I'm
+  // running out"). IP/fp warns would be misleading on shared networks.
+  const warnHeader = cookieChk?.warn
+    ? `used=${cookieChk.used_rub};limit=${cookieChk.limit_rub}`
+    : null;
+
+  // 3) Inject the three subject keys into config.configurable so the backend
+  //    accounting node can UPSERT all of them.
   const bodyText = await req.text();
   let bodyJson: Record<string, unknown> = {};
   try {
@@ -152,7 +210,10 @@ async function runStart(
   }
   const config = ((bodyJson.config as Record<string, unknown>) ?? {}) as Record<string, unknown>;
   const configurable = ((config.configurable as Record<string, unknown>) ?? {}) as Record<string, unknown>;
-  configurable.subject_key = subject;
+  configurable.subject_keys = [keys.cookie, keys.ip, keys.fp];
+  // Backwards-compat: old backend builds read singular `subject_key`. Drop
+  // once every prod backend has the multi-bucket node.
+  configurable.subject_key = keys.cookie;
   config.configurable = configurable;
   bodyJson.config = config;
 

@@ -14,6 +14,11 @@ DB_DSN_TEST = os.environ.get(
 # Otherwise tools (read_passage, lexical_search, …) hit the prod DB while
 # fixtures seed the test DB, and assertions fail with empty results.
 os.environ["POSTGRES_DSN"] = DB_DSN_TEST
+# Local dev .env often has BUDGET_GUARD_ENABLED=false (rollback knob). Tests
+# that probe budget writes/reads need the flag ON or they're silently no-ops
+# and assertions fail with 0.0 across the board. Force true here BEFORE the
+# `import backend` below so pydantic-settings picks it up.
+os.environ["BUDGET_GUARD_ENABLED"] = "true"
 
 import backend  # noqa: F401,E402 — sets WindowsSelectorEventLoopPolicy on Windows
 

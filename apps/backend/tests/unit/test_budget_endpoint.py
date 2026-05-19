@@ -50,6 +50,25 @@ async def test_ip_subject_uses_lower_limit(db_clean, client):
 
 
 @pytest.mark.asyncio
+async def test_fp_subject_uses_fp_limit(db_clean, client):
+    # FP cap = 1000 ₽ (between cookie and unbounded)
+    await storage.add_usage("fp:abc123", storage._today_msk(), 500.0)
+    r = client.get("/budget/check", params={"subject": "fp:abc123"})
+    data = r.json()
+    assert data["allowed"] is True
+    assert data["limit_rub"] == pytest.approx(1000.0)
+
+
+@pytest.mark.asyncio
+async def test_fp_subject_denied_above_cap(db_clean, client):
+    await storage.add_usage("fp:def456", storage._today_msk(), 1001.0)
+    r = client.get("/budget/check", params={"subject": "fp:def456"})
+    data = r.json()
+    assert data["allowed"] is False
+    assert data["limit_rub"] == pytest.approx(1000.0)
+
+
+@pytest.mark.asyncio
 async def test_global_month_subject(db_clean, client):
     await storage.add_usage("__global_month", storage._this_month_msk(), 30_001.0)
     r = client.get("/budget/check", params={"subject": "__global_month"})
