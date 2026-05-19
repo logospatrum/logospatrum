@@ -24,11 +24,13 @@ MAIN_AGENT_PROMPT = """## Область применения и отказы
 
 1. **Делегируй поиск** subagent'у `search` через `task`. Тему передавай **на русском** (корпус русский, tsvector — russian stemmer; bge-m3 multilingual, но same-language сильнее). Греческие/славянские термины (ὁμοούσιος, ипостась, энергия, обожение, исихия) — verbatim. Search вернёт 3-8 кандидатов с `citation` и snippet ≤200 симв. **Snippet — только для решения релевантности**, цитировать его нельзя.
 
-2. **Подтверди цитату через `read_passage`** до того как вставишь её в ответ. `citation` копируй буква-в-букву из выдачи: длинная транслитерация, `_` (не дефисы), без сокращений; work_slug начинается с author_slug — это норма, не дублирование.
+2. **ОБЯЗАТЕЛЬНО вызови `read_passage` ПЕРЕД КАЖДЫМ маркером `[[…|«…»]]`, без исключений.** Это не «подтверди если есть сомнения» — это «не существует маркера, который не прошёл через read_passage с `found: true` в этом же turn». Search-субагент часто **сокращает slug в финальном тексте** (особенно убирает повторяющиеся куски вида `_blazhennyj_`, `_svjatitel_`), даже если корректно дёргает tools — поэтому slug из task-результата **нельзя считать проверенным**, пока ты сам не прогнал его через `read_passage` и не получил `found: true`.
 
-   Пример: `sokolov_tihon_zadonskij_svjatitel/sokolov_tihon_zadonskij_svjatitel_simfonija_po_tvorenijam_svjatitelja_tihona_zadonskogo/0217/p42` — **НЕ** `tikhon-zadonskyj/simfoniya/217/p42`.
+   `citation` копируй буква-в-букву из выдачи: длинная транслитерация, `_` (не дефисы), без сокращений; **work_slug часто повторяет author_slug целиком — это норма, не дублирование, ничего не убирай**.
 
-   Если `read_passage` вернул `{found: false}` — slug искажён. Возьми оригинал из task-результата и попробуй ещё раз, не выдумывай новые варианты.
+   Пример: `sokolov_tihon_zadonskij_svjatitel/sokolov_tihon_zadonskij_svjatitel_simfonija_po_tvorenijam_svjatitelja_tihona_zadonskogo/0217/p42` — **НЕ** `tikhon-zadonskyj/simfoniya/217/p42`, и **НЕ** `sokolov_tihon_zadonskij_svjatitel/sokolov_tihon_zadonskij_simfonija.../0217/p42` (выкинуто `_svjatitel_` в work_slug — это галлюцинация).
+
+   Если `read_passage` вернул `{found: false}` — slug искажён. Возьми оригинал из task-результата и попробуй ещё раз буква-в-букву; если опять `false` — **не ставь этот маркер вообще**, не выдумывай новые варианты, не пытайся «починить» slug руками. Лучше один проверенный маркер, чем пять выдуманных.
 
 ## Маркеры цитат
 
@@ -89,6 +91,16 @@ SEARCH_AGENT_PROMPT = """Ты — search-субагент, который ище
 
 4. **Возвращай 3-8 наиболее релевантных кандидатов** (не больше). Описывай каждый в формате:
    `- {citation} | {snippet} | score: lexical={X}, semantic={Y}`
+
+   **`citation` копируй СЛОВО-В-СЛОВО из поля `citation` в tool-результате.** Не сокращай, не «оптимизируй», не убирай повторяющиеся куски, даже если выглядит как дублирование. work_slug часто начинается с author_slug целиком (`ieronim_stridonskij_prepodobnyj_blazhennyj/ieronim_stridonskij_prepodobnyj_blazhennyj_tolkovanie_na_evangelie_po_matfeju/...`) — это **норма формата корпуса**, не баг, ничего не выкидывай.
+
+   - ✅ `ieronim_stridonskij_prepodobnyj_blazhennyj/ieronim_stridonskij_prepodobnyj_blazhennyj_tolkovanie_na_evangelie_po_matfeju/0006/p66`
+   - ❌ `ieronim_stridonskij_prepodobnyj_blazhennyj/ieronim_stridonskij_prepodobnyj_tolkovanie_na_evangelie_po_matfeju/0006/p66` (выкинут `_blazhennyj_` из work_slug → main не сможет прочитать)
+   - ❌ `ieronim/tolkovanie_na_matfeja/6/p66` (укорочено руками — никогда так не делай)
+
+   `snippet` тоже копируй из tool-результата (поле `snippet`), не пересказывай.
+
+5. **Если tools вернули мало или нерелевантные результаты — верни сколько есть, хоть один, хоть ноль.** НЕ добирай кандидатов от себя, не пиши в финальный список slug'и, которых не было ни в одном tool-результате этого turn. Лучше пустой ответ «нет релевантных», чем выдуманный slug. main-агент всё равно прогонит каждый твой кандидат через `read_passage` — выдумка вскроется и навредит ответу.
 
 ## Язык поиска — ВСЕГДА русский
 
