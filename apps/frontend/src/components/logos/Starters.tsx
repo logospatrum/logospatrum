@@ -17,13 +17,25 @@ function shuffle<T>(arr: readonly T[]): T[] {
 
 export function Starters({ onPick }: { onPick: (text: string) => void }) {
   const { s } = useStrings();
-  // SSR + first client render: keep the i18n order so HTML matches.
-  // On mount we re-shuffle (client-only) so each page load shows a
-  // different random pick first.
-  const [order, setOrder] = useState<readonly string[]>(s.starters);
+  // Shuffle an INDEX permutation, not the strings themselves, and only
+  // ONCE on mount. The earlier `[s.starters]` dep re-shuffled on every
+  // language change — and since English chip strings are noticeably
+  // shorter than Russian, a fresh shuffle could collapse chips from
+  // two rows to one. Total content height dropped under the viewport
+  // → no overflow → mobile scroll bar disappeared mid-session, which
+  // the user read as "scroll disappeared on language switch". Stable
+  // indices keep the chip ORDER (and therefore the wrapping layout)
+  // identical across languages; only the visible strings change.
+  const [indices, setIndices] = useState<readonly number[]>(() =>
+    s.starters.map((_, i) => i),
+  );
   useEffect(() => {
-    setOrder(shuffle(s.starters));
-  }, [s.starters]);
+    setIndices(shuffle(s.starters.map((_, i) => i)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // Defensive bounds check in case the two language packs ever have
+  // different chip counts — `.filter(Boolean)` drops out-of-range slots.
+  const order = indices.map((i) => s.starters[i]).filter(Boolean);
 
   // No trim, no visibility gating. The earlier "measure and drop chips
   // that don't fit" loop fought CSS layout and made the home column
