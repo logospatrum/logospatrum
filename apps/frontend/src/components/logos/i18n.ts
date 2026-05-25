@@ -87,6 +87,10 @@ export const STRINGS = {
       sourceLabel: "azbyka",
       showPassage: "Полный параграф",
       highlightNotFound: "(цитата не найдена в параграфе дословно)",
+      sources:     "Источники",
+      collapseAria: "Свернуть список источников",
+      expandAria:   "Развернуть список источников",
+      pillHint:     "Открыть карточку источника",
     },
     errors: {
       streamConnect:    "Не удалось подключиться к LangGraph",
@@ -249,6 +253,10 @@ export const STRINGS = {
       sourceLabel: "source",
       showPassage: "Full paragraph",
       highlightNotFound: "(quote not found verbatim in paragraph)",
+      sources:     "Sources",
+      collapseAria: "Collapse sources list",
+      expandAria:   "Expand sources list",
+      pillHint:     "Open source card",
     },
     errors: {
       streamConnect:    "Cannot reach LangGraph",

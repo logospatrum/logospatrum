@@ -25,6 +25,13 @@ export const palette = {
 export const type = {
   logo:   `var(--font-cormorant), "Cormorant Garamond", "EB Garamond", Georgia, serif`,
   quote:  `var(--font-eb-garamond), "EB Garamond", Georgia, serif`,
+  // Citation body — Cormorant italic. EB Garamond italic at 15px on the
+  // dark surface reads heavy/blocky because its italic obliques carry
+  // chunky stroke joins; Cormorant italic shares the same Garamond
+  // genealogy but with much thinner, airier letterforms. The fallback
+  // chain still ends in EB Garamond → Georgia so a missed font load
+  // degrades gracefully.
+  cite:   `var(--font-cormorant), "Cormorant Garamond", "EB Garamond", Georgia, serif`,
   ui:     `var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif`,
   mono:   `var(--font-geist-mono), "Geist Mono", ui-monospace, monospace`,
   logoWeight: 300,

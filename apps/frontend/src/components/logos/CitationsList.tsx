@@ -1,103 +1,39 @@
 // apps/frontend/src/components/logos/CitationsList.tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { palette, type } from "./tokens";
 import { useStrings } from "./i18n";
 import { useCitationContext } from "./CitationContext";
 import { PassageModal } from "./PassageModal";
-import type {
-  ReadPassageFailure,
-  ReadPassageSuccess,
-} from "@/components/citation-card";
-import type { DesignToolCall } from "./turns";
-import type { CitationMarker } from "@/lib/citation-marker";
+import { Chevron } from "./Chevron";
 import {
-  bibleAzbykaUrl,
-  bibleShortRef,
-  workSlugFromCitation,
-} from "@/lib/bible-books";
+  type RowKind,
+  azbykaHref,
+  refLabel,
+} from "./citation-rows";
 import { reachGoal } from "@/lib/metrika";
-import type { Lang } from "./i18n";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
-type RowKind =
-  | { kind: "success"; marker: CitationMarker; rich: ReadPassageSuccess }
-  | { kind: "error"; marker: CitationMarker; err: ReadPassageFailure };
+const COLLAPSE_STORAGE_KEY = "logos:citations-collapsed";
 
-function paraLabel(d: ReadPassageSuccess): string {
-  return d.window_size === 1
-    ? `§${d.para_start}`
-    : `§${d.para_start}-${d.para_start + d.window_size - 1}`;
-}
-
-function chapterLabel(d: ReadPassageSuccess): string | null {
-  if (d.chapter_title) return d.chapter_title;
-  if (d.chapter_num) return `гл. ${d.chapter_num}`;
-  return null;
-}
-
-/** Build the right-column ref string. Scripture gets `Мф 1:2`; patristic
- *  keeps the chapter/§ form. */
-function refLabel(d: ReadPassageSuccess, lang: Lang): string {
-  const workSlug = workSlugFromCitation(d.citation);
-  if (workSlug) {
-    const bibleRef = bibleShortRef(
-      workSlug,
-      lang,
-      d.chapter_num,
-      d.para_start,
-      d.window_size,
-    );
-    if (bibleRef) return bibleRef;
+/** Read the user's last collapse preference. SSR-safe (returns false). */
+function readCollapsedPref(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(COLLAPSE_STORAGE_KEY) === "true";
+  } catch {
+    return false;
   }
-  return [chapterLabel(d), paraLabel(d)].filter(Boolean).join(" · ");
 }
 
-/** Resolve the azbyka link. Patristic works carry `source_url`; Bible works
- *  have it NULL, so build it from the static book map. */
-function azbykaHref(d: ReadPassageSuccess): string | null {
-  if (d.source_url) return d.source_url;
-  const workSlug = workSlugFromCitation(d.citation);
-  if (!workSlug) return null;
-  return bibleAzbykaUrl(workSlug, d.chapter_num, d.para_start, d.window_size);
-}
-
-function matchToolCall(
-  toolCalls: DesignToolCall[],
-  slug: string,
-): DesignToolCall | undefined {
-  return toolCalls.find(
-    (tc) =>
-      tc.name === "read_passage" &&
-      typeof tc.args.citation === "string" &&
-      tc.args.citation === slug,
-  );
-}
-
-function buildRows(
-  markers: CitationMarker[],
-  toolCalls: DesignToolCall[],
-): RowKind[] {
-  return markers.map((m) => {
-    const tc = matchToolCall(toolCalls, m.slug);
-    if (!tc || tc.jsonResult == null) {
-      return {
-        kind: "error",
-        marker: m,
-        err: {
-          found: false,
-          error: "no matching read_passage call for this slug",
-          citation: m.slug,
-        } as ReadPassageFailure,
-      };
-    }
-    const r = tc.jsonResult as ReadPassageSuccess | ReadPassageFailure;
-    if (r.found === false) {
-      return { kind: "error", marker: m, err: r };
-    }
-    return { kind: "success", marker: m, rich: r };
-  });
+function writeCollapsedPref(v: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(COLLAPSE_STORAGE_KEY, v ? "true" : "false");
+  } catch {
+    /* localStorage may throw in privacy mode */
+  }
 }
 
 function CitationRowSuccess({ row }: { row: Extract<RowKind, { kind: "success" }> }) {
@@ -147,10 +83,12 @@ function CitationRowSuccess({ row }: { row: Extract<RowKind, { kind: "success" }
       <div>
         <div
           style={{
-            fontFamily: type.quote,
+            fontFamily: type.cite,
             fontStyle: "italic",
-            fontSize: "clamp(15px, 1.2vw, 17px)",
-            lineHeight: 1.55,
+            fontWeight: 400,
+            fontSize: "clamp(16px, 1.25vw, 18px)",
+            lineHeight: 1.6,
+            letterSpacing: "0.005em",
             color: palette.text,
             marginBottom: 6,
             textWrap: "pretty",
@@ -369,15 +307,26 @@ function CitationRowError({ row }: { row: Extract<RowKind, { kind: "error" }> })
   );
 }
 
-export function CitationsList({
-  markers,
-  toolCalls,
-}: {
-  markers: CitationMarker[];
-  toolCalls: DesignToolCall[];
-}) {
-  const rows = useMemo(() => buildRows(markers, toolCalls), [markers, toolCalls]);
+/**
+ * Panel below the answer. Driven by pre-built rows (built once at
+ * AssistantTurn level so the tooltip can share the same data via
+ * CitationContext). Collapsible — preference persists in localStorage
+ * under `logos:citations-collapsed`. SSR default is expanded; on the
+ * very first render the lazy initializer reads localStorage on the
+ * client (chat is client-only post-hydration, so no mismatch).
+ */
+export function CitationsList({ rows }: { rows: RowKind[] }) {
+  const { s } = useStrings();
+  const [collapsed, setCollapsed] = useState<boolean>(() => readCollapsedPref());
+
+  // Persist on every change. Effect (not inline call) so React keeps
+  // strict-mode double-invokes idempotent.
+  useEffect(() => {
+    writeCollapsedPref(collapsed);
+  }, [collapsed]);
+
   if (rows.length === 0) return null;
+
   return (
     <div
       style={{
@@ -388,13 +337,32 @@ export function CitationsList({
         animationDelay: "120ms",
       }}
     >
-      {rows.map((row) =>
-        row.kind === "success" ? (
-          <CitationRowSuccess key={`c-${row.marker.n}`} row={row} />
-        ) : (
-          <CitationRowError key={`c-${row.marker.n}`} row={row} />
-        ),
-      )}
+      <button
+        type="button"
+        className="logos-citations-toggle"
+        onClick={() => setCollapsed((c) => !c)}
+        aria-expanded={!collapsed}
+        aria-label={collapsed ? s.citation.expandAria : s.citation.collapseAria}
+      >
+        <Chevron open={!collapsed} color={palette.muted} />
+        <span>
+          {s.citation.sources} · {rows.length}
+        </span>
+      </button>
+      <div
+        className="logos-citations-collapse-wrap"
+        data-collapsed={collapsed ? "true" : undefined}
+      >
+        <div className="logos-citations-collapse-inner">
+          {rows.map((row) =>
+            row.kind === "success" ? (
+              <CitationRowSuccess key={`c-${row.marker.n}`} row={row} />
+            ) : (
+              <CitationRowError key={`c-${row.marker.n}`} row={row} />
+            ),
+          )}
+        </div>
+      </div>
     </div>
   );
 }

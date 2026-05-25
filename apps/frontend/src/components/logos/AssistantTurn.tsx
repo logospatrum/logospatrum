@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { ThinkingTrace } from "./ThinkingTrace";
 import { CitationsList } from "./CitationsList";
 import { CitationProvider } from "./CitationContext";
+import { buildRows } from "./citation-rows";
 import {
   extractMarkers,
   numberMarkers,
@@ -88,8 +89,16 @@ export function AssistantTurn({ turn, showRegenerate, onRegenerate, onExport }: 
     () => numberMarkers(cleanAnswer),
     [cleanAnswer],
   );
+  // Build the per-marker view-model once at this level so both the
+  // CitationsList (below the answer) and the hover tooltip (via
+  // CitationContext.getRow) work off the same data without re-joining
+  // markers → tool calls in two places.
+  const rows = useMemo(
+    () => buildRows(markers, turn.toolCalls),
+    [markers, turn.toolCalls],
+  );
   return (
-    <CitationProvider turnKey={turn.key}>
+    <CitationProvider turnKey={turn.key} rows={rows}>
     <div
       style={{
         display: "flex",
@@ -111,7 +120,7 @@ export function AssistantTurn({ turn, showRegenerate, onRegenerate, onExport }: 
         </div>
       )}
 
-      <CitationsList markers={markers} toolCalls={turn.toolCalls} />
+      <CitationsList rows={rows} />
 
       {showRegenerate && (onRegenerate || onExport) && (
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>

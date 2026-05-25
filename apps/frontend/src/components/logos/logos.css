@@ -493,6 +493,86 @@ button:focus-visible, textarea:focus-visible, a:focus-visible {
   color: #ece6d6;
 }
 
+/* ─── Citations panel collapse ────────────────────────────────────────
+   The panel can be folded down to a single header pill "Источники · N".
+   The user's last choice is persisted in localStorage; new messages
+   render with the remembered state.
+
+   We animate the fold via the grid-template-rows: 1fr ↔ 0fr trick — the
+   inner container has overflow: hidden + min-height: 0, so the grid row
+   collapsing to 0fr smoothly clips the content to zero height. No JS
+   measurement needed, and it works for arbitrary row counts. */
+.logos-citations-toggle {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 0 12px;
+  margin: 0;
+  color: rgba(236, 230, 214, 0.48);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  transition: color 200ms ease;
+}
+.logos-citations-toggle:hover {
+  color: #ece6d6;
+}
+.logos-citations-toggle:focus-visible {
+  outline: 1px solid rgba(238, 232, 218, 0.36);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.logos-citations-collapse-wrap {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 280ms cubic-bezier(.22,.61,.36,1);
+}
+.logos-citations-collapse-wrap[data-collapsed="true"] {
+  grid-template-rows: 0fr;
+}
+.logos-citations-collapse-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ─── Citation hover tooltip ──────────────────────────────────────────
+   Portal'd to body. Position is set inline (top/left) by the React
+   component after measuring itself; here we paint the surface. The
+   `data-side` attribute is informational for now (would drive an arrow
+   if we add one later). */
+.logos-citation-tooltip {
+  z-index: 60;
+  /* Fully opaque — the tooltip floats over the answer text and rock
+     background, so transparency would let the text bleed through and
+     hurt legibility. Solid gradient between the two surface tokens
+     keeps the same Logos surface feel without alpha. */
+  background: linear-gradient(180deg, #1d2025, #15171b);
+  border-radius: 10px;
+  box-shadow:
+    0 1px 0 rgba(238, 232, 218, 0.06) inset,
+    0 0 0 0.5px rgba(238, 232, 218, 0.12) inset,
+    0 18px 40px rgba(0, 0, 0, 0.55),
+    0 4px 14px rgba(0, 0, 0, 0.35);
+  color: #ece6d6;
+  animation: logos-tooltip-rise 200ms cubic-bezier(.22,.61,.36,1) both;
+}
+@keyframes logos-tooltip-rise {
+  0%   { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.logos-citation-tooltip[data-side="bottom"] {
+  animation-name: logos-tooltip-rise-down;
+}
+@keyframes logos-tooltip-rise-down {
+  0%   { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
 /* ─── Citation markers + panel rows + passage modal ─────────────────── */
 /* Inline text marker (no box). Lives inside <sup>, so it visually reads
    as a footnote `[N]`. Hit-area follows the glyphs themselves — hover
