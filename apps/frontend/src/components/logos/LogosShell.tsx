@@ -22,6 +22,7 @@ import {
 
 import { tweaks } from "./tokens";
 import { LangContext, useLangState, useStrings } from "./i18n";
+import { useMonolithClearance } from "@/hooks/useMonolithClearance";
 // Background stays eager: it IS the visual brand of the landing page
 // (rock plate, cursor lighting, flames). Lazy-loading it left users
 // staring at a flat dark rectangle until the dynamic chunk arrived,
@@ -85,6 +86,12 @@ function LogosInner({ initialLightOn }: { initialLightOn: boolean }) {
   const stream = useStreamContext();
   const { threads } = useThreads();
   const { removeThread } = useThreadStore();
+
+  // Keep `--monolith-clearance` on <html> equal to the live Monolith
+  // card height + safety gaps. The home column's mobile padding-bottom
+  // reads it (logos.css), so chip overlap with the fixed input is
+  // impossible regardless of textarea growth or mobile URL-bar changes.
+  useMonolithClearance();
 
   // URL-driven threadId — read from the same StreamProvider hook so both
   // the stream's history-loader and this shell stay in sync without a

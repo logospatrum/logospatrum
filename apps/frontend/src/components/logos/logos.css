@@ -786,7 +786,14 @@ a.citation-pill[data-active="true"] {
 }
 @media (max-width: 640px) {
   .logos-home-column {
-    padding: 120px 24px 175px;
+    /* `--monolith-clearance` is set on <html> by useMonolithClearance
+       (apps/frontend/src/hooks/useMonolithClearance.tsx). It mirrors
+       the live Monolith card height + a 28px top gap + 28px bottom
+       gap, so chips can never slide under the fixed input — even when
+       the mobile URL bar shows and shrinks the visual viewport, or
+       when the textarea auto-grows from one line to several. The
+       175px fallback covers the SSR paint before the hook mounts. */
+    padding: 120px 24px var(--monolith-clearance, 175px);
   }
 }
 

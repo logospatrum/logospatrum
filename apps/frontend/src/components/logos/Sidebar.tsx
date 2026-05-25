@@ -65,12 +65,17 @@ export function Sidebar({ threads, activeId, onPick, onNew, onExport, onDelete }
         />
       )}
 
-      {/* Collapsed icon — always visible, left edge, near the top. */}
+      {/* Collapsed icon — always visible, left edge, near the top.
+          On touch, `onMouseEnter` would fire synthetically right
+          before the click and the two setHover calls batched together
+          (one to true, one functional toggle) flip the final state to
+          false — so the first tap appeared as a no-op and the user
+          had to tap a second time. Skip the hover side on touch. */}
       <button
         type="button"
         aria-label={s.sidebar.historyAria}
         onClick={() => setHover((v) => !v)}
-        onMouseEnter={() => setHover(true)}
+        onMouseEnter={isTouch ? undefined : () => setHover(true)}
         style={{
           position: "fixed",
           left: 16,
@@ -102,8 +107,8 @@ export function Sidebar({ threads, activeId, onPick, onNew, onExport, onDelete }
       </button>
 
       <aside
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
+        onMouseEnter={isTouch ? undefined : () => setHover(true)}
+        onMouseLeave={isTouch ? undefined : () => setHover(false)}
         style={{
           position: "fixed",
           left: 0,
