@@ -1,19 +1,74 @@
 // apps/frontend/src/providers/Stream.tsx
 import React, {
   createContext,
+  useCallback,
   useContext,
   ReactNode,
   useEffect,
+  useState,
 } from "react";
 import type { Message } from "@langchain/langgraph-sdk";
-import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 
 import { useStatelessStream } from "@/lib/useStatelessStream";
 import { loadThreads } from "@/lib/local-thread-store";
 import { useThreadStore } from "./Thread";
 
-type StreamContextType = ReturnType<typeof useStatelessStream>;
+/**
+ * URL-driven `threadId` state — replaces `nuqs.useQueryState("threadId")`.
+ *
+ * nuqs used `next/navigation.useSearchParams()` under the hood, which forces
+ * the entire route to bail out to client-side rendering inside its nearest
+ * Suspense boundary. That bail-out is why the page used to ship a skeleton
+ * in the SSR HTML and "pop" the real layout in after hydration. By reading
+ * the URL via `useEffect` instead, the calling tree (including this Stream
+ * provider AND LogosShell) renders fully on the server and hydrates without
+ * suspending — no skeleton needed.
+ *
+ * Trade-off: the SSR HTML doesn't carry the `threadId` value (the server
+ * has no access to `window.location.search` here, and we'd rather not lift
+ * the read into a server component). The first render always shows "home"
+ * mode; the URL-driven thread switch happens 1 paint later via the effect.
+ * For users who land on `/?threadId=xxx` this means home flashes briefly
+ * before the chat history loads from localStorage — acceptable, since the
+ * history hydration was already async (it comes from localStorage, not the
+ * server).
+ */
+function useUrlThreadId(): [string | null, (next: string | null) => void] {
+  const [threadId, setThreadIdState] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const read = () => {
+      const params = new URLSearchParams(window.location.search);
+      setThreadIdState(params.get("threadId"));
+    };
+    read();
+    window.addEventListener("popstate", read);
+    return () => window.removeEventListener("popstate", read);
+  }, []);
+
+  const setThreadId = useCallback((next: string | null) => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (next == null || next === "") {
+      url.searchParams.delete("threadId");
+    } else {
+      url.searchParams.set("threadId", next);
+    }
+    // replaceState (not pushState) so the back button doesn't accumulate one
+    // history entry per thread switch — matches the previous nuqs default.
+    window.history.replaceState(null, "", url.toString());
+    setThreadIdState(next);
+  }, []);
+
+  return [threadId, setThreadId];
+}
+
+type StreamContextType = ReturnType<typeof useStatelessStream> & {
+  threadId: string | null;
+  setThreadId: (next: string | null) => void;
+};
 const StreamContext = createContext<StreamContextType | undefined>(undefined);
 
 async function checkGraphStatus(apiUrl: string): Promise<boolean> {
@@ -41,7 +96,7 @@ const StreamSession = ({
   apiUrl: string;
   assistantId: string;
 }) => {
-  const [threadId] = useQueryState("threadId");
+  const [threadId, setThreadId] = useUrlThreadId();
   const { saveCurrent } = useThreadStore();
 
   const stream = useStatelessStream({ apiUrl, assistantId });
@@ -88,8 +143,11 @@ const StreamSession = ({
     });
   }, [apiUrl]);
 
+  // Bundle threadId state into the context so LogosShell consumes URL state
+  // from the same hook instance — keeping us off `useSearchParams` entirely.
+  const value: StreamContextType = { ...stream, threadId, setThreadId };
   return (
-    <StreamContext.Provider value={stream}>{children}</StreamContext.Provider>
+    <StreamContext.Provider value={value}>{children}</StreamContext.Provider>
   );
 };
 

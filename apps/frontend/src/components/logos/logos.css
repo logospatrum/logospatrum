@@ -692,3 +692,66 @@ a.citation-pill[data-active="true"] {
   background: rgba(217, 119, 87, 0.18);
   border-color: rgba(217, 119, 87, 0.6);
 }
+
+/* ─── Home flex column ──────────────────────────────────────────────────
+   The column is centered both axes and holds Logo / Quote / Monolith /
+   Starters as flex children. Padding-bottom differs between desktop and
+   narrow viewports because on narrow the Monolith becomes
+   position-fixed (see `.logos-monolith` below) and we need extra room
+   so Starters don't slide under it. Expressing the padding switch via
+   media query (not JS / useMediaQuery) keeps it deterministic from
+   first paint — no SSR/CSR mismatch. */
+.logos-home-column {
+  padding: 120px 24px 100px;
+}
+@media (max-width: 640px) {
+  .logos-home-column {
+    padding: 120px 24px 175px;
+  }
+}
+
+/* ─── Monolith positioning (home flex child <-> fixed-bottom in chat) ──
+   The Monolith is rendered exactly ONCE as a flex child of the home
+   column so its SSR position equals its post-hydration position (no JS
+   measurement, no first-paint jump). Mode is driven by:
+     - `data-mode="home"`  -> in-flow flex child (mid-column on desktop,
+                              bottom-pinned on narrow via media query)
+     - `data-mode="chat"`  -> position: fixed, pinned 28px above viewport
+                              bottom, full-width centered
+   The home<->chat transition is animated by FLIP (see LogosShell.tsx):
+   we capture the rect before the mode flip, set an inverse transform
+   after, and animate it back to identity. */
+.logos-monolith {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  /* The wrapper itself never receives clicks — only its inner card does.
+     This way the wrapper can overlay things behind it without blocking
+     interactions with them (matters in chat mode where the wrapper is
+     full-width fixed but the input card is only 720px wide). */
+  pointer-events: none;
+}
+.logos-monolith > * {
+  pointer-events: auto;
+}
+.logos-monolith[data-mode="chat"] {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 28px;
+  z-index: 6;
+}
+/* Narrow viewports: the home column overflows so a mid-column input
+   would float above the Starters chips when the user scrolls. Bottom-
+   pin it like chat mode. Using a media query keeps the position
+   deterministic from first paint — no JS measurement of viewport width,
+   no SSR/CSR mismatch, no post-hydration jump. */
+@media (max-width: 640px) {
+  .logos-monolith[data-mode="home"] {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 28px;
+    z-index: 6;
+  }
+}

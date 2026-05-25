@@ -6,7 +6,6 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import dynamic from "next/dynamic";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
-import { useQueryState } from "nuqs";
 import type { Message } from "@langchain/langgraph-sdk";
 
 import { useStreamContext } from "@/providers/Stream";
@@ -21,33 +20,16 @@ import {
   messagesToMarkdown,
 } from "@/lib/export-markdown";
 
-import { palette, tweaks } from "./tokens";
+import { tweaks } from "./tokens";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { LangContext, useLangState, useStrings } from "./i18n";
-import type { LightSource } from "./Background";
+// Background stays eager: it IS the visual brand of the landing page
+// (rock plate, cursor lighting, flames). Lazy-loading it left users
+// staring at a flat dark rectangle until the dynamic chunk arrived,
+// which on slow connections felt broken. Library/Connect remain lazy
+// — they're dialogs the user opens later, invisible on first paint.
+import { Background, type LightSource } from "./Background";
 
-// Heavy / interactive-only modules are deferred so they don't bloat the
-// initial bundle. Background has heavy SVG filter init + two rAF loops;
-// LibraryBrowser/ConnectAgent are dialogs the user opens later.
-// `ssr: false` is safe here because none of them participate in SSR
-// content — the page is fully client-driven via streaming + localStorage.
-const Background = dynamic(
-  () => import("./Background").then((m) => ({ default: m.Background })),
-  {
-    ssr: false,
-    loading: () => (
-      <div
-        aria-hidden
-        style={{
-          position: "fixed",
-          inset: 0,
-          background: palette.bg,
-          zIndex: 0,
-        }}
-      />
-    ),
-  },
-);
 const LibraryBrowser = dynamic(
   () =>
     import("@/components/library/LibraryBrowser").then((m) => ({
@@ -100,9 +82,11 @@ function LogosInner() {
   const { removeThread } = useThreadStore();
   const isNarrow = useMediaQuery("(max-width: 640px)");
 
-  // URL-driven threadId (matches upstream agent-chat-ui behavior so the
-  // back/forward buttons keep working).
-  const [threadId, setThreadId] = useQueryState("threadId");
+  // URL-driven threadId — read from the same StreamProvider hook so both
+  // the stream's history-loader and this shell stay in sync without a
+  // second `useSearchParams` consumer (which would re-introduce the
+  // Suspense bail-out we just removed).
+  const { threadId, setThreadId } = stream;
   const inChat = !!threadId || stream.messages.length > 0;
 
   const [inputFocused, setInputFocused] = useState(false);
@@ -130,20 +114,23 @@ function LogosInner() {
       window.removeEventListener("patristic:global-paused", onPause);
     };
   }, []);
-  // Monolith is rendered once as a fixed-positioned overlay. On home it
-  // visually sits where a placeholder div would land inside the flex-
-  // centered home layout — we measure that placeholder's top to keep the
-  // overlay pixel-aligned with the designer's original layout (Logo /
-  // Quote / Monolith / Starters, all flex-column centered).
+  // The Monolith is rendered as a *single* React element that lives in
+  // exactly one place in the JSX tree (as a flex child of the home
+  // column). On home it's a normal in-flow flex child, so its vertical
+  // position is whatever the flex layout naturally produces — which is
+  // also what SSR emits. No JS measurement, no post-hydration jump.
   //
-  // `monolithTop` starts as `null` (no measurement yet); the render uses a
-  // CSS fallback (`top: 50vh` on desktop home, bottom-pinned on chat/narrow
-  // via the explicit chat/narrow branch in the layout effect) so the input
-  // is VISIBLE from the very first paint, including SSR HTML before
-  // hydration. Once the layout effect measures the slot, the 480ms `top`
-  // transition smoothly nudges the input into pixel-perfect alignment.
-  const monoSlotRef = useRef<HTMLDivElement | null>(null);
-  const [monolithTop, setMonolithTop] = useState<number | null>(null);
+  // For chat mode we promote the wrapper to `position: fixed` pinned to
+  // the bottom. To avoid a jarring snap between the two layout modes we
+  // use the FLIP technique: capture the wrapper's rect just before the
+  // mode flips, then after the mode change measure the new rect, set an
+  // inverse transform to mask the jump, and on the next frame remove the
+  // transform with a transition. The user sees a single smooth slide,
+  // identical to the prior 480ms `top` animation but without the JS
+  // measurement that caused the first-paint jump.
+  const monoWrapperRef = useRef<HTMLDivElement | null>(null);
+  const prevInChatRef = useRef<boolean>(inChat);
+  const prevRectRef = useRef<DOMRect | null>(null);
   const [lightOn, setLightOnState] = useState(true);
   useEffect(() => {
     try {
@@ -183,29 +170,68 @@ function LogosInner() {
   // Effective chat count drives the "cave lights up over time" progression.
   const chatCount = threads.length;
 
-  // Pixel-align the fixed Monolith with its in-flow slot on home, or with
-  // a 28px gap from the viewport bottom on chat. Runs synchronously
-  // before paint so the initial frame has the right `top` and we don't
-  // see the input snap into place.
+  // FLIP capture: BEFORE React applies the layout change that flips
+  // home<->chat, snapshot the Monolith wrapper's current bounding rect.
+  // This effect runs as a render-phase side effect via useState updater,
+  // but we use a normal render-time read of refs.current — safe because
+  // the wrapper exists on every render (the Monolith never unmounts).
+  //
+  // We compare the *previous* inChat we observed against the current one;
+  // when they differ a mode flip has occurred. We capture the OLD rect
+  // here (before the DOM mutates) so the post-mutation useLayoutEffect
+  // can compute the delta. We deliberately read in the render body — refs
+  // are populated from the prior commit, so `getBoundingClientRect()` here
+  // returns the pre-flip geometry.
+  if (typeof window !== "undefined" && prevInChatRef.current !== inChat) {
+    prevRectRef.current = monoWrapperRef.current?.getBoundingClientRect() ?? null;
+  }
+
+  // FLIP play: AFTER the DOM has the new layout (chat -> fixed-bottom, or
+  // home -> inline flex child), measure the new rect, set an inverse
+  // transform, then on the next frame animate the transform to identity
+  // with a 480ms ease. The user perceives a single smooth slide between
+  // the two positions; intermediate frames are pure GPU-composited
+  // transforms so it stays cheap.
+  //
+  // useLayoutEffect is required so the inverse transform is applied
+  // before the browser paints — otherwise the user would see one frame
+  // at the new position before the animation starts.
   useLayoutEffect(() => {
     if (typeof window === "undefined") return undefined;
-    const MONOLITH_H = 115;
-    const compute = () => {
-      // On narrow viewports the home column overflows and the user has to
-      // scroll past Starters to read everything. A fixed-mid-viewport input
-      // would slide over the chips. Bottom-pin it like the chat-mode input.
-      if (inChat || isNarrow) {
-        setMonolithTop(window.innerHeight - MONOLITH_H - 28);
-        return;
-      }
-      const r = monoSlotRef.current?.getBoundingClientRect();
-      if (r) setMonolithTop(r.top);
-      else setMonolithTop(window.innerHeight / 2 - MONOLITH_H / 2);
-    };
-    compute();
-    window.addEventListener("resize", compute);
-    return () => window.removeEventListener("resize", compute);
-  }, [inChat, isNarrow]);
+    const prevInChat = prevInChatRef.current;
+    prevInChatRef.current = inChat;
+    if (prevInChat === inChat) return undefined;
+    const el = monoWrapperRef.current;
+    const oldRect = prevRectRef.current;
+    prevRectRef.current = null;
+    if (!el || !oldRect) return undefined;
+    const newRect = el.getBoundingClientRect();
+    const dy = oldRect.top - newRect.top;
+    const dx = oldRect.left - newRect.left;
+    if (Math.abs(dy) < 1 && Math.abs(dx) < 1) return undefined;
+    // First frame: paint at the old position via an inverse transform,
+    // no transition so the snap-back is invisible.
+    el.style.transition = "none";
+    el.style.transform = `translate(${dx}px, ${dy}px)`;
+    // Force a reflow so the browser commits the inverse before the
+    // transition kicks in. Reading offsetWidth is the canonical trick.
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    el.offsetWidth;
+    // Next frame: clear the transform with a transition. The browser
+    // interpolates from the inverse back to identity, which visually
+    // slides the wrapper from the old position to its new layout.
+    requestAnimationFrame(() => {
+      const node = monoWrapperRef.current;
+      if (!node) return;
+      node.style.transition = "transform 480ms cubic-bezier(.22,.61,.36,1)";
+      node.style.transform = "translate(0, 0)";
+    });
+    return undefined;
+  }, [inChat]);
+
+  // (Narrow-viewport bottom-pin is now expressed as a CSS media query
+  // on `.logos-monolith[data-mode="home"]` — deterministic from first
+  // paint, no JS measurement, no SSR/CSR width mismatch.)
 
   // Three-state light source machine. Mirrors the design's
   // `landing | thinking | reading`.
@@ -494,7 +520,17 @@ function LogosInner() {
           times. Visibility is opacity-driven so switching modes doesn't
           unmount/remount Logo/Quote/Starters or the chat scroller —
           which was the cause of the "everything flickers except input"
-          report. */}
+          report.
+
+          The Monolith lives INSIDE the home flex column as a real flex
+          child (replacing the previous absolute-positioned overlay +
+          getBoundingClientRect measurement). On `inChat` we promote the
+          Monolith wrapper to `position: fixed` via the CSS
+          `data-mode="chat"` attribute — same DOM node, just floated out
+          of the column. The FLIP useLayoutEffect above animates the
+          transition. SSR HTML now contains the input AT its final
+          flex-centered position, so there is no first-paint jump on
+          hydration. */}
       <main
         style={{
           position: "fixed",
@@ -502,14 +538,19 @@ function LogosInner() {
           zIndex: 5,
         }}
       >
-        {/* Home layer — designer's original flex-centered column.
-            Monolith itself is rendered separately as a fixed overlay,
-            but a same-sized placeholder lives here so the rest of the
-            layout (Logo / Quote / Starters) keeps its designed spacing.
-            We measure the placeholder's getBoundingClientRect to align
-            the fixed overlay onto it. */}
+        {/* Home layer — designer's original flex-centered column. The
+            decorations (Logo / Quote / Starters) each get their own
+            opacity wrapper so they fade out individually on inChat,
+            leaving the column itself at opacity:1 so the Monolith
+            (a real flex child here) stays fully visible during and
+            after the mode transition.
+
+            The column's `pointer-events` toggles on inChat so chat-
+            mode clicks fall through to the chat scroller behind. The
+            Monolith escapes that toggle because `.logos-monolith` has
+            its own `pointer-events: auto` on the inner card. */}
         <div
-          aria-hidden={inChat}
+          className="logos-home-column"
           style={{
             position: "absolute",
             inset: 0,
@@ -517,26 +558,75 @@ function LogosInner() {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            padding: isNarrow ? "120px 24px 175px" : "120px 24px 100px",
             gap: 64,
             overflowY: "auto",
             overflowX: "hidden",
             scrollbarGutter: "stable",
             scrollbarWidth: "thin",
             scrollbarColor: "rgba(255,255,255,0.10) transparent",
-            opacity: inChat ? 0 : 1,
             pointerEvents: inChat ? "none" : "auto",
-            transition: "opacity 360ms ease",
           }}
         >
-          <Logo />
-          <Quote show={tweaks.showQuote} />
           <div
-            ref={monoSlotRef}
-            aria-hidden
-            style={{ height: 115, width: "min(720px, 92vw)" }}
-          />
-          <Starters onPick={submit} />
+            aria-hidden={inChat}
+            style={{
+              opacity: inChat ? 0 : 1,
+              transition: "opacity 360ms ease",
+              pointerEvents: inChat ? "none" : "auto",
+            }}
+          >
+            <Logo />
+          </div>
+          <div
+            aria-hidden={inChat}
+            style={{
+              opacity: inChat ? 0 : 1,
+              transition: "opacity 360ms ease",
+              pointerEvents: inChat ? "none" : "auto",
+            }}
+          >
+            <Quote show={tweaks.showQuote} />
+          </div>
+          {/* Monolith — the actual chat input. In-flow flex child on
+              desktop home (SSR-paintable at its final position, no JS
+              measurement); promoted to `position: fixed` at the bottom
+              when inChat (or on narrow viewports, via CSS media query).
+              See `.logos-monolith` rules in logos.css. */}
+          <div
+            ref={monoWrapperRef}
+            className="logos-monolith"
+            data-mode={inChat ? "chat" : "home"}
+          >
+            <div
+              style={{
+                position: "relative",
+                width: "min(720px, 92vw)",
+              }}
+            >
+              {inChat && (
+                <ScrollToBottom visible={!atBottom} onClick={scrollToBottom} />
+              )}
+              <Monolith
+                onSubmit={submit}
+                busy={stream.isLoading}
+                onStop={() => stream.stop()}
+                onFocusChange={setInputFocused}
+                prefill={prefill}
+                styleId={styleId}
+                onStyleChange={setStyleId}
+              />
+            </div>
+          </div>
+          <div
+            aria-hidden={inChat}
+            style={{
+              opacity: inChat ? 0 : 1,
+              transition: "opacity 360ms ease",
+              pointerEvents: inChat ? "none" : "auto",
+            }}
+          >
+            <Starters onPick={submit} />
+          </div>
         </div>
 
         {/* Chat layer */}
@@ -581,58 +671,6 @@ function LogosInner() {
           </div>
         </div>
       </main>
-
-      {/* Unified Monolith — single React instance, fixed-positioned.
-          Smoothly transitions between mid-viewport (home) and just-above-
-          bottom (chat) via CSS `top` transition. Previously there were two
-          separate Monoliths inside the !inChat / inChat branches; switching
-          mode unmounted one and mounted the other, which the user saw as a
-          ~400px jump (and rerendered focus state). One instance with one
-          transition is the whole fix. */}
-      <div
-        style={{
-          position: "fixed",
-          left: 0,
-          right: 0,
-          zIndex: 6,
-          pointerEvents: "none",
-          display: "flex",
-          justifyContent: "center",
-          // Pre-measurement fallback: bottom-pinned for chat/narrow (matches
-          // the layout-effect's narrow/inChat branch), centered for desktop
-          // home (matches the slot's natural flex-center position closely
-          // enough that any post-measurement correction animates via the
-          // 480ms transition rather than a visible snap).
-          ...(monolithTop != null
-            ? { top: `${monolithTop}px` }
-            : inChat || isNarrow
-              ? { top: "auto", bottom: 28 }
-              : { top: "50vh", transform: "translateY(-50%)" }),
-          opacity: 1,
-          transition: "top 480ms cubic-bezier(.22,.61,.36,1)",
-        }}
-      >
-        <div
-          style={{
-            pointerEvents: "auto",
-            position: "relative",
-            width: "min(720px, 92vw)",
-          }}
-        >
-          {inChat && (
-            <ScrollToBottom visible={!atBottom} onClick={scrollToBottom} />
-          )}
-          <Monolith
-            onSubmit={submit}
-            busy={stream.isLoading}
-            onStop={() => stream.stop()}
-            onFocusChange={setInputFocused}
-            prefill={prefill}
-            styleId={styleId}
-            onStyleChange={setStyleId}
-          />
-        </div>
-      </div>
     </>
   );
 }

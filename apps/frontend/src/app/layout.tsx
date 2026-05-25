@@ -8,7 +8,6 @@ import {
 } from "next/font/google";
 import React from "react";
 import Script from "next/script";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { cookies } from "next/headers";
 import crypto from "node:crypto";
 
@@ -90,7 +89,7 @@ export default async function RootLayout({
         <meta name="pat-session" content={patSession} />
       </head>
       <body className={inter.className}>
-        <NuqsAdapter>{children}</NuqsAdapter>
+        {children}
         {YM_COUNTER_ID && (
           <>
             <Script id="ym-counter" strategy="afterInteractive">
