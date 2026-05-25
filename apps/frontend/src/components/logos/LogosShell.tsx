@@ -568,7 +568,12 @@ function LogosInner({ initialLightOn }: { initialLightOn: boolean }) {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            justifyContent: "center",
+            // justify-content is set in logos.css so the mobile @media
+            // query can override it: center on desktop, flex-start on
+            // mobile (with .logos-home-starters using margin-top:auto
+            // to glue chips to the bottom without moving Logo/Quote).
+            // Inline `justifyContent: "center"` here would defeat the
+            // mobile override.
             gap: 64,
             // Native scroll on both home and chat. Earlier we set
             // `touch-action: none` + `overflow-y: hidden` here to keep
@@ -637,6 +642,7 @@ function LogosInner({ initialLightOn }: { initialLightOn: boolean }) {
             </div>
           </div>
           <div
+            className="logos-home-starters"
             aria-hidden={inChat}
             style={{
               opacity: inChat ? 0 : 1,

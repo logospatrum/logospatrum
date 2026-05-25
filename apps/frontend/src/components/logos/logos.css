@@ -782,18 +782,35 @@ a.citation-pill[data-active="true"] {
    media query (not JS / useMediaQuery) keeps it deterministic from
    first paint — no SSR/CSR mismatch. */
 .logos-home-column {
+  /* Desktop: stack centered vertically in the column. Mobile @media
+     query below switches to flex-start + Starters margin-top: auto
+     so growing the chip clearance doesn't shift Logo/Quote upward. */
+  justify-content: center;
   padding: 120px 24px 100px;
 }
 @media (max-width: 640px) {
   .logos-home-column {
-    /* `--monolith-clearance` is set on <html> by useMonolithClearance
-       (apps/frontend/src/hooks/useMonolithClearance.tsx). It mirrors
-       the live Monolith card height + a 28px top gap + 28px bottom
-       gap, so chips can never slide under the fixed input — even when
-       the mobile URL bar shows and shrinks the visual viewport, or
-       when the textarea auto-grows from one line to several. The
-       175px fallback covers the SSR paint before the hook mounts. */
+    /* Mobile layout switches from "vertically centered floating
+       stack" to "top-anchored stack with Starters glued to the
+       bottom". Two reasons:
+         1. Logo + Quote should NOT move when --monolith-clearance
+            grows (e.g. URL bar shows up or textarea auto-grows) —
+            with center alignment, padding-bottom changes shift the
+            entire centered pile up by half the delta.
+         2. Starters must always sit just above the fixed Monolith,
+            regardless of how short the viewport is.
+       `justify-content: flex-start` pins Logo at the top; the
+       `margin-top: auto` on .logos-home-starters (below) pushes
+       Starters to the end of the flex column. Padding-bottom is
+       driven by --monolith-clearance (set on <html> by
+       useMonolithClearance.tsx) so the chips stay above the input
+       even as it grows. Fallback 175px covers SSR before the hook
+       has measured. */
+    justify-content: flex-start;
     padding: 120px 24px var(--monolith-clearance, 175px);
+  }
+  .logos-home-starters {
+    margin-top: auto;
   }
 }
 
