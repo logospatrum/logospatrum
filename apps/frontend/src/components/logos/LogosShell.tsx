@@ -3,6 +3,7 @@
 import "./logos.css";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 import { useQueryState } from "nuqs";
@@ -19,13 +20,48 @@ import {
   exportFilename,
   messagesToMarkdown,
 } from "@/lib/export-markdown";
-import { LibraryBrowser } from "@/components/library/LibraryBrowser";
-import { ConnectAgent } from "@/components/connect/ConnectAgent";
 
-import { tweaks } from "./tokens";
+import { palette, tweaks } from "./tokens";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { LangContext, useLangState, useStrings } from "./i18n";
-import { Background, type LightSource } from "./Background";
+import type { LightSource } from "./Background";
+
+// Heavy / interactive-only modules are deferred so they don't bloat the
+// initial bundle. Background has heavy SVG filter init + two rAF loops;
+// LibraryBrowser/ConnectAgent are dialogs the user opens later.
+// `ssr: false` is safe here because none of them participate in SSR
+// content — the page is fully client-driven via streaming + localStorage.
+const Background = dynamic(
+  () => import("./Background").then((m) => ({ default: m.Background })),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        aria-hidden
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: palette.bg,
+          zIndex: 0,
+        }}
+      />
+    ),
+  },
+);
+const LibraryBrowser = dynamic(
+  () =>
+    import("@/components/library/LibraryBrowser").then((m) => ({
+      default: m.LibraryBrowser,
+    })),
+  { ssr: false },
+);
+const ConnectAgent = dynamic(
+  () =>
+    import("@/components/connect/ConnectAgent").then((m) => ({
+      default: m.ConnectAgent,
+    })),
+  { ssr: false },
+);
 import { TopChrome } from "./TopChrome";
 import { BottomChrome } from "./BottomChrome";
 import { Sidebar, type SidebarThread } from "./Sidebar";
@@ -99,6 +135,13 @@ function LogosInner() {
   // centered home layout — we measure that placeholder's top to keep the
   // overlay pixel-aligned with the designer's original layout (Logo /
   // Quote / Monolith / Starters, all flex-column centered).
+  //
+  // `monolithTop` starts as `null` (no measurement yet); the render uses a
+  // CSS fallback (`top: 50vh` on desktop home, bottom-pinned on chat/narrow
+  // via the explicit chat/narrow branch in the layout effect) so the input
+  // is VISIBLE from the very first paint, including SSR HTML before
+  // hydration. Once the layout effect measures the slot, the 480ms `top`
+  // transition smoothly nudges the input into pixel-perfect alignment.
   const monoSlotRef = useRef<HTMLDivElement | null>(null);
   const [monolithTop, setMonolithTop] = useState<number | null>(null);
   const [lightOn, setLightOnState] = useState(true);
@@ -555,8 +598,17 @@ function LogosInner() {
           pointerEvents: "none",
           display: "flex",
           justifyContent: "center",
-          top: monolithTop != null ? `${monolithTop}px` : "50vh",
-          opacity: monolithTop != null ? 1 : 0,
+          // Pre-measurement fallback: bottom-pinned for chat/narrow (matches
+          // the layout-effect's narrow/inChat branch), centered for desktop
+          // home (matches the slot's natural flex-center position closely
+          // enough that any post-measurement correction animates via the
+          // 480ms transition rather than a visible snap).
+          ...(monolithTop != null
+            ? { top: `${monolithTop}px` }
+            : inChat || isNarrow
+              ? { top: "auto", bottom: 28 }
+              : { top: "50vh", transform: "translateY(-50%)" }),
+          opacity: 1,
           transition: "top 480ms cubic-bezier(.22,.61,.36,1)",
         }}
       >

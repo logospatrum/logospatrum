@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { MarkdownText } from "./markdown/markdown-text";
+import dynamic from "next/dynamic";
 import { ThinkingTrace } from "./ThinkingTrace";
 import { CitationsList } from "./CitationsList";
 import { CitationProvider } from "./CitationContext";
@@ -18,6 +18,20 @@ import type { DesignTurn } from "./turns";
 // Styles for `.logos-answer` (markdown body palette overrides) live in
 // `app/globals.css`. We attach the class here so the upstream
 // `MarkdownText`'s tailwind defaults don't fight the dark theme.
+//
+// MarkdownText pulls in react-markdown + remark/rehype + react-syntax-
+// highlighter + katex (~230 KB gz combined). On the home page there are
+// no assistant turns to render, so we keep that whole graph out of the
+// initial bundle via next/dynamic. `loading` shows the still-streaming
+// raw text so the chat doesn't flicker between fallback and rendered
+// markdown — the chunk usually arrives well before the first token does.
+const MarkdownText = dynamic(
+  () => import("./markdown/markdown-text").then((m) => ({ default: m.MarkdownText })),
+  {
+    ssr: false,
+    loading: () => null,
+  },
+);
 
 const pillStyle: React.CSSProperties = {
   appearance: "none",
