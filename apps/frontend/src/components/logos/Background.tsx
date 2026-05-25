@@ -192,10 +192,15 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
       setRenderHeavy(true);
       return undefined;
     }
-    // Reduced-motion + static-mobile both skip the cinematic fade —
-    // we can't fade without a rAF, and on mobile the rAF is exactly
-    // what we're trying to avoid.
-    if (reducedMotion || staticMode) {
+    // Static mobile path: NEVER tear the heavy SVG down on light-off.
+    // The first rasterization of the rock filter is the expensive
+    // operation on iOS Safari (~500ms-2s freeze); subsequent toggles
+    // would re-pay it on every light-on. Instead we keep the SVG
+    // mounted and fade its CSS opacity — iOS keeps the cached filter
+    // bitmap and just composites it at 0 alpha for free. The fallback
+    // SVG underneath shows through when opacity hits 0.
+    if (staticMode) return undefined;
+    if (reducedMotion) {
       setRenderHeavy(false);
       return undefined;
     }
@@ -532,24 +537,29 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
 
   // ── Static mobile: pin the cursor light at its peak intensity ──
   // The rAF envelopes that normally lerp cursor diff/spec from 0 → peak
-  // never run in static mode, so we set the attributes ourselves once
-  // the heavy SVG mounts. Without this, the SSR-initial values
-  // (controlled by `lightOn` via useRef capture above) might still be 0
-  // for users whose pat_light cookie was off at first render, leaving
-  // the rock looking dark on mobile even though they later toggled
-  // light back on.
+  // never run in static mode, so we set the attributes once when the
+  // heavy SVG first mounts. CRITICAL: do NOT re-set these on `lightOn`
+  // change — any setAttribute on a filter primitive's constant
+  // invalidates the iOS-cached rasterization and forces a full filter
+  // recompute (~500ms-2s freeze per toggle). Light-off visibility is
+  // handled by CSS opacity on the parent <svg> instead, which is
+  // a cached-bitmap-friendly compositor operation.
   useEffect(() => {
     if (!staticMode) return;
     if (!renderHeavy) return;
-    const cursorDiff = lightOn ? cursorPeakDiff : 0;
-    const cursorSpec = lightOn ? cursorPeakSpec : 0;
-    cursorDiffRef.current?.setAttribute("diffuseConstant", cursorDiff.toFixed(3));
-    cursorSpecRef.current?.setAttribute("specularConstant", cursorSpec.toFixed(3));
+    cursorDiffRef.current?.setAttribute(
+      "diffuseConstant",
+      cursorPeakDiff.toFixed(3),
+    );
+    cursorSpecRef.current?.setAttribute(
+      "specularConstant",
+      cursorPeakSpec.toFixed(3),
+    );
     ambientDiffRef.current?.setAttribute(
       "diffuseConstant",
-      (lightOn ? ambientPeakRef.current : 0).toFixed(3),
+      ambientPeakRef.current.toFixed(3),
     );
-  }, [staticMode, renderHeavy, lightOn, cursorPeakDiff, cursorPeakSpec]);
+  }, [staticMode, renderHeavy, cursorPeakDiff, cursorPeakSpec]);
 
   // When LIGHT is off and the fade-out timer has fired, drop the heavy
   // filter graph but keep a minimal SVG carrying ONLY:
@@ -618,6 +628,53 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
 
   return (
     <>
+      {/* Static-mobile backdrop: the lightweight beam + vignette stays
+          mounted permanently underneath the heavy rock so when the
+          user toggles light off and the rock fades to opacity 0 there's
+          still character behind it (instead of pure black body bg).
+          On desktop renderHeavy's mount/unmount alternates these two
+          paths and this layer is never rendered. */}
+      {staticMode && (
+        <svg
+          viewBox={`${VB_VIEW_X0} ${VB_VIEW_Y0} ${VB_VIEW_W} ${VB_VIEW_H}`}
+          preserveAspectRatio="xMidYMid slice"
+          aria-hidden="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            width: "100vw",
+            height: "100vh",
+            zIndex: 0,
+            pointerEvents: "none",
+            background: "#000",
+          }}
+        >
+          <defs>
+            <radialGradient id="logosBeamMobile" cx="50%" cy="-5%" r="60%">
+              <stop offset="0%" stopColor={palette.stoneLit} stopOpacity={0.14 * lightK} />
+              <stop offset="60%" stopColor={palette.stoneLit} stopOpacity={0} />
+            </radialGradient>
+            <radialGradient id="logosVignetteMobile" cx="50%" cy="50%" r="75%">
+              <stop offset="55%" stopColor="#000" stopOpacity={0} />
+              <stop offset="100%" stopColor="#000" stopOpacity={0.55} />
+            </radialGradient>
+          </defs>
+          <rect
+            x={VB_VIEW_X0}
+            y={VB_VIEW_Y0}
+            width={VB_VIEW_W}
+            height={VB_VIEW_H}
+            fill="url(#logosBeamMobile)"
+          />
+          <rect
+            x={VB_VIEW_X0}
+            y={VB_VIEW_Y0}
+            width={VB_VIEW_W}
+            height={VB_VIEW_H}
+            fill="url(#logosVignetteMobile)"
+          />
+        </svg>
+      )}
       <svg
         ref={svgRef}
         viewBox={`${VB_VIEW_X0} ${VB_VIEW_Y0} ${VB_VIEW_W} ${VB_VIEW_H}`}
@@ -630,7 +687,16 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
           height: "100vh",
           zIndex: 0,
           pointerEvents: "none",
-          background: palette.bgDeep,
+          background: staticMode ? "transparent" : palette.bgDeep,
+          // On mobile we never unmount this SVG (the first rock
+          // rasterization is the one-time expensive operation and we
+          // don't want to pay it again on every light-on). Light
+          // toggle just fades CSS opacity here — iOS Safari keeps the
+          // cached filter bitmap and composites it at the new alpha,
+          // which is a cheap GPU operation. Desktop keeps opacity 1
+          // and uses the rAF-driven envelope instead.
+          opacity: staticMode ? (lightOn ? 1 : 0) : 1,
+          transition: staticMode ? "opacity 500ms ease" : undefined,
         }}
       >
         <defs>
