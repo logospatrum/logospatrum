@@ -1,4 +1,8 @@
-FROM nginx:alpine
+# nginx:alpine + ngx_brotli compiled in. Same nginx version line as the
+# official image — macbre maintains releases in lockstep with upstream.
+# Switched from plain nginx:alpine to get on-the-fly brotli, which cuts
+# JS/CSS payloads by ~15-25% over gzip for the same MIME types.
+FROM macbre/nginx-brotli:latest
 
 # certbot for Let's Encrypt cert renewal (renew-ssl.sh / init-letsencrypt.sh)
 RUN apk add --no-cache openssl certbot
