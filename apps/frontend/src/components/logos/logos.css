@@ -859,11 +859,21 @@ a.citation-pill[data-active="true"] {
   }
   .logos-top-chrome-brand,
   .logos-top-chrome-library,
-  .logos-top-chrome-connect {
+  .logos-top-chrome-connect,
+  .logos-top-chrome-light {
     display: none !important;
   }
   .logos-top-chrome-right {
     margin-left: auto;
+  }
+}
+/* Hover-less devices (touch) — hide the Light toggle even if the
+   viewport is wider than 640px (tablets in landscape, touchscreen
+   laptops). The mobile background path renders only the static halo
+   so the toggle would be a no-op there. */
+@media (hover: none) {
+  .logos-top-chrome-light {
+    display: none !important;
   }
 }
 

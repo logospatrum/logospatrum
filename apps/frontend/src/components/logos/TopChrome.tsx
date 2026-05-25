@@ -165,52 +165,57 @@ export function TopChrome({
           })}
         </div>
 
-        {/* Light toggle */}
-        <button
-          type="button"
-          onClick={onToggleLight}
-          role="switch"
-          aria-checked={lightOn}
-          aria-label={lightOn ? s.top.lightOnAria : s.top.lightOffAria}
-          style={{
-            appearance: "none",
-            border: `0.5px solid ${palette.hairline}`,
-            background: "transparent",
-            cursor: "default",
-            color: lightOn ? palette.text : palette.faint,
-            fontFamily: type.mono,
-            fontSize: 10,
-            letterSpacing: "0.22em",
-            textTransform: "uppercase",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "8px 12px 8px 10px",
-            borderRadius: 999,
-            transition: "color 320ms ease, border-color 320ms ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = palette.hairline;
-          }}
-        >
-          <span
-            aria-hidden="true"
+        {/* Light toggle — desktop-only (the mobile background is a
+            static halo with no animated light, so the toggle would be
+            a no-op there). Hidden via `.logos-top-chrome-light` in
+            logos.css under @media (max-width: 640px) or (hover: none). */}
+        <span className="logos-top-chrome-light" style={{ display: "inline-flex" }}>
+          <button
+            type="button"
+            onClick={onToggleLight}
+            role="switch"
+            aria-checked={lightOn}
+            aria-label={lightOn ? s.top.lightOnAria : s.top.lightOffAria}
             style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: lightOn ? palette.accent : "transparent",
-              boxShadow: lightOn ? `0 0 10px ${palette.accent}` : "none",
-              border: `0.5px solid ${lightOn ? "transparent" : palette.faint}`,
-              transition:
-                "background 320ms ease, box-shadow 320ms ease, border-color 320ms ease",
+              appearance: "none",
+              border: `0.5px solid ${palette.hairline}`,
+              background: "transparent",
+              cursor: "default",
+              color: lightOn ? palette.text : palette.faint,
+              fontFamily: type.mono,
+              fontSize: 10,
+              letterSpacing: "0.22em",
+              textTransform: "uppercase",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 12px 8px 10px",
+              borderRadius: 999,
+              transition: "color 320ms ease, border-color 320ms ease",
             }}
-          />
-          <span>{s.top.lightLabel}</span>
-        </button>
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = palette.hairline;
+            }}
+          >
+            <span
+              aria-hidden="true"
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: lightOn ? palette.accent : "transparent",
+                boxShadow: lightOn ? `0 0 10px ${palette.accent}` : "none",
+                border: `0.5px solid ${lightOn ? "transparent" : palette.faint}`,
+                transition:
+                  "background 320ms ease, box-shadow 320ms ease, border-color 320ms ease",
+              }}
+            />
+            <span>{s.top.lightLabel}</span>
+          </button>
+        </span>
       </div>
     </header>
   );

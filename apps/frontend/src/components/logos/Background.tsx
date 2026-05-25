@@ -188,18 +188,18 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
   // unmount (no animation expectation).
   const [renderHeavy, setRenderHeavy] = useState(lightOn);
   useEffect(() => {
+    // Mobile / touch: never render the heavy SVG at all. iOS Safari
+    // can't sustain the filter chain, and the user-requested mobile
+    // chrome is just "the halo above the header" — which is exactly
+    // what the fallback path below renders. Skip everything else.
+    if (staticMode) {
+      setRenderHeavy(false);
+      return undefined;
+    }
     if (lightOn) {
       setRenderHeavy(true);
       return undefined;
     }
-    // Static mobile path: NEVER tear the heavy SVG down on light-off.
-    // The first rasterization of the rock filter is the expensive
-    // operation on iOS Safari (~500ms-2s freeze); subsequent toggles
-    // would re-pay it on every light-on. Instead we keep the SVG
-    // mounted and fade its CSS opacity — iOS keeps the cached filter
-    // bitmap and just composites it at 0 alpha for free. The fallback
-    // SVG underneath shows through when opacity hits 0.
-    if (staticMode) return undefined;
     if (reducedMotion) {
       setRenderHeavy(false);
       return undefined;
@@ -535,32 +535,6 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
     return () => cancelAnimationFrame(raf);
   }, [cursorPeakDiff, cursorPeakSpec, reducedMotion, renderHeavy, staticMode]);
 
-  // ── Static mobile: pin the cursor light at its peak intensity ──
-  // The rAF envelopes that normally lerp cursor diff/spec from 0 → peak
-  // never run in static mode, so we set the attributes once when the
-  // heavy SVG first mounts. CRITICAL: do NOT re-set these on `lightOn`
-  // change — any setAttribute on a filter primitive's constant
-  // invalidates the iOS-cached rasterization and forces a full filter
-  // recompute (~500ms-2s freeze per toggle). Light-off visibility is
-  // handled by CSS opacity on the parent <svg> instead, which is
-  // a cached-bitmap-friendly compositor operation.
-  useEffect(() => {
-    if (!staticMode) return;
-    if (!renderHeavy) return;
-    cursorDiffRef.current?.setAttribute(
-      "diffuseConstant",
-      cursorPeakDiff.toFixed(3),
-    );
-    cursorSpecRef.current?.setAttribute(
-      "specularConstant",
-      cursorPeakSpec.toFixed(3),
-    );
-    ambientDiffRef.current?.setAttribute(
-      "diffuseConstant",
-      ambientPeakRef.current.toFixed(3),
-    );
-  }, [staticMode, renderHeavy, cursorPeakDiff, cursorPeakSpec]);
-
   // When LIGHT is off and the fade-out timer has fired, drop the heavy
   // filter graph but keep a minimal SVG carrying ONLY:
   //   - black background — matches what the filter outputs at env=0
@@ -628,53 +602,6 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
 
   return (
     <>
-      {/* Static-mobile backdrop: the lightweight beam + vignette stays
-          mounted permanently underneath the heavy rock so when the
-          user toggles light off and the rock fades to opacity 0 there's
-          still character behind it (instead of pure black body bg).
-          On desktop renderHeavy's mount/unmount alternates these two
-          paths and this layer is never rendered. */}
-      {staticMode && (
-        <svg
-          viewBox={`${VB_VIEW_X0} ${VB_VIEW_Y0} ${VB_VIEW_W} ${VB_VIEW_H}`}
-          preserveAspectRatio="xMidYMid slice"
-          aria-hidden="true"
-          style={{
-            position: "fixed",
-            inset: 0,
-            width: "100vw",
-            height: "100vh",
-            zIndex: 0,
-            pointerEvents: "none",
-            background: "#000",
-          }}
-        >
-          <defs>
-            <radialGradient id="logosBeamMobile" cx="50%" cy="-5%" r="60%">
-              <stop offset="0%" stopColor={palette.stoneLit} stopOpacity={0.14 * lightK} />
-              <stop offset="60%" stopColor={palette.stoneLit} stopOpacity={0} />
-            </radialGradient>
-            <radialGradient id="logosVignetteMobile" cx="50%" cy="50%" r="75%">
-              <stop offset="55%" stopColor="#000" stopOpacity={0} />
-              <stop offset="100%" stopColor="#000" stopOpacity={0.55} />
-            </radialGradient>
-          </defs>
-          <rect
-            x={VB_VIEW_X0}
-            y={VB_VIEW_Y0}
-            width={VB_VIEW_W}
-            height={VB_VIEW_H}
-            fill="url(#logosBeamMobile)"
-          />
-          <rect
-            x={VB_VIEW_X0}
-            y={VB_VIEW_Y0}
-            width={VB_VIEW_W}
-            height={VB_VIEW_H}
-            fill="url(#logosVignetteMobile)"
-          />
-        </svg>
-      )}
       <svg
         ref={svgRef}
         viewBox={`${VB_VIEW_X0} ${VB_VIEW_Y0} ${VB_VIEW_W} ${VB_VIEW_H}`}
@@ -687,16 +614,7 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
           height: "100vh",
           zIndex: 0,
           pointerEvents: "none",
-          background: staticMode ? "transparent" : palette.bgDeep,
-          // On mobile we never unmount this SVG (the first rock
-          // rasterization is the one-time expensive operation and we
-          // don't want to pay it again on every light-on). Light
-          // toggle just fades CSS opacity here — iOS Safari keeps the
-          // cached filter bitmap and composites it at the new alpha,
-          // which is a cheap GPU operation. Desktop keeps opacity 1
-          // and uses the rAF-driven envelope instead.
-          opacity: staticMode ? (lightOn ? 1 : 0) : 1,
-          transition: staticMode ? "opacity 500ms ease" : undefined,
+          background: palette.bgDeep,
         }}
       >
         <defs>
@@ -806,15 +724,7 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
               lightingColor={palette.stoneLit}
               result="cursorLit"
             >
-              <fePointLight
-                ref={registerLight}
-                /* Static mobile parks the light upper-right of the
-                   view area ("right of the header"); desktop starts
-                   it centered and the rAF takes over from there. */
-                x={staticMode ? VB_VIEW_X0 + VB_VIEW_W * 0.82 : VBW / 2}
-                y={staticMode ? VB_VIEW_Y0 + VB_VIEW_H * 0.15 : VBH * 0.4}
-                z={cursorZ}
-              />
+              <fePointLight ref={registerLight} x={VBW / 2} y={VBH * 0.4} z={cursorZ} />
             </feDiffuseLighting>
 
             <feSpecularLighting
@@ -826,12 +736,7 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
               lightingColor={palette.stoneSpec}
               result="cursorSpec"
             >
-              <fePointLight
-                ref={registerLight}
-                x={staticMode ? VB_VIEW_X0 + VB_VIEW_W * 0.82 : VBW / 2}
-                y={staticMode ? VB_VIEW_Y0 + VB_VIEW_H * 0.15 : VBH * 0.4}
-                z={specZ}
-              />
+              <fePointLight ref={registerLight} x={VBW / 2} y={VBH * 0.4} z={specZ} />
             </feSpecularLighting>
 
             {/* Flames — left + right, offscreen below the chat. Initial
