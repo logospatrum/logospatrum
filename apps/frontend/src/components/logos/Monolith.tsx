@@ -116,15 +116,20 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, style
         }}
       />
 
-      {/* Textarea row — avatar (desktop only) + transparent textarea.
-          The textarea now blends into the card surface: no dark fill,
-          no inset border, no focus-state background flip. The cursor
-          itself is the input affordance; the card's subtle
-          translateY(-1px) on focus gives global feedback.
-          `.logos-monolith-row` styling lives in logos.css. */}
+      {/* Textarea row.
+
+          Desktop: avatar Σ | textarea | send button — the classic shape.
+          Mobile:  textarea only (avatar + desktop-send are hidden via
+                   `@media (max-width: 640px)`); send + style live in a
+                   separate controls strip below the row.
+
+          The textarea is transparent and borderless on both viewports
+          so it visually merges with the card surface — the cursor
+          itself is the input affordance, and the card's translateY(-1px)
+          on focus gives global feedback. */}
       <div className="logos-monolith-row">
-        {/* Greek sigil — the system speaks first. Hidden on mobile via
-            `.logos-monolith-avatar { display: none }` media query. */}
+        {/* Greek sigil — desktop only. Hidden on mobile via
+            `.logos-monolith-avatar { display: none }`. */}
         <div
           className="logos-monolith-avatar"
           style={{
@@ -160,7 +165,7 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, style
           /* Single placeholder text — switching between long/short by
              `useMediaQuery` caused an SSR-vs-hydration content swap on
              mobile. The longer line wraps fine inside the taller mobile
-             textarea (min-height 64px = ~2 lines visible). */
+             textarea (min-height 56px = ~2 lines visible). */
           placeholder={s.chat.placeholder}
           rows={1}
           style={{
@@ -180,19 +185,14 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, style
             maxHeight: 200,
           }}
         />
-      </div>
 
-      {/* Controls strip — sits BELOW the textarea on the card surface
-          (out of the input itself). Style picker left, send right. Same
-          structure on desktop and mobile; the desktop variant just gets
-          slightly larger spacing. */}
-      <div className="logos-monolith-controls">
-        <div className="logos-monolith-controls-style">
-          <StyleSelect styleId={styleId} onChange={onStyleChange} />
-        </div>
+        {/* Desktop send button — flex sibling of textarea inside the
+            row. Hidden on mobile (`.logos-monolith-send-desktop {
+            display: none }`); the mobile send lives in the controls
+            strip below the row. */}
         <button
           type="button"
-          className="logos-monolith-send"
+          className="logos-monolith-send-desktop"
           onClick={busy && onStop ? onStop : send}
           disabled={!busy && !value.trim()}
           aria-label={busy ? s.chat.stopAria : s.chat.sendAria}
@@ -201,6 +201,8 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, style
             appearance: "none",
             border: 0,
             cursor: "default",
+            width: 40,
+            height: 40,
             borderRadius: "50%",
             background: busy
               ? palette.accent
@@ -238,8 +240,66 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, style
         </button>
       </div>
 
-      {/* Footer captions — keyboard hint + safety note. Desktop only;
-          hidden on mobile by `.logos-monolith-footer { display: none }`. */}
+      {/* Mobile-only controls strip — style picker left, send right —
+          sits below the textarea on the card surface. Hidden on
+          desktop where the send button lives in the row and the style
+          picker sits in the footer. */}
+      <div className="logos-monolith-controls">
+        <div className="logos-monolith-controls-style">
+          <StyleSelect styleId={styleId} onChange={onStyleChange} />
+        </div>
+        <button
+          type="button"
+          className="logos-monolith-send-mobile"
+          onClick={busy && onStop ? onStop : send}
+          disabled={!busy && !value.trim()}
+          aria-label={busy ? s.chat.stopAria : s.chat.sendAria}
+          style={{
+            flexShrink: 0,
+            appearance: "none",
+            border: 0,
+            cursor: "default",
+            borderRadius: "50%",
+            background: busy
+              ? palette.accent
+              : value.trim()
+                ? palette.accent
+                : "transparent",
+            color: value.trim() || busy ? palette.bg : palette.faint,
+            boxShadow: `inset 0 0 0 0.5px ${palette.hairline}`,
+            display: "grid",
+            placeItems: "center",
+            transition: "background 280ms ease, color 280ms ease",
+          }}
+        >
+          {busy ? (
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: "currentColor",
+                animation: "logos-pulse 1.4s ease-in-out infinite",
+              }}
+            />
+          ) : (
+            <svg width={14} height={14} viewBox="0 0 16 16" fill="none">
+              <path
+                d="M3 8h10M9 4l4 4-4 4"
+                stroke="currentColor"
+                strokeWidth={1.2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+        </button>
+      </div>
+
+      {/* Footer — desktop layout: keyboard hint | style picker | safety
+          note. Hidden on mobile by `.logos-monolith-footer { display:
+          none }` (mobile renders the style picker inside the controls
+          strip above, and drops the keyboard hint + safety text). */}
       <div
         className="logos-monolith-footer"
         style={{
@@ -253,6 +313,9 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, style
         <span className="logos-monolith-footer-enter" style={{ padding: "0 8px" }}>
           {s.chat.enterHint}
         </span>
+        <div className="logos-monolith-footer-style">
+          <StyleSelect styleId={styleId} onChange={onStyleChange} />
+        </div>
         <span className="logos-monolith-footer-safety" style={{ padding: "0 8px" }}>
           {s.chat.safety}
         </span>

@@ -828,32 +828,31 @@ a.citation-pill[data-active="true"] {
   }
 }
 
-/* ─── Monolith layout — textarea on the card surface, controls below ──
-   The textarea now blends into the card (transparent background, no
-   inset border). The send button + style picker sit in their own strip
-   BELOW the textarea, on the card surface — not floating inside the
-   textarea's box. Same structure on desktop and mobile; the mobile
-   variant hides the Σ avatar and the footer captions to maximise input
-   real estate, and trims the card's drop shadow to a hairline rim. */
+/* ─── Monolith layout — split between desktop and mobile ───────────────
+   DESKTOP (default): the original shape — Σ avatar | textarea | send
+   button in a flex row, with the footer below carrying keyboard hint +
+   style picker + safety caption.
+   MOBILE (`@media (max-width: 640px)`): textarea fills the row, avatar
+   hidden, desktop-send hidden; a separate controls strip BELOW the row
+   carries the style picker on the left and a smaller send button on
+   the right; footer hidden entirely.
+   The textarea itself is transparent on both viewports so it visually
+   merges with the card. The card also drops its heavy outer shadows on
+   mobile down to a single 0.5px hairline rim.
+
+   Two send buttons + two style pickers are rendered in the DOM (one
+   for each layout, the wrong one hidden via `display: none`). They all
+   share the same React handlers and `styleId` state, so the duplication
+   is purely a positioning artefact — there's no state divergence. */
 .logos-monolith-row {
   display: flex;
   align-items: flex-end;
   gap: 18px;
-  padding: 22px 26px 8px 26px;
+  padding: 22px 22px 22px 26px;
 }
 .logos-monolith-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 6px 18px 14px;
-}
-.logos-monolith-controls-style {
-  /* Wrapper for StyleSelect so the flex layout treats it as one item. */
-}
-.logos-monolith-send {
-  width: 40px;
-  height: 40px;
+  /* Mobile-only strip — hidden on desktop. */
+  display: none;
 }
 .logos-monolith-footer {
   display: flex;
@@ -876,7 +875,8 @@ a.citation-pill[data-active="true"] {
     padding: 16px 18px 4px;
     gap: 0;
   }
-  .logos-monolith-avatar {
+  .logos-monolith-avatar,
+  .logos-monolith-send-desktop {
     display: none !important;
   }
   .logos-monolith-textarea {
@@ -884,9 +884,13 @@ a.citation-pill[data-active="true"] {
     min-height: 56px !important;  /* ~2 lines visible immediately */
   }
   .logos-monolith-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
     padding: 4px 14px 12px;
   }
-  .logos-monolith-send {
+  .logos-monolith-send-mobile {
     width: 32px !important;
     height: 32px !important;
   }
