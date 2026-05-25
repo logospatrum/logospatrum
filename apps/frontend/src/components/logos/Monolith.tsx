@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { palette, type } from "./tokens";
 import { useStrings } from "./i18n";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { StyleSelect } from "./StyleSelect";
 import type { StyleId } from "./styles";
 
@@ -29,7 +28,6 @@ interface Props {
 
 export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, styleId, onStyleChange }: Props) {
   const { s } = useStrings();
-  const isNarrow = useMediaQuery("(max-width: 640px)");
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
@@ -62,6 +60,7 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, style
 
   return (
     <div
+      className="logos-monolith-card"
       style={{
         position: "relative",
         // Sit above the ScrollToBottom pill (zIndex 6 in the same wrapper).
@@ -77,6 +76,8 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, style
         background: `linear-gradient(180deg,
           color-mix(in oklab, ${palette.surfaceHi} 96%, transparent),
           color-mix(in oklab, ${palette.surface}   96%, transparent))`,
+        // Heavy drop shadows are overridden on mobile (@media) to a thin
+        // hairline-only frame — see `.logos-monolith-card` in logos.css.
         boxShadow: `
           0 1px 0 rgba(${palette.light}, 0.06) inset,
           0 0 0 0.5px ${palette.hairline} inset,
@@ -115,16 +116,17 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, style
         }}
       />
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-end",
-          gap: 18,
-          padding: "22px 22px 22px 26px",
-        }}
-      >
-        {/* Greek sigil — the system speaks first. */}
+      {/* Textarea row — avatar (desktop only) + transparent textarea.
+          The textarea now blends into the card surface: no dark fill,
+          no inset border, no focus-state background flip. The cursor
+          itself is the input affordance; the card's subtle
+          translateY(-1px) on focus gives global feedback.
+          `.logos-monolith-row` styling lives in logos.css. */}
+      <div className="logos-monolith-row">
+        {/* Greek sigil — the system speaks first. Hidden on mobile via
+            `.logos-monolith-avatar { display: none }` media query. */}
         <div
+          className="logos-monolith-avatar"
           style={{
             flexShrink: 0,
             width: 36,
@@ -144,6 +146,7 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, style
 
         <textarea
           ref={taRef}
+          className="logos-monolith-textarea"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onFocus={() => setFocused(true)}
@@ -154,37 +157,42 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, style
               send();
             }
           }}
-          placeholder={isNarrow ? s.chat.placeholderShort : s.chat.placeholder}
+          /* Single placeholder text — switching between long/short by
+             `useMediaQuery` caused an SSR-vs-hydration content swap on
+             mobile. The longer line wraps fine inside the taller mobile
+             textarea (min-height 64px = ~2 lines visible). */
+          placeholder={s.chat.placeholder}
           rows={1}
           style={{
             flex: 1,
             resize: "none",
             border: 0,
             outline: 0,
-            // Darker fill than the surrounding pill makes it visually
-            // obvious that THIS is where you type. Without it the textarea
-            // dissolves into the gradient and new visitors miss the input
-            // entirely.
-            background: focused ? "rgba(0, 0, 0, 0.38)" : "rgba(0, 0, 0, 0.28)",
-            boxShadow: focused
-              ? `inset 0 0 0 0.5px rgba(${palette.light}, 0.22)`
-              : `inset 0 0 0 0.5px ${palette.hairline}`,
-            borderRadius: 12,
+            background: "transparent",
             color: palette.text,
             caretColor: palette.accent,
             fontFamily: type.ui,
             fontSize: 17,
             lineHeight: 1.5,
             letterSpacing: "0.005em",
-            padding: "10px 14px",
+            padding: "10px 0",
             minHeight: 40,
             maxHeight: 200,
-            transition: "background 240ms ease, box-shadow 240ms ease",
           }}
         />
+      </div>
 
+      {/* Controls strip — sits BELOW the textarea on the card surface
+          (out of the input itself). Style picker left, send right. Same
+          structure on desktop and mobile; the desktop variant just gets
+          slightly larger spacing. */}
+      <div className="logos-monolith-controls">
+        <div className="logos-monolith-controls-style">
+          <StyleSelect styleId={styleId} onChange={onStyleChange} />
+        </div>
         <button
           type="button"
+          className="logos-monolith-send"
           onClick={busy && onStop ? onStop : send}
           disabled={!busy && !value.trim()}
           aria-label={busy ? s.chat.stopAria : s.chat.sendAria}
@@ -193,8 +201,6 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, style
             appearance: "none",
             border: 0,
             cursor: "default",
-            width: 40,
-            height: 40,
             borderRadius: "50%",
             background: busy
               ? palette.accent
@@ -232,13 +238,11 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, style
         </button>
       </div>
 
+      {/* Footer captions — keyboard hint + safety note. Desktop only;
+          hidden on mobile by `.logos-monolith-footer { display: none }`. */}
       <div
+        className="logos-monolith-footer"
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 12,
-          padding: "0 18px 14px",
           fontFamily: type.mono,
           fontSize: 10,
           letterSpacing: "0.18em",
@@ -246,11 +250,12 @@ export function Monolith({ onSubmit, busy, onStop, onFocusChange, prefill, style
           color: palette.faint,
         }}
       >
-        {!isNarrow && <span style={{ padding: "0 8px" }}>{s.chat.enterHint}</span>}
-        <div style={isNarrow ? { marginRight: "auto" } : undefined}>
-          <StyleSelect styleId={styleId} onChange={onStyleChange} />
-        </div>
-        <span style={{ padding: "0 8px" }}>{s.chat.safety}</span>
+        <span className="logos-monolith-footer-enter" style={{ padding: "0 8px" }}>
+          {s.chat.enterHint}
+        </span>
+        <span className="logos-monolith-footer-safety" style={{ padding: "0 8px" }}>
+          {s.chat.safety}
+        </span>
       </div>
     </div>
   );

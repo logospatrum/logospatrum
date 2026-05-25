@@ -21,7 +21,6 @@ import {
 } from "@/lib/export-markdown";
 
 import { tweaks } from "./tokens";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { LangContext, useLangState, useStrings } from "./i18n";
 // Background stays eager: it IS the visual brand of the landing page
 // (rock plate, cursor lighting, flames). Lazy-loading it left users
@@ -66,21 +65,26 @@ const LIGHT_STORAGE_KEY = "logos:lightOn";
 // The whole shell is one big client component because it owns the
 // stream/thread state machine for the chat. Keeping it monolithic mirrors
 // the design's `app.js` `App()` and avoids prop-drilling palette/i18n.
-export function LogosShell() {
+//
+// `initialLightOn` comes from the server (page.tsx reads the `pat_light`
+// cookie) so the very first render — both SSR and the first client
+// commit — already matches the user's saved preference. Without this
+// prop the old useState(true) → useEffect → setLightOnState dance flashed
+// the lights on for ~1 frame even when the user had them turned off.
+export function LogosShell({ initialLightOn = true }: { initialLightOn?: boolean }) {
   const langState = useLangState();
   return (
     <LangContext.Provider value={langState}>
-      <LogosInner />
+      <LogosInner initialLightOn={initialLightOn} />
     </LangContext.Provider>
   );
 }
 
-function LogosInner() {
+function LogosInner({ initialLightOn }: { initialLightOn: boolean }) {
   const { s, lang, setLang } = useStrings();
   const stream = useStreamContext();
   const { threads } = useThreads();
   const { removeThread } = useThreadStore();
-  const isNarrow = useMediaQuery("(max-width: 640px)");
 
   // URL-driven threadId — read from the same StreamProvider hook so both
   // the stream's history-loader and this shell stay in sync without a
@@ -131,20 +135,19 @@ function LogosInner() {
   const monoWrapperRef = useRef<HTMLDivElement | null>(null);
   const prevInChatRef = useRef<boolean>(inChat);
   const prevRectRef = useRef<DOMRect | null>(null);
-  const [lightOn, setLightOnState] = useState(true);
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(LIGHT_STORAGE_KEY);
-      if (raw === "0") setLightOnState(false);
-      else if (raw === "1") setLightOnState(true);
-    } catch {
-      /* localStorage may throw in privacy mode */
-    }
-  }, []);
+  // Initialised from the server-known cookie value, so SSR HTML already
+  // reflects the user's last toggle. No useEffect-driven flip after
+  // hydration → no light-flash for users who had it turned off.
+  const [lightOn, setLightOnState] = useState(initialLightOn);
   const toggleLight = useCallback(() => {
     setLightOnState((v) => {
       const next = !v;
       try {
+        // Cookie so the server knows the value on the next page load
+        // (eliminates the post-hydration flicker). max-age = 1 year.
+        document.cookie = `pat_light=${next ? "1" : "0"}; path=/; max-age=31536000; samesite=lax`;
+        // localStorage kept as a backup readable on the client even if
+        // the cookie is stripped by privacy modes.
         localStorage.setItem(LIGHT_STORAGE_KEY, next ? "1" : "0");
       } catch {
         /* swallow */
@@ -504,14 +507,15 @@ function LogosInner() {
 
       {/* BottomChrome — always mounted; visibility fades with home mode
           so the corpus/clock strip doesn't flash on mount/unmount when
-          switching to a chat. Hidden on narrow viewports where the
-          bottom-pinned Monolith already occupies the same band. */}
+          switching to a chat. Hidden on `@media (max-width: 640px)`
+          via `.logos-bottom-chrome-wrap` in logos.css (the bottom-
+          pinned Monolith already occupies the same band on mobile).
+          inChat is driven by data-attribute so the CSS owns the
+          full visibility logic and there's no isNarrow-induced
+          opacity flip after hydration. */}
       <div
-        style={{
-          opacity: !inChat && !isNarrow ? 1 : 0,
-          transition: "opacity 360ms ease",
-          pointerEvents: "none",
-        }}
+        className="logos-bottom-chrome-wrap"
+        data-in-chat={inChat ? "true" : "false"}
       >
         <BottomChrome />
       </div>

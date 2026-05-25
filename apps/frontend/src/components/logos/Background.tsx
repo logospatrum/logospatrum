@@ -223,6 +223,23 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
   // switched in from the sidebar (see git history).
   const cursorPeakDiff = baseCursor * progress * lightK;
   const cursorPeakSpec = baseSpec * progress * lightK;
+
+  // Cursor lighting constants written into the JSX on the VERY FIRST
+  // render — i.e. into the SSR HTML. The rAF loop below takes over as
+  // the sole writer once it mounts (via `setAttribute`), so subsequent
+  // re-renders of this component don't fight the animation. Capturing
+  // through `useRef(...).current` pins the value to first-render data:
+  //   - `lightOn` reflects the server-known cookie (default true), so
+  //     SSR shows the cursor halo immediately for users who have the
+  //     light on — no waiting for JS to hydrate before it draws.
+  //   - When the user has the light off, both initial values are 0 and
+  //     the SVG starts dark, matching their preference from frame one.
+  const initialCursorDiffConstant = useRef(
+    lightOn ? cursorPeakDiff : 0,
+  ).current;
+  const initialCursorSpecConstant = useRef(
+    lightOn ? cursorPeakSpec : 0,
+  ).current;
   const ambientIntensity = isCursorActive
     ? ambientTorchLamp
     : lightSource === "reading"
@@ -614,7 +631,7 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
               ref={cursorDiffRef}
               in="rockSharp"
               surfaceScale={surfaceScale}
-              diffuseConstant={0}
+              diffuseConstant={initialCursorDiffConstant}
               lightingColor={palette.stoneLit}
               result="cursorLit"
             >
@@ -625,7 +642,7 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
               ref={cursorSpecRef}
               in="rockSharp"
               surfaceScale={surfaceScale}
-              specularConstant={0}
+              specularConstant={initialCursorSpecConstant}
               specularExponent={specExponent}
               lightingColor={palette.stoneSpec}
               result="cursorSpec"

@@ -1,3 +1,5 @@
+"use client";
+
 // apps/frontend/src/providers/Stream.tsx
 import React, {
   createContext,

@@ -2,19 +2,21 @@
 
 import { palette, type } from "./tokens";
 import { useStrings } from "./i18n";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export function Quote({ show }: { show: boolean }) {
   const { s } = useStrings();
-  const isNarrow = useMediaQuery("(max-width: 640px)");
+  // Padding (`72px 140px` on desktop, `32px 20px` on `@media
+  // (max-width: 640px)`) is set via `.logos-quote-figure` in logos.css.
+  // Moved off `useMediaQuery` to avoid the SSR-vs-hydration shift that
+  // collapsed the halo from desktop spacing to mobile spacing after JS
+  // loaded.
   return (
     <figure
+      className="logos-quote-figure"
       style={{
         position: "relative",
         margin: 0,
         textAlign: "center",
-        // Padding leaves room for the dark halo to extend past the glyphs.
-        padding: isNarrow ? "32px 20px" : "72px 140px",
         opacity: show ? 1 : 0,
         transform: show ? "translateY(0)" : "translateY(-6px)",
         transition: "opacity 800ms ease, transform 800ms ease",

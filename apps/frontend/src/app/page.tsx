@@ -1,4 +1,4 @@
-"use client";
+import { cookies } from "next/headers";
 
 import { LogosShell } from "@/components/logos/LogosShell";
 import { StreamProvider } from "@/providers/Stream";
@@ -23,13 +23,20 @@ import React from "react";
 // messages or artifacts, and nothing inside LogosShell calls useArtifact().
 // If that capability returns, wire the provider back here and add an
 // artifact panel inside LogosShell.
-export default function HomePage(): React.ReactNode {
+export default async function HomePage(): Promise<React.ReactNode> {
+  // `pat_light` cookie carries the user's last LIGHT toggle. Reading it
+  // here (server component) lets us hand the correct initial value to
+  // LogosShell *before* SSR, so the rendered HTML already reflects the
+  // user's preference — no `useState(true)` → useEffect → flip flicker
+  // after hydration. Missing or unrecognised value defaults to ON.
+  const cookieStore = await cookies();
+  const initialLightOn = cookieStore.get("pat_light")?.value !== "0";
   return (
     <>
       <Toaster theme="dark" />
       <ThreadProvider>
         <StreamProvider>
-          <LogosShell />
+          <LogosShell initialLightOn={initialLightOn} />
         </StreamProvider>
       </ThreadProvider>
     </>

@@ -755,3 +755,142 @@ a.citation-pill[data-active="true"] {
     z-index: 6;
   }
 }
+
+/* ─── Mobile-responsive chrome (CSS-only — no useMediaQuery) ─────────
+   Everything below is the *layout* axis of mobile responsiveness. We
+   replaced JS `useMediaQuery("(max-width: 640px)")` with `@media`
+   queries here because the JS hook defaults to `false` on SSR and the
+   first client render, then flips after `useEffect`. That flip caused a
+   visible relayout on every mobile cold load: TopChrome padding, Quote
+   padding, Monolith chrome, ChatBackdrop width — all jumped at once
+   when isNarrow finally became true. Pure CSS media queries are
+   deterministic from the very first paint. */
+
+/* ─── TopChrome ─────────────────────────────────────────────────────── */
+.logos-top-chrome {
+  padding: 26px 36px 26px 76px;
+}
+.logos-top-chrome-right {
+  margin-left: 0;
+}
+@media (max-width: 640px) {
+  .logos-top-chrome {
+    padding: 16px 16px 16px 60px;
+  }
+  .logos-top-chrome-brand,
+  .logos-top-chrome-library,
+  .logos-top-chrome-connect {
+    display: none !important;
+  }
+  .logos-top-chrome-right {
+    margin-left: auto;
+  }
+}
+
+/* ─── Quote ─────────────────────────────────────────────────────────── */
+.logos-quote-figure {
+  padding: 72px 140px;
+}
+@media (max-width: 640px) {
+  .logos-quote-figure {
+    padding: 32px 20px;
+  }
+}
+
+/* ─── ChatBackdrop ──────────────────────────────────────────────────── */
+.logos-chat-backdrop {
+  width: min(1140px, 100vw);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, rgba(0,0,0,1) 80px, rgba(0,0,0,1) calc(100% - 80px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, rgba(0,0,0,1) 80px, rgba(0,0,0,1) calc(100% - 80px), transparent 100%);
+}
+@media (max-width: 720px) {
+  .logos-chat-backdrop {
+    width: 100vw;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
+/* ─── BottomChrome visibility — hidden on narrow (Monolith already
+       occupies the bottom band) and in chat mode. Toggled via
+       data-in-chat attribute on the wrapper. */
+.logos-bottom-chrome-wrap {
+  opacity: 1;
+  transition: opacity 360ms ease;
+  pointer-events: none;
+}
+.logos-bottom-chrome-wrap[data-in-chat="true"] {
+  opacity: 0;
+}
+@media (max-width: 640px) {
+  .logos-bottom-chrome-wrap {
+    opacity: 0;
+  }
+}
+
+/* ─── Monolith layout — textarea on the card surface, controls below ──
+   The textarea now blends into the card (transparent background, no
+   inset border). The send button + style picker sit in their own strip
+   BELOW the textarea, on the card surface — not floating inside the
+   textarea's box. Same structure on desktop and mobile; the mobile
+   variant hides the Σ avatar and the footer captions to maximise input
+   real estate, and trims the card's drop shadow to a hairline rim. */
+.logos-monolith-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  padding: 22px 26px 8px 26px;
+}
+.logos-monolith-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 18px 14px;
+}
+.logos-monolith-controls-style {
+  /* Wrapper for StyleSelect so the flex layout treats it as one item. */
+}
+.logos-monolith-send {
+  width: 40px;
+  height: 40px;
+}
+.logos-monolith-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px 14px;
+}
+@media (max-width: 640px) {
+  .logos-monolith-card {
+    /* Strip the heavy drop shadows on mobile — the card reads as a
+       lightly-rimmed surface, not a pillow. Keep only the 0.5px hairline
+       inset (the thinnest a border can render on retina) and the faint
+       top highlight. */
+    box-shadow:
+      0 1px 0 rgba(238, 232, 218, 0.06) inset,
+      0 0 0 0.5px rgba(238, 232, 218, 0.08) inset !important;
+  }
+  .logos-monolith-row {
+    padding: 16px 18px 4px;
+    gap: 0;
+  }
+  .logos-monolith-avatar {
+    display: none !important;
+  }
+  .logos-monolith-textarea {
+    font-size: 16px !important;   /* iOS won't auto-zoom on focus */
+    min-height: 56px !important;  /* ~2 lines visible immediately */
+  }
+  .logos-monolith-controls {
+    padding: 4px 14px 12px;
+  }
+  .logos-monolith-send {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .logos-monolith-footer {
+    display: none !important;
+  }
+}

@@ -2,7 +2,6 @@
 
 import { palette, type } from "./tokens";
 import { useStrings, type Lang } from "./i18n";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 interface Props {
   inChat: boolean;
@@ -31,9 +30,15 @@ export function TopChrome({
   connectSlot,
 }: Props) {
   const { s } = useStrings();
-  const isNarrow = useMediaQuery("(max-width: 640px)");
+  // Layout (padding) + which decorations show (brand pip, library /
+  // connect pills) are driven by `@media (max-width: 640px)` in
+  // logos.css, NOT by `useMediaQuery`. The JS hook defaulted to `false`
+  // on SSR and the first client render, which caused a visible
+  // padding+content jump on mobile cold loads as soon as
+  // `useEffect` flipped isNarrow to true.
   return (
     <header
+      className="logos-top-chrome"
       style={{
         position: "fixed",
         top: 0,
@@ -43,8 +48,6 @@ export function TopChrome({
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        // Extra left pad — the sidebar trigger sits there.
-        padding: isNarrow ? "16px 16px 16px 60px" : "26px 36px 26px 76px",
         fontFamily: type.mono,
         fontSize: 11,
         letterSpacing: "0.18em",
@@ -53,30 +56,30 @@ export function TopChrome({
         pointerEvents: "none",
       }}
     >
-      {!isNarrow && (
-        <div
-          style={{ display: "flex", alignItems: "center", gap: 14, pointerEvents: "auto" }}
-        >
-          <span
-            aria-hidden="true"
-            style={{
-              display: "inline-block",
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: palette.accent,
-              boxShadow: `0 0 12px ${palette.accent}`,
-              opacity: 0.7,
-            }}
-          />
-          <span>{s.brand}</span>
-        </div>
-      )}
       <div
-        style={{ display: "flex", alignItems: "center", gap: 8, pointerEvents: "auto", marginLeft: isNarrow ? "auto" : 0 }}
+        className="logos-top-chrome-brand"
+        style={{ display: "flex", alignItems: "center", gap: 14, pointerEvents: "auto" }}
       >
-        {!isNarrow && librarySlot}
-        {!isNarrow && connectSlot}
+        <span
+          aria-hidden="true"
+          style={{
+            display: "inline-block",
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            background: palette.accent,
+            boxShadow: `0 0 12px ${palette.accent}`,
+            opacity: 0.7,
+          }}
+        />
+        <span>{s.brand}</span>
+      </div>
+      <div
+        className="logos-top-chrome-right"
+        style={{ display: "flex", alignItems: "center", gap: 8, pointerEvents: "auto" }}
+      >
+        <span className="logos-top-chrome-library">{librarySlot}</span>
+        <span className="logos-top-chrome-connect">{connectSlot}</span>
 
         {inChat && (
           <button
