@@ -563,18 +563,16 @@ function LogosInner({ initialLightOn }: { initialLightOn: boolean }) {
             alignItems: "center",
             justifyContent: "center",
             gap: 64,
-            // Home mode is a single-screen experience: kill scroll so the
-            // browser doesn't preempt vertical finger drags as scroll
-            // (which would fire `pointercancel` mid-drag and freeze the
-            // cursor light under the finger). `touch-action: none` on the
-            // column tells the browser "this surface owns the touch — no
-            // scroll/zoom/pan gestures" so pointermove keeps streaming
-            // for the full drag. Chat mode flips back to `auto` because
-            // pointer-events: none lets touches fall through to the chat
-            // scroller behind, where native scrolling must work.
-            overflowY: inChat ? "auto" : "hidden",
+            // Native scroll on both home and chat. Earlier we set
+            // `touch-action: none` + `overflow-y: hidden` here to keep
+            // pointermove streaming so the cursor light could follow a
+            // finger drag on mobile — but the mobile background is now
+            // a static cached bitmap (no rAF, no pointer tracking — see
+            // Background.tsx::useStaticBackground), so there's nothing
+            // left to protect and the browser's native scroll path is
+            // both cheaper and more idiomatic.
+            overflowY: "auto",
             overflowX: "hidden",
-            touchAction: inChat ? "auto" : "none",
             scrollbarGutter: "stable",
             scrollbarWidth: "thin",
             scrollbarColor: "rgba(255,255,255,0.10) transparent",

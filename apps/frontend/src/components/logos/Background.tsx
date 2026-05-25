@@ -16,6 +16,33 @@ function useReducedMotion(): boolean {
   return reduced;
 }
 
+/**
+ * True on small viewports OR pure-touch devices. Phones can't keep up
+ * with the rAF-driven SVG filter chain (iOS Safari software-rasterizes
+ * feTurbulence/feDisplacementMap on the CPU at the full viewport size
+ * every frame) — the phone overheats and the page locks. On these
+ * devices we render the rock filter ONCE and skip both rAF loops, so
+ * iOS caches the filter output as a static bitmap and subsequent
+ * scrolls/taps just composite the cached layer. One slow initial paint
+ * (~500ms-2s on iPhone 14 Pro) buys an otherwise smooth experience.
+ *
+ * Set ONCE on mount — no resize/change listener — because flipping
+ * static mode mid-session would tear down the rAF loops asymmetrically.
+ * The trade is: rotating a tablet from portrait (~640px) into landscape
+ * (≥641px) keeps it in static mode until the next page load.
+ */
+function useStaticBackground(): boolean {
+  const [v, setV] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setV(
+      window.matchMedia("(max-width: 640px)").matches ||
+        window.matchMedia("(hover: none)").matches,
+    );
+  }, []);
+  return v;
+}
+
 // Three-state machine for the whole stage's lighting:
 //   "cursor"   — landing. Cursor drives a moving point-light on the rock.
 //   "thinking" — chat is mid-stream. Cursor light is off, two offscreen
@@ -83,6 +110,7 @@ const FLAME_SPEC = "#ffd28a";
 
 export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props) {
   const reducedMotion = useReducedMotion();
+  const staticMode = useStaticBackground();
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   // We hold every fePointLight in this array so JS can swing them in
@@ -164,13 +192,16 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
       setRenderHeavy(true);
       return undefined;
     }
-    if (reducedMotion) {
+    // Reduced-motion + static-mobile both skip the cinematic fade —
+    // we can't fade without a rAF, and on mobile the rAF is exactly
+    // what we're trying to avoid.
+    if (reducedMotion || staticMode) {
       setRenderHeavy(false);
       return undefined;
     }
     const t = window.setTimeout(() => setRenderHeavy(false), 1500);
     return () => window.clearTimeout(t);
-  }, [lightOn, reducedMotion]);
+  }, [lightOn, reducedMotion, staticMode]);
 
   const registerLight = useCallback((el: SVGFEPointLightElement | null) => {
     if (el && !lightsRef.current.includes(el)) lightsRef.current.push(el);
@@ -262,6 +293,10 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
     if (lightSource !== "cursor") return undefined;
     if (reducedMotion) return undefined;
     if (!renderHeavy) return undefined;
+    // Static mobile path: no rAF, no pointer tracking. The cursor light
+    // sits at a fixed top-right position (set in JSX below) and is held
+    // bright by the setAttribute effect a bit lower in this file.
+    if (staticMode) return undefined;
     let raf = 0;
     let tx = VBW * 0.5, ty = VBH * 0.4;
     let cx = tx, cy = ty;
@@ -347,7 +382,7 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
       window.removeEventListener("pointercancel", onUp, true);
       cancelAnimationFrame(raf);
     };
-  }, [lightSource, reducedMotion, renderHeavy]);
+  }, [lightSource, reducedMotion, renderHeavy, staticMode]);
 
   // ── Flame + cross-shadow + cursor + master envelopes ── runs whenever
   // the heavy SVG is mounted. Tearing down with renderHeavy=false lets us
@@ -356,6 +391,13 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
   useEffect(() => {
     if (reducedMotion) return undefined;
     if (!renderHeavy) return undefined;
+    // Static mobile path: skip the whole flame/ambient/cursor envelope
+    // loop. Ambient stays at its JSX-initial diffuseConstant
+    // (= ambientIntensity), cursor diff/spec stay at the values written
+    // by the one-shot setAttribute effect below, and flames stay at 0.
+    // The rock filter then has a steady input → iOS caches the
+    // rasterized output and reuses it across frames.
+    if (staticMode) return undefined;
     const baseLX = VBW * 0.30, baseRX = VBW * 0.70;
     const baseY = VBH * 1.15;
     let raf = 0;
@@ -486,7 +528,28 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [cursorPeakDiff, cursorPeakSpec, reducedMotion, renderHeavy]);
+  }, [cursorPeakDiff, cursorPeakSpec, reducedMotion, renderHeavy, staticMode]);
+
+  // ── Static mobile: pin the cursor light at its peak intensity ──
+  // The rAF envelopes that normally lerp cursor diff/spec from 0 → peak
+  // never run in static mode, so we set the attributes ourselves once
+  // the heavy SVG mounts. Without this, the SSR-initial values
+  // (controlled by `lightOn` via useRef capture above) might still be 0
+  // for users whose pat_light cookie was off at first render, leaving
+  // the rock looking dark on mobile even though they later toggled
+  // light back on.
+  useEffect(() => {
+    if (!staticMode) return;
+    if (!renderHeavy) return;
+    const cursorDiff = lightOn ? cursorPeakDiff : 0;
+    const cursorSpec = lightOn ? cursorPeakSpec : 0;
+    cursorDiffRef.current?.setAttribute("diffuseConstant", cursorDiff.toFixed(3));
+    cursorSpecRef.current?.setAttribute("specularConstant", cursorSpec.toFixed(3));
+    ambientDiffRef.current?.setAttribute(
+      "diffuseConstant",
+      (lightOn ? ambientPeakRef.current : 0).toFixed(3),
+    );
+  }, [staticMode, renderHeavy, lightOn, cursorPeakDiff, cursorPeakSpec]);
 
   // When LIGHT is off and the fade-out timer has fired, drop the heavy
   // filter graph but keep a minimal SVG carrying ONLY:
@@ -677,7 +740,15 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
               lightingColor={palette.stoneLit}
               result="cursorLit"
             >
-              <fePointLight ref={registerLight} x={VBW / 2} y={VBH * 0.4} z={cursorZ} />
+              <fePointLight
+                ref={registerLight}
+                /* Static mobile parks the light upper-right of the
+                   view area ("right of the header"); desktop starts
+                   it centered and the rAF takes over from there. */
+                x={staticMode ? VB_VIEW_X0 + VB_VIEW_W * 0.82 : VBW / 2}
+                y={staticMode ? VB_VIEW_Y0 + VB_VIEW_H * 0.15 : VBH * 0.4}
+                z={cursorZ}
+              />
             </feDiffuseLighting>
 
             <feSpecularLighting
@@ -689,7 +760,12 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
               lightingColor={palette.stoneSpec}
               result="cursorSpec"
             >
-              <fePointLight ref={registerLight} x={VBW / 2} y={VBH * 0.4} z={specZ} />
+              <fePointLight
+                ref={registerLight}
+                x={staticMode ? VB_VIEW_X0 + VB_VIEW_W * 0.82 : VBW / 2}
+                y={staticMode ? VB_VIEW_Y0 + VB_VIEW_H * 0.15 : VBH * 0.4}
+                z={specZ}
+              />
             </feSpecularLighting>
 
             {/* Flames — left + right, offscreen below the chat. Initial
