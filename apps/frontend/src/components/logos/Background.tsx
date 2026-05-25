@@ -270,8 +270,13 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
     // Pointer-type tracking: see `pointerTypeRef` declaration above.
     // We mirror into the ref so the master-envelope effect (separate
     // useEffect) can also gate dim conditions by pointer type.
-    const onMove = (e: PointerEvent) => {
-      pointerTypeRef.current = e.pointerType || "mouse";
+    //
+    // `setTarget` updates tx/ty + pxX/pxY from any pointer event.
+    // The rAF lerp below is the SAME for mouse and touch — slow,
+    // meditative trail. Touch drags fire `pointermove` continuously,
+    // so the light glides under the finger the same way it does under
+    // the cursor on desktop.
+    const setTarget = (e: PointerEvent) => {
       const r = svgRef.current?.getBoundingClientRect();
       if (!r) return;
       // Map element pixels to the *visible* user-space window so the
@@ -282,13 +287,22 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
       pxX = e.clientX;
       pxY = e.clientY;
     };
+    const onMove = (e: PointerEvent) => {
+      pointerTypeRef.current = e.pointerType || "mouse";
+      setTarget(e);
+    };
     // Primary button only. Capture phase so child stopPropagation can't break it.
     // Touch pointers don't toggle pressedRef — every touch is a press,
-    // so applying the dim on touch would make the light vanish under
-    // the user's finger on every tap / swipe.
+    // so applying the press-dim would make the light vanish under the
+    // user's finger on every tap / swipe. We also don't snap on
+    // pointerdown — the lerp catching up from the previous resting
+    // point is exactly the trail the user wants.
     const onDown = (e: PointerEvent) => {
       pointerTypeRef.current = e.pointerType || "mouse";
-      if (e.button === 0 && e.pointerType === "mouse") pressedRef.current = true;
+      setTarget(e);
+      if (e.pointerType === "mouse" && e.button === 0) {
+        pressedRef.current = true;
+      }
     };
     const onUp = (e: PointerEvent) => {
       if (e.button === 0 && e.pointerType === "mouse") pressedRef.current = false;
@@ -305,15 +319,15 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
         return;
       }
       lastWrite = now;
-      // Mouse: meditative 0.06 / 0.10 (monumental, slow follow).
-      // Touch: 0.30 / 0.40 — finger and light stay visually attached.
-      const isMouse = pointerTypeRef.current === "mouse";
-      const kSvg = isMouse ? 0.06 : 0.30;
-      const kPx = isMouse ? 0.10 : 0.40;
-      cx += (tx - cx) * kSvg;
-      cy += (ty - cy) * kSvg;
-      cpxX += (pxX - cpxX) * kPx;
-      cpxY += (pxY - cpxY) * kPx;
+      // Meditative 0.06 / 0.10 lerp — slow follow that reads as a
+      // monumental, drifting halo. Identical for mouse and touch:
+      // pointermove fires continuously during a finger drag on every
+      // modern mobile browser, so the same gentle catch-up creates the
+      // same trail under a finger that it does under a cursor.
+      cx += (tx - cx) * 0.06;
+      cy += (ty - cy) * 0.06;
+      cpxX += (pxX - cpxX) * 0.10;
+      cpxY += (pxY - cpxY) * 0.10;
       const sx = cx.toFixed(1), sy = cy.toFixed(1);
       for (const l of lightsRef.current) {
         l.setAttribute("x", sx);
