@@ -117,6 +117,13 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
   const flameEnvRef = useRef(0);
   const cursorEnvRef = useRef(1);
   const pressedRef = useRef(false);
+  // Most recent pointer type. Touch pointers shouldn't trigger the
+  // press-dim or the focus-dim — both are mouse-centric behaviours
+  // (clicking to grab attention, mouse leaving the rock while typing).
+  // On touch the user expects the light to track the finger and stay
+  // visible underneath it. Updated in the cursor-follow effect and
+  // consumed in the cTarget computation in the master-envelope effect.
+  const pointerTypeRef = useRef<string>("mouse");
   // Master envelope for the LIGHT toggle. 1 = full scene (current default),
   // 0 = scene dimmed to nothing. Multiplied into ambient + cursor + flame
   // peaks so all three converge to zero at the same lerp rate before we
@@ -260,8 +267,11 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
     let cx = tx, cy = ty;
     let pxX = window.innerWidth / 2, pxY = window.innerHeight * 0.4;
     let cpxX = pxX, cpxY = pxY;
-
+    // Pointer-type tracking: see `pointerTypeRef` declaration above.
+    // We mirror into the ref so the master-envelope effect (separate
+    // useEffect) can also gate dim conditions by pointer type.
     const onMove = (e: PointerEvent) => {
+      pointerTypeRef.current = e.pointerType || "mouse";
       const r = svgRef.current?.getBoundingClientRect();
       if (!r) return;
       // Map element pixels to the *visible* user-space window so the
@@ -273,8 +283,16 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
       pxY = e.clientY;
     };
     // Primary button only. Capture phase so child stopPropagation can't break it.
-    const onDown = (e: PointerEvent) => { if (e.button === 0) pressedRef.current = true; };
-    const onUp   = (e: PointerEvent) => { if (e.button === 0) pressedRef.current = false; };
+    // Touch pointers don't toggle pressedRef — every touch is a press,
+    // so applying the dim on touch would make the light vanish under
+    // the user's finger on every tap / swipe.
+    const onDown = (e: PointerEvent) => {
+      pointerTypeRef.current = e.pointerType || "mouse";
+      if (e.button === 0 && e.pointerType === "mouse") pressedRef.current = true;
+    };
+    const onUp = (e: PointerEvent) => {
+      if (e.button === 0 && e.pointerType === "mouse") pressedRef.current = false;
+    };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerdown", onDown, true);
     window.addEventListener("pointerup", onUp, true);
@@ -287,11 +305,15 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
         return;
       }
       lastWrite = now;
-      // Slow follow — heavy, monumental.
-      cx += (tx - cx) * 0.06;
-      cy += (ty - cy) * 0.06;
-      cpxX += (pxX - cpxX) * 0.10;
-      cpxY += (pxY - cpxY) * 0.10;
+      // Mouse: meditative 0.06 / 0.10 (monumental, slow follow).
+      // Touch: 0.30 / 0.40 — finger and light stay visually attached.
+      const isMouse = pointerTypeRef.current === "mouse";
+      const kSvg = isMouse ? 0.06 : 0.30;
+      const kPx = isMouse ? 0.10 : 0.40;
+      cx += (tx - cx) * kSvg;
+      cy += (ty - cy) * kSvg;
+      cpxX += (pxX - cpxX) * kPx;
+      cpxY += (pxY - cpxY) * kPx;
       const sx = cx.toFixed(1), sy = cy.toFixed(1);
       for (const l of lightsRef.current) {
         l.setAttribute("x", sx);
@@ -420,11 +442,17 @@ export function Background({ lightSource, lightOn, chatCount, dimCursor }: Props
       // remains the single writer of the cursor diffuse/spec attributes
       // and any cached "0.750" from the previous mode gets cleanly faded
       // out to 0.
+      // Touch pointers skip the press-dim AND the focus-dim — both are
+      // mouse-centric behaviours and on touch the light should stay
+      // bright wherever the finger last landed. pressedRef itself is
+      // gated on the input side too (onDown only sets it for mouse),
+      // but dimCursorRef is driven by `inputFocused` from the parent
+      // and doesn't know about pointer type — we gate it here.
+      const isMousePointer = pointerTypeRef.current === "mouse";
       const cTarget =
         lightSourceRef.current !== "cursor" ||
-        pressedRef.current ||
-        dimCursorRef.current ||
-        !lightOnRef.current
+        !lightOnRef.current ||
+        (isMousePointer && (pressedRef.current || dimCursorRef.current))
           ? 0
           : 1;
       let cEnv = cursorEnvRef.current;
