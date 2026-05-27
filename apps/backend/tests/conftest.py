@@ -104,11 +104,11 @@ async def db_with_paragraphs(db_with_seed_authors):
         """)
         await c.execute("""
             INSERT INTO embeddings (work_slug, chapter_num, para_num, window_size, vector, text_for_lexical) VALUES
-            ('lestvichnik_lestvica', 4, 1, 1, ARRAY_FILL(0::float4, ARRAY[1024])::vector,
+            ('lestvichnik_lestvica', 4, 1, 1, ARRAY_FILL(0::float4, ARRAY[1024])::halfvec(1024),
              to_tsvector('russian', 'послушание есть совершенное отречение от своей души')),
-            ('lestvichnik_lestvica', 4, 2, 1, ARRAY_FILL(0::float4, ARRAY[1024])::vector,
+            ('lestvichnik_lestvica', 4, 2, 1, ARRAY_FILL(0::float4, ARRAY[1024])::halfvec(1024),
              to_tsvector('russian', 'послушник тот кто имея тело по виду ум же ангельский не имеет вовсе своей воли')),
-            ('lestvichnik_lestvica', 1, 1, 1, ARRAY_FILL(0::float4, ARRAY[1024])::vector,
+            ('lestvichnik_lestvica', 1, 1, 1, ARRAY_FILL(0::float4, ARRAY[1024])::halfvec(1024),
              to_tsvector('russian', 'отречение от мира есть произвольная ненависть к похваляемому веществу'))
         """)
     yield
