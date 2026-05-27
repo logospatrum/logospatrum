@@ -396,13 +396,48 @@ async def run() -> None:
           flush=True)
 
     # --- Phase 1: parse all patristic MDs into in-memory dicts ---
+    #
+    # Two-pass: pass 1 collects (author_slug, work_title, source_url) per MD
+    # to detect title collisions across distinct works (azbyka occasionally
+    # hosts multiple separate works under the same frontmatter title — e.g.
+    # Григорий Чудотворец has two distinct "Беседа на Благовещение", Тихон
+    # Беллавин has three "Послание святейшего патриарха" with different
+    # subjects, etc.). For colliding (author, title) groups we append the
+    # last URL segment to disambiguate; non-colliding works keep the legacy
+    # slug shape so existing prod slugs / citations stay stable.
+    #
+    # Pass 2 parses each MD again and accumulates per-chapter rows.
     # Accumulator pattern: (work_slug, chapter_num) → {title, src, paragraphs}.
-    # Multiple MDs can legitimately land on the same (ws, cn) key because two
-    # different azbyka epubs occasionally share the same `book_title` in
-    # frontmatter (separate works just titled "Беседа на Благовещение",
-    # "Из пережитого", etc.). Last MD wins — matches legacy
-    # `_replace_paragraphs` DELETE-then-INSERT semantics.
-    print("[parse] reading patristic MDs into memory...", flush=True)
+    print("[parse] pass 1: detecting (author, title) collisions...", flush=True)
+    t0 = time.perf_counter()
+    # (author_slug, work_title) -> set of source_url
+    title_urls: dict[tuple, set] = {}
+    for path in patristic_files:
+        try:
+            parsed = parse_md(path)
+        except Exception:
+            continue
+        fm = parsed.frontmatter
+        an = fm.get("author", "").strip()
+        wt = fm.get("book_title", "").strip()
+        if not an or not wt:
+            continue
+        url = (fm.get("source_url") or "").strip()
+        title_urls.setdefault((slugify(an), wt), set()).add(url)
+    collisions = {k: urls for k, urls in title_urls.items() if len(urls) > 1}
+    print(f"[parse] pass 1 done in {time.perf_counter()-t0:.1f}s — "
+          f"{len(title_urls)} unique (author,title), "
+          f"{len(collisions)} colliding (need URL disambiguation)",
+          flush=True)
+
+    def _url_disamb(source_url: str) -> str:
+        """Last URL segment, slug-cleaned. Returns '' if URL missing."""
+        if not source_url:
+            return ""
+        seg = source_url.rstrip("/").rsplit("/", 1)[-1]
+        return slugify(seg)
+
+    print("[parse] pass 2: reading patristic MDs into memory...", flush=True)
     t0 = time.perf_counter()
     authors: dict[str, tuple] = {}    # slug -> (name, years, section)
     works: dict[str, tuple] = {}      # slug -> (author_slug, title, cd, sec, url)
@@ -433,7 +468,13 @@ async def run() -> None:
             chapter_num = _chapter_num_from_filename(path.name)
 
         author_slug = slugify(author_name)
-        work_slug = slugify(f"{author_slug}_{work_title}")
+        # Standard slug: slugify(author + title). Disambiguate with URL
+        # tail ONLY when this (author, title) collides with another work.
+        if (author_slug, work_title) in collisions:
+            url_tail = _url_disamb(fm.get("source_url") or "")
+            work_slug = slugify(f"{author_slug}_{work_title}_{url_tail}")
+        else:
+            work_slug = slugify(f"{author_slug}_{work_title}")
         rel_path = str(path.relative_to(settings.output_dir))
 
         authors.setdefault(author_slug, (
