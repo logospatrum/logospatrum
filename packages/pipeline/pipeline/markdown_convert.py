@@ -103,12 +103,29 @@ class MarkdownConverter:
         for sup in soup.select("a > sup"):
             sup.parent.decompose()
 
+        # Azbyka epubs use two distinct layouts:
+        #  - Calibre-style: each block is `<div class="...paragraph...">`
+        #    (older / typesetter route). Existing 92 authors mostly this.
+        #  - Plain HTML: `<p>`, `<h1>`–`<h6>`, `<blockquote>`, `<li>` directly
+        #    in the document (newer / liturgical books — Косма Маиумский,
+        #    Феодор Эдесский, ~10 authors observed).
+        #
+        # Strategy: try the div.paragraph layout first; if it yields nothing,
+        # fall back to scanning the standard block elements.
+        elements = soup.find_all(
+            "div", class_=lambda x: x and "paragraph" in x.split()
+        )
+        if not elements:
+            elements = soup.find_all(
+                ["h1", "h2", "h3", "h4", "h5", "h6", "p", "blockquote", "li"]
+            )
+
         lines = []
-        for element in soup.find_all('div', class_=lambda x: x and 'paragraph' in x.split()):
+        for element in elements:
             tag = element.name
             text = element.get_text(strip=False)
 
-            if not text:
+            if not text or not text.strip():
                 continue
 
             if tag == "h1":
@@ -119,6 +136,10 @@ class MarkdownConverter:
                 lines.append(f"### {text}\n")
             elif tag == "h4":
                 lines.append(f"#### {text}\n")
+            elif tag == "h5":
+                lines.append(f"##### {text}\n")
+            elif tag == "h6":
+                lines.append(f"###### {text}\n")
             elif tag == "blockquote":
                 lines.append(f"> {text}\n")
             elif tag == "li":
