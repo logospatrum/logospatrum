@@ -17,7 +17,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[0]
+REPO_ROOT = Path(__file__).resolve().parents[1]
 # Make backend package importable
 sys.path.insert(0, str(REPO_ROOT / "apps" / "backend" / "src"))
 
