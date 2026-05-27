@@ -8,10 +8,50 @@ from .config import Config
 from .models import WorkMetadata
 
 
+# Azbyka.ru added an auth-wall on epub downloads in 2026. Without a logged-in
+# session, /otechnik/books/download/<id>/<file>.epub returns 302 → /auth/, and
+# follow_redirects=True silently saves the HTML login page as the epub.
+#
+# Store the Cookie header value (verbatim from DevTools "Copy as cURL") in
+# packages/pipeline/.azbyka_session.txt (gitignored). Refresh when sessions
+# expire (look for HTML payloads instead of epubs in data/<author>/epubs/).
+#
+# Browser User-Agent helps avoid bot heuristics on the same endpoint.
+_AZBYKA_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+)
+
+
+def _load_azbyka_cookies(repo_root: Path) -> str | None:
+    path = repo_root / ".azbyka_session.txt"
+    if not path.exists():
+        return None
+    text = path.read_text(encoding="utf-8").strip()
+    return text or None
+
+
 class Downloader:
     def __init__(self, config: Config):
         self.config = config
-        self.client = httpx.Client(timeout=60.0, follow_redirects=True)
+        cookies_str = _load_azbyka_cookies(config.data_dir.parent)
+        headers = {"User-Agent": _AZBYKA_UA}
+        if cookies_str:
+            headers["Cookie"] = cookies_str
+            print(f"[downloader] using azbyka session cookies "
+                  f"({len(cookies_str)} chars)", flush=True)
+        else:
+            print("[downloader] WARNING: no .azbyka_session.txt found — "
+                  "downloads will likely be HTML login pages, not epubs",
+                  flush=True)
+        # follow_redirects=False so we DETECT the auth redirect instead of
+        # silently saving the login page. download_epub() will print a clear
+        # error if redirected.
+        self.client = httpx.Client(
+            timeout=60.0,
+            follow_redirects=False,
+            headers=headers,
+        )
 
     def close(self):
         self.client.close()
@@ -45,7 +85,23 @@ class Downloader:
 
         try:
             response = self.client.get(work.epub_url)
+            # Detect auth redirects explicitly (follow_redirects=False).
+            if response.status_code in (301, 302, 303, 307, 308):
+                target = response.headers.get("location", "?")
+                print(f"      [auth] {response.status_code} → {target[:80]}")
+                print(f"      Hint: refresh .azbyka_session.txt cookies")
+                return None
             response.raise_for_status()
+
+            # Guard against HTML payloads masquerading as epubs (defence in
+            # depth — if the redirect detection above ever misses, content
+            # sniffing catches it).
+            head = response.content[:4]
+            if head[:2] != b"PK":
+                ct = response.headers.get("content-type", "?")
+                print(f"      [skip] not a zip (Content-Type={ct}, "
+                      f"head={head!r})")
+                return None
 
             with open(epub_path, "wb") as f:
                 f.write(response.content)

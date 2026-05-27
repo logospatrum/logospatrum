@@ -184,7 +184,15 @@ source_url: {metadata.get('work_url', '')}
             global_section, author_name = self.extract_author_info(json_path)
             print(f"Converting: {metadata.get('title', 'Unknown')}")
 
-            chapters = self.read_epub(epub_path)
+            # Some epubs from azbyka.ru are corrupted (BadZipFile, missing
+            # OPF, etc.). Don't let a single bad file kill the whole batch —
+            # log and continue. read_epub may also fail on weird XML inside
+            # otherwise-valid epubs.
+            try:
+                chapters = self.read_epub(epub_path)
+            except Exception as e:
+                print(f"  [skip] read_epub failed: {type(e).__name__}: {e}")
+                continue
 
             for i, (chapter_title, chapter_content) in enumerate(chapters, 2):
                 if chapter_title == "Untitled":

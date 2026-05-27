@@ -58,10 +58,10 @@ class ConceptEntry(BaseModel):
 
 class WorkMetadata(BaseModel):
     title: str
-    work_url: str
+    work_url: str | None = None  # optional — legacy Bible JSONs lack this
     creation_date: str | None = None
     views: float = 0
-    section: str
+    section: str = ""  # optional — legacy Bible JSONs lack this
     epub_url: str | None = None
     annotation: str | None = None
     epub_path: str | None = None
