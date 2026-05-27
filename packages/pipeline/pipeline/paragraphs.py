@@ -396,13 +396,17 @@ async def run() -> None:
           flush=True)
 
     # --- Phase 1: parse all patristic MDs into in-memory dicts ---
+    # Accumulator pattern: (work_slug, chapter_num) → {title, src, paragraphs}.
+    # Multiple MDs can legitimately land on the same (ws, cn) key because two
+    # different azbyka epubs occasionally share the same `book_title` in
+    # frontmatter (separate works just titled "Беседа на Благовещение",
+    # "Из пережитого", etc.). Last MD wins — matches legacy
+    # `_replace_paragraphs` DELETE-then-INSERT semantics.
     print("[parse] reading patristic MDs into memory...", flush=True)
     t0 = time.perf_counter()
     authors: dict[str, tuple] = {}    # slug -> (name, years, section)
     works: dict[str, tuple] = {}      # slug -> (author_slug, title, cd, sec, url)
-    chapter_rows: list[tuple] = []    # (work_slug, chapter_num, title, src_md)
-    para_rows: list[tuple] = []       # (ws, cn, pn, text, off_s, off_e)
-    work_para_counts: dict[str, int] = {}
+    chapter_acc: dict[tuple, dict] = {}  # (ws, cn) -> {'title','src','paragraphs'}
     skipped = 0
 
     for i, path in enumerate(patristic_files):
@@ -441,21 +445,38 @@ async def run() -> None:
             author_slug, work_title, fm.get("creation_date"),
             fm.get("section"), fm.get("source_url"),
         ))
-        chapter_rows.append((work_slug, chapter_num, chapter_title, rel_path))
 
+        # Compute paragraph offsets for this chapter's paragraphs.
         body = parsed.body
         pos = 0
-        for p_idx, p in enumerate(parsed.paragraphs):
+        chapter_paragraphs: list[tuple] = []
+        for p in parsed.paragraphs:
             idx = body.find(p, pos)
             if idx < 0:
                 off = (0, len(p))
             else:
                 off = (idx, idx + len(p))
                 pos = idx + len(p)
-            para_rows.append((work_slug, chapter_num, p_idx + 1, p,
-                              off[0], off[1]))
-        work_para_counts[work_slug] = (work_para_counts.get(work_slug, 0) +
-                                       len(parsed.paragraphs))
+            chapter_paragraphs.append((p, off[0], off[1]))
+
+        # OVERWRITE — last MD per (ws, cn) wins. Matches legacy
+        # _replace_paragraphs (DELETE-then-INSERT per chapter).
+        chapter_acc[(work_slug, chapter_num)] = {
+            'title': chapter_title,
+            'src': rel_path,
+            'paragraphs': chapter_paragraphs,
+        }
+
+    # Flatten accumulator into chapter_rows + para_rows.
+    chapter_rows: list[tuple] = []
+    para_rows: list[tuple] = []
+    work_para_counts: dict[str, int] = {}
+    for (ws, cn), data in chapter_acc.items():
+        chapter_rows.append((ws, cn, data['title'], data['src']))
+        for p_idx, (text, off_s, off_e) in enumerate(data['paragraphs']):
+            para_rows.append((ws, cn, p_idx + 1, text, off_s, off_e))
+        work_para_counts[ws] = (work_para_counts.get(ws, 0) +
+                                len(data['paragraphs']))
 
     print(f"[parse] done in {time.perf_counter()-t0:.1f}s | "
           f"authors={len(authors)} works={len(works)} "
