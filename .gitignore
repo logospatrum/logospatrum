@@ -47,3 +47,4 @@ packages/pipeline/_subset_small/
 apps/backend/.langgraph_api/
 apps/backend/_smoke/
 bench/baseline-run.log
+bench/after-nestloop-fix*.txt

@@ -142,9 +142,29 @@ async def lexical_search(
 
     sql = "\n".join(sql_parts)
 
+    # Planner heuristic — force hash plan only when the wlist is *large*.
+    #
+    # For 1 author / 1 section (Bible/Patristic small subsets) the nested-loop
+    # plan via `embeddings_filter_idx` is optimal: wlist has tens of works, the
+    # inner index scan is cheap. Forcing hash here costs 5-10× (760ms vs 80ms
+    # on Bible). For 3+ authors wlist swells to ~300 works; the planner
+    # underestimates per-loop cost and sticks with nestloop, which then does
+    # ~125K in-heap @@-tsquery checks (1.4s observed on 4-author "смирение").
+    # Disabling nestloop for that case forces BitmapAnd(GIN, Hash(wlist))
+    # → ~270ms.
+    #
+    # Threshold ≥3 authors is empirical: 2-author cross queries still fit
+    # nestloop comfortably; 3+ is where the planner blows up.
+    multi_author_filter = isinstance(author_slug, list) and len(author_slug) >= 3
+    multi_work_filter = isinstance(work_slug, list) and len(work_slug) >= 10
+    force_hash = multi_author_filter or multi_work_filter
+
     async with conn() as c:
-        cur = await c.execute(sql, all_params)
-        rows = await cur.fetchall()
+        async with c.transaction():
+            if force_hash:
+                await c.execute("SET LOCAL enable_nestloop = off")
+            cur = await c.execute(sql, all_params)
+            rows = await cur.fetchall()
 
     return [
         {
