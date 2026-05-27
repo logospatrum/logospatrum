@@ -360,66 +360,214 @@ async def _ingest_bible(c, bible_files: list[Path]) -> dict[str, int]:
 
 
 async def run() -> None:
+    """Ingest all MDs into the DB via in-memory accumulation + bulk COPY.
+
+    Replaces the legacy row-by-row INSERT-in-one-mega-transaction design
+    (which dispatched ~3M individual INSERT statements over the wire and
+    blocked the whole table for hours on a remote DSN).
+
+    Pipeline:
+      1. Walk MD files, parse in-memory into (authors, works, chapters,
+         paragraph rows) dicts. ~1-2 GB peak RAM for current corpus.
+      2. TRUNCATE paragraphs CASCADE — wipes paragraphs + embeddings in
+         one statement (FK cascades). Atomic, fast.
+      3. Bulk UPSERT metadata tables via executemany (small N: ~300
+         authors, ~3K works, ~100K chapters).
+      4. COPY paragraphs FROM STDIN — streams ~2-3M rows in one network
+         frame, ~30-60s total.
+      5. Update works.paragraph_count.
+
+    TODO: convert to streaming 2-pass to drop the ~1.5 GB paragraph-row
+    peak. Pass 1: walk MDs collecting only authors/works/chapter dicts,
+    UPSERT them. Pass 2: walk MDs again, parse on the fly, stream rows
+    directly into the COPY cursor without buffering. Net cost +1 parse
+    pass (~30-60s for 220K MDs), benefit -1.3 GB RAM. Right now we burn
+    RAM for code simplicity since dev machines have it; remote agents
+    with constrained RAM should prefer the streaming variant.
+    """
+    import time
+
     await init_pool()
     md_files = list(settings.output_dir.rglob("*.md"))
-    print(f"Found {len(md_files)} md files in {settings.output_dir}")
-
+    print(f"Found {len(md_files)} md files in {settings.output_dir}", flush=True)
     patristic_files = [p for p in md_files if not _is_bible_path(p, settings.output_dir)]
     bible_files = [p for p in md_files if _is_bible_path(p, settings.output_dir)]
-    print(f"  patristic: {len(patristic_files)}, bible: {len(bible_files)}")
+    print(f"  patristic: {len(patristic_files)}, bible: {len(bible_files)}",
+          flush=True)
 
+    # --- Phase 1: parse all patristic MDs into in-memory dicts ---
+    print("[parse] reading patristic MDs into memory...", flush=True)
+    t0 = time.perf_counter()
+    authors: dict[str, tuple] = {}    # slug -> (name, years, section)
+    works: dict[str, tuple] = {}      # slug -> (author_slug, title, cd, sec, url)
+    chapter_rows: list[tuple] = []    # (work_slug, chapter_num, title, src_md)
+    para_rows: list[tuple] = []       # (ws, cn, pn, text, off_s, off_e)
     work_para_counts: dict[str, int] = {}
+    skipped = 0
 
-    with Progress() as progress:
-        task = progress.add_task("Parsing md", total=len(patristic_files))
-        async with conn() as c:
-            async with c.transaction():
-                for path in patristic_files:
-                    progress.update(task, advance=1)
-                    try:
-                        parsed = parse_md(path)
-                    except Exception as e:
-                        print(f"  [skip] {path}: {e}")
-                        continue
+    for i, path in enumerate(patristic_files):
+        if i and i % 50000 == 0:
+            print(f"  ...parsed {i:>6}/{len(patristic_files)} ({time.perf_counter()-t0:.1f}s)", flush=True)
+        try:
+            parsed = parse_md(path)
+        except Exception as e:
+            print(f"  [skip] {path.name}: {e}")
+            skipped += 1
+            continue
+        fm = parsed.frontmatter
+        author_name = fm.get("author", "").strip()
+        work_title = fm.get("book_title", "").strip()
+        if not author_name or not work_title:
+            skipped += 1
+            continue
 
-                    fm = parsed.frontmatter
-                    author_name = fm.get("author", "").strip()
-                    work_title = fm.get("book_title", "").strip()
-                    if not author_name or not work_title:
-                        continue
+        chapter_title = fm.get("chapter_title")
+        try:
+            chapter_num = int(fm.get("chapter_number") or
+                              _chapter_num_from_filename(path.name))
+        except ValueError:
+            chapter_num = _chapter_num_from_filename(path.name)
 
-                    chapter_title = fm.get("chapter_title")
-                    try:
-                        chapter_num = int(fm.get("chapter_number") or _chapter_num_from_filename(path.name))
-                    except ValueError:
-                        chapter_num = _chapter_num_from_filename(path.name)
+        author_slug = slugify(author_name)
+        work_slug = slugify(f"{author_slug}_{work_title}")
+        rel_path = str(path.relative_to(settings.output_dir))
 
-                    author_slug = slugify(author_name)
-                    work_slug = slugify(f"{author_slug}_{work_title}")
-                    rel_path = str(path.relative_to(settings.output_dir))
+        authors.setdefault(author_slug, (
+            author_name,
+            fm.get("author_years_of_life"),
+            fm.get("global_section"),
+        ))
+        works.setdefault(work_slug, (
+            author_slug, work_title, fm.get("creation_date"),
+            fm.get("section"), fm.get("source_url"),
+        ))
+        chapter_rows.append((work_slug, chapter_num, chapter_title, rel_path))
 
-                    await _upsert_author(c, author_slug, author_name,
-                                         fm.get("author_years_of_life"),
-                                         fm.get("global_section"))
-                    await _upsert_work(c, work_slug, author_slug, work_title,
-                                       fm.get("creation_date"),
-                                       fm.get("section"),
-                                       fm.get("source_url"))
-                    await _upsert_chapter(c, work_slug, chapter_num, chapter_title, rel_path)
-                    await _replace_paragraphs(c, work_slug, chapter_num,
-                                              parsed.paragraphs, parsed.body)
+        body = parsed.body
+        pos = 0
+        for p_idx, p in enumerate(parsed.paragraphs):
+            idx = body.find(p, pos)
+            if idx < 0:
+                off = (0, len(p))
+            else:
+                off = (idx, idx + len(p))
+                pos = idx + len(p)
+            para_rows.append((work_slug, chapter_num, p_idx + 1, p,
+                              off[0], off[1]))
+        work_para_counts[work_slug] = (work_para_counts.get(work_slug, 0) +
+                                       len(parsed.paragraphs))
 
-                    work_para_counts[work_slug] = work_para_counts.get(work_slug, 0) + len(parsed.paragraphs)
+    print(f"[parse] done in {time.perf_counter()-t0:.1f}s | "
+          f"authors={len(authors)} works={len(works)} "
+          f"chapters={len(chapter_rows)} paragraphs={len(para_rows)} "
+          f"skipped={skipped}", flush=True)
 
-                bible_counts = await _ingest_bible(c, bible_files)
-                work_para_counts.update(bible_counts)
+    # --- Phase 2: bulk DB ops ---
+    async with conn() as c:
+        # Step 1: TRUNCATE paragraphs (and cascade to embeddings via FK).
+        print("[db] TRUNCATE paragraphs CASCADE (wipes embeddings too)...",
+              flush=True)
+        t0 = time.perf_counter()
+        await c.execute("TRUNCATE paragraphs CASCADE")
+        print(f"  done in {time.perf_counter()-t0:.1f}s", flush=True)
 
-                for ws, count in work_para_counts.items():
-                    await c.execute(
-                        "UPDATE works SET paragraph_count=%s WHERE slug=%s",
-                        [count, ws],
-                    )
+        # Step 2: UPSERT authors (small).
+        print(f"[db] UPSERT {len(authors)} authors...", flush=True)
+        t0 = time.perf_counter()
+        author_rows = []
+        for slug, (name, years, section) in authors.items():
+            century = _century_from_years(years)
+            author_rows.append((slug, name, years, century, section))
+        async with c.cursor() as cur:
+            await cur.executemany(
+                """INSERT INTO authors (slug, name_display, years, century, global_section)
+                   VALUES (%s, %s, %s, %s, %s)
+                   ON CONFLICT (slug) DO UPDATE
+                   SET name_display=EXCLUDED.name_display,
+                       years=COALESCE(EXCLUDED.years, authors.years),
+                       century=COALESCE(EXCLUDED.century, authors.century),
+                       global_section=COALESCE(EXCLUDED.global_section, authors.global_section)""",
+                author_rows,
+            )
+        print(f"  done in {time.perf_counter()-t0:.1f}s", flush=True)
+
+        # Step 3: UPSERT works (small).
+        print(f"[db] UPSERT {len(works)} works...", flush=True)
+        t0 = time.perf_counter()
+        work_rows = [(s, a, t, cd, sec, url)
+                     for s, (a, t, cd, sec, url) in works.items()]
+        async with c.cursor() as cur:
+            await cur.executemany(
+                """INSERT INTO works (slug, author_slug, title_display, creation_date, section, source_url)
+                   VALUES (%s, %s, %s, %s, %s, %s)
+                   ON CONFLICT (slug) DO UPDATE
+                   SET title_display=EXCLUDED.title_display,
+                       creation_date=COALESCE(EXCLUDED.creation_date, works.creation_date),
+                       section=COALESCE(EXCLUDED.section, works.section),
+                       source_url=COALESCE(EXCLUDED.source_url, works.source_url)""",
+                work_rows,
+            )
+        print(f"  done in {time.perf_counter()-t0:.1f}s", flush=True)
+
+        # Step 4: UPSERT chapters (medium, ~100K).
+        print(f"[db] UPSERT {len(chapter_rows)} chapters...", flush=True)
+        t0 = time.perf_counter()
+        # Deduplicate chapter_rows by (work_slug, chapter_num) — latest wins.
+        seen_chapters: dict[tuple, tuple] = {}
+        for ws, cn, title, src in chapter_rows:
+            seen_chapters[(ws, cn)] = (title, src)
+        chapter_upsert_rows = [(ws, cn, t, s)
+                               for (ws, cn), (t, s) in seen_chapters.items()]
+        async with c.cursor() as cur:
+            await cur.executemany(
+                """INSERT INTO chapters (work_slug, chapter_num, title, source_md_path)
+                   VALUES (%s, %s, %s, %s)
+                   ON CONFLICT (work_slug, chapter_num) DO UPDATE
+                   SET title=EXCLUDED.title, source_md_path=EXCLUDED.source_md_path""",
+                chapter_upsert_rows,
+            )
+        print(f"  done in {time.perf_counter()-t0:.1f}s "
+              f"({len(chapter_upsert_rows)} unique)", flush=True)
+
+        # Step 5: COPY paragraphs FROM STDIN (big).
+        print(f"[db] COPY {len(para_rows)} paragraphs FROM STDIN...",
+              flush=True)
+        t0 = time.perf_counter()
+        async with c.cursor() as cur:
+            async with cur.copy(
+                """COPY paragraphs
+                   (work_slug, chapter_num, para_num, text,
+                    char_offset_start, char_offset_end)
+                   FROM STDIN"""
+            ) as copy:
+                for row in para_rows:
+                    await copy.write_row(row)
+        elapsed = time.perf_counter() - t0
+        rate = len(para_rows) / elapsed if elapsed > 0 else 0
+        print(f"  done in {elapsed:.1f}s ({rate:.0f} rows/sec)", flush=True)
+
+        # Step 6: Bible flow (small, original logic — re-uses _ingest_bible).
+        # Note: _ingest_bible expects empty target chapters; since we just
+        # truncated everything, this is the right starting state.
+        print(f"[db] ingest Bible ({len(bible_files)} files)...", flush=True)
+        t0 = time.perf_counter()
+        bible_counts = await _ingest_bible(c, bible_files)
+        work_para_counts.update(bible_counts)
+        print(f"  done in {time.perf_counter()-t0:.1f}s "
+              f"({sum(bible_counts.values())} Bible verses)", flush=True)
+
+        # Step 7: update works.paragraph_count.
+        print("[db] update works.paragraph_count...", flush=True)
+        t0 = time.perf_counter()
+        async with c.cursor() as cur:
+            await cur.executemany(
+                "UPDATE works SET paragraph_count=%s WHERE slug=%s",
+                [(count, ws) for ws, count in work_para_counts.items()],
+            )
+        print(f"  done in {time.perf_counter()-t0:.1f}s", flush=True)
 
     await close_pool()
-    print(f"Indexed {sum(work_para_counts.values())} paragraphs across {len(work_para_counts)} works "
-          f"({sum(bible_counts.values()) if bible_files else 0} from Bible).")
+    print(f"[DONE] {sum(work_para_counts.values())} paragraphs across "
+          f"{len(work_para_counts)} works "
+          f"({sum(bible_counts.values()) if bible_files else 0} Bible verses).",
+          flush=True)

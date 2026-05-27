@@ -1,3 +1,4 @@
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -183,10 +184,23 @@ source_url: {metadata.get('work_url', '')}
             f.write(content)
 
     def _safe_filename(self, name: str) -> str:
-        # Keep only word characters (letters, digits) - works for Cyrillic too
+        # Keep only word characters (letters, digits) - works for Cyrillic too.
         words = re.findall(r'[\w]+', name, re.UNICODE)
-        name = '_'.join(words)
-        return name[:30]
+        return '_'.join(words)[:30]
+
+    def _safe_title(self, name: str) -> str:
+        # Work titles need a uniqueness guarantee — pure 30-char truncation
+        # collapses ~80% of canonized authors' similarly-titled works into
+        # one output dir (e.g. "Из пережитого: Речь Рязанскую кафедру" and
+        # "Из пережитого: Речь Якутскую кафедру" both → "Из_пережитого_…").
+        # Append a short content hash so distinct sources land in distinct
+        # dirs while keeping the path length under Windows MAX_PATH=260.
+        # Full-length expansion (80 chars per component) blew past MAX_PATH
+        # once author + work + chapter were concatenated.
+        words = re.findall(r'[\w]+', name, re.UNICODE)
+        truncated = '_'.join(words)[:30]
+        h = hashlib.md5(name.encode('utf-8')).hexdigest()[:8]
+        return f"{truncated}_{h}"
 
     def run(self):
         output_dir = self.config.output_dir
@@ -230,7 +244,7 @@ source_url: {metadata.get('work_url', '')}
 
                 safe_section = self._safe_filename(global_section)
                 safe_author = self._safe_filename(author_name)
-                safe_title = self._safe_filename(metadata.get("title", "unknown"))
+                safe_title = self._safe_title(metadata.get("title", "unknown"))
                 safe_chapter = self._safe_filename(chapter_title)
 
                 output_path = (

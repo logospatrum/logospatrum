@@ -10,7 +10,7 @@ Data ingestion CLI for the patristic corpus: scrape azbyka.ru → download epub 
 
 The typer app exposes ONLY these subcommands:
 - `diagnose` — fs scan of `output/` and `data/`, writes `diagnose_report.json`. No DB. `pipeline/diagnose.py`.
-- `paragraphs` — parses every md (patristic + Bible) and writes `paragraphs`/`works`/`authors`/`chapters` in one big transaction. Both flows live in `pipeline/paragraphs.py`; Bible branch is `_ingest_bible`.
+- `paragraphs` — parses every md (patristic + Bible) and writes `paragraphs`/`works`/`authors`/`chapters` via in-memory accumulation + bulk COPY-FROM-STDIN (replaced the legacy row-by-row executemany flow). Both flows live in `pipeline/paragraphs.py`; Bible branch is `_ingest_bible`. **Known tech-debt:** the patristic pass buffers ~2.6M paragraph rows in RAM (~1.5 GB peak) before COPY. See TODO at the top of `paragraphs.run()` — convert to streaming 2-pass (pass 1 collects authors/works/chapters, pass 2 streams parsed rows directly into the COPY cursor) to drop RAM to ~50 MB at the cost of one extra parse pass. Worth doing before any further corpus expansion.
 - `bible-markdown` — Bible-specific epub→md (verse-per-md). Skip-if-exists per book. `pipeline/bible_md_convert.py`.
 - `embed` — bge-m3 encoding + HNSW/GIN build. See perf section below. `pipeline/embed.py`.
 - `concepts-bootstrap` — generates `glossary.json` (synonyms/related/greek per concept) via the configured OpenAI-compatible endpoint (Haiku) from `seed_concepts.json`. Resumable. Currently 79/79 done. `pipeline/concepts_bootstrap.py`.
