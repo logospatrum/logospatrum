@@ -10,12 +10,24 @@ from .models import ParsedMarkdown
 
 MIN_PARA_CHARS = 30
 
+# Max chars per stored paragraph. Long source paragraphs are sub-split on
+# sentence boundaries before insertion. 1500 chars ≈ 430 Russian tokens; a
+# ws=3 window (three such pieces) fits inside cap=2048 with margin. Without
+# this split, ~3% of MDs are single-paragraph monoliths up to 50K chars,
+# which bge-m3 truncates at the seq cap — entire tails go unindexed.
+MAX_PARA_CHARS = 1500
+
 _NOISE_PATTERNS = [
     re.compile(r"^—\s*\d+\s*—$"),          # — 42 —
     re.compile(r"^\*\d+\)?\s*$"),           # *1) or *1
     re.compile(r"^\s*\d+\s*$"),             # bare page number
     re.compile(r"^[\s\-=_]{1,}$"),          # dividers
 ]
+
+# Russian sentence terminators followed by whitespace + capital letter or
+# digit. Includes the elongated ellipsis "…" and the angle quotes that
+# patristic editors love to use.
+_SENTENCE_BOUNDARY_RE = re.compile(r"(?<=[.!?…»])\s+(?=[А-ЯA-Z0-9«—])")
 
 _FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n(.*)$", re.DOTALL)
 
@@ -42,18 +54,73 @@ def _is_noise(line: str) -> bool:
     return False
 
 
+def _split_long_paragraph(text: str, max_chars: int = MAX_PARA_CHARS) -> list[str]:
+    """Greedy-split an over-long paragraph on Russian sentence boundaries.
+
+    Goal: keep every output sub-paragraph at or below `max_chars`. The
+    `_SENTENCE_BOUNDARY_RE` lookahead requires a Cyrillic/Latin uppercase or
+    digit start, so it ignores in-sentence abbreviations like "св. Иоанн".
+
+    If a single sentence is itself longer than `max_chars` (e.g. monolithic
+    epub paragraphs with no sentence breaks), the chunk is hard-cut on a
+    word boundary near the limit. We never emit a sub-paragraph below
+    MIN_PARA_CHARS — those merge into the next chunk.
+    """
+    if len(text) <= max_chars:
+        return [text]
+
+    sentences = _SENTENCE_BOUNDARY_RE.split(text)
+
+    chunks: list[str] = []
+    current = ""
+    for s in sentences:
+        if not s:
+            continue
+        candidate = (current + " " + s).strip() if current else s
+        if len(candidate) <= max_chars:
+            current = candidate
+        else:
+            if current:
+                chunks.append(current)
+            # The single sentence itself is too long → hard-cut on word
+            # boundaries.
+            while len(s) > max_chars:
+                cut = s.rfind(" ", 0, max_chars)
+                if cut <= 0:
+                    cut = max_chars
+                chunks.append(s[:cut].strip())
+                s = s[cut:].lstrip()
+            current = s
+    if current:
+        chunks.append(current)
+    # Drop fragments under MIN_PARA_CHARS by merging into previous (rare;
+    # mostly happens after a trailing partial sentence after hard-cut).
+    merged: list[str] = []
+    for c in chunks:
+        if c and len(c) < MIN_PARA_CHARS and merged:
+            merged[-1] = (merged[-1] + " " + c).strip()
+        else:
+            merged.append(c)
+    return [c for c in merged if c]
+
+
 def split_paragraphs(body: str) -> list[str]:
     """Split body into paragraphs.
 
     Prefers blank-line separators. Falls back to single-newline split if no
     blank lines exist. Filters noise (short blocks, page markers, footnote
-    markers).
+    markers). Sub-splits over-long paragraphs on sentence boundaries so the
+    embedding model never silently truncates the tail.
     """
     raw = re.split(r"\n{2,}", body)
     raw = [b.strip() for b in raw if b.strip()]
     if len(raw) == 1 and "\n" in raw[0]:
         raw = [line.strip() for line in raw[0].split("\n") if line.strip()]
-    return [p for p in raw if not _is_noise(p)]
+    filtered = [p for p in raw if not _is_noise(p)]
+    out: list[str] = []
+    for p in filtered:
+        out.extend(_split_long_paragraph(p))
+    return out
 
 
 def parse_md(path: Path) -> ParsedMarkdown:
