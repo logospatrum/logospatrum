@@ -90,9 +90,20 @@ async def semantic_search(
     """
     params = where_params + [vec, candidate_pool, vec, vec, limit]
 
+    # When a selective WHERE filter is combined with HNSW ORDER BY, the default
+    # ef_search=40 yields top-40 globally and then the filter rejects most/all
+    # of them — empty results on author/section/work-filtered searches.
+    # pgvector 0.8 `iterative_scan = strict_order` keeps re-entering the index
+    # until LIMIT rows survive the filter, with exact distance order preserved.
+    # ef_search is also bumped so the per-iteration candidate pool is bigger.
+    # Applies to the bit-Hamming HNSW just like it did to the old cosine HNSW.
     async with conn() as c:
-        cur = await c.execute(sql, params)
-        rows = await cur.fetchall()
+        async with c.transaction():
+            if filters:
+                await c.execute("SET LOCAL hnsw.iterative_scan = strict_order")
+                await c.execute("SET LOCAL hnsw.ef_search = 100")
+            cur = await c.execute(sql, params)
+            rows = await cur.fetchall()
 
     return [
         {
