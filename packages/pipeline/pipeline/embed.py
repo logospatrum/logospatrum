@@ -117,10 +117,10 @@ async def _drop_indexes() -> None:
 
 async def _create_indexes() -> None:
     async with conn() as c:
-        print("[indexes] CREATE HNSW...", flush=True)
+        print("[indexes] CREATE HNSW (bit-quantized)...", flush=True)
         await c.execute(
             "CREATE INDEX IF NOT EXISTS embeddings_vector_idx "
-            "ON embeddings USING hnsw (vector vector_cosine_ops) "
+            "ON embeddings USING hnsw ((binary_quantize(vector)::bit(1024)) bit_hamming_ops) "
             "WITH (m=16, ef_construction=64)"
         )
         print("[indexes] CREATE GIN...", flush=True)
@@ -240,7 +240,7 @@ async def run(
                         """
                         INSERT INTO embeddings
                             (work_slug, chapter_num, para_num, window_size, vector, text_for_lexical)
-                        VALUES (%s, %s, %s, %s, %s, to_tsvector('russian', %s))
+                        VALUES (%s, %s, %s, %s, %s::halfvec(1024), to_tsvector('russian', %s))
                         ON CONFLICT (work_slug, chapter_num, para_num, window_size) DO NOTHING
                         """,
                         rows,
