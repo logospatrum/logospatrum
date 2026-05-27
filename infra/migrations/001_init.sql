@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS embeddings (
     chapter_num INTEGER NOT NULL,
     para_num INTEGER NOT NULL,           -- start paragraph of window
     window_size INTEGER NOT NULL CHECK (window_size BETWEEN 1 AND 3),
-    vector vector(1024),
+    vector halfvec(1024),
     text_for_lexical TSVECTOR,
     PRIMARY KEY (work_slug, chapter_num, para_num, window_size),
     FOREIGN KEY (work_slug, chapter_num, para_num) REFERENCES paragraphs(work_slug, chapter_num, para_num) ON DELETE CASCADE
