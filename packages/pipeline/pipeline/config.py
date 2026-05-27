@@ -31,5 +31,14 @@ class Settings(BaseSettings):
     seed_concepts_path: Path = Path(__file__).resolve().parent.parent / "seed_concepts.json"
     cs_dict_path: Path = Path(__file__).resolve().parent.parent / "cs_dict.json"
 
+    # Used by the legacy Scraper/Downloader/MarkdownConverter classes when
+    # they're driven from a typer subcommand (e.g. ingest-azbyka). Lists the
+    # library/index URLs to walk. Optional — most flows derive URLs elsewhere.
+    libraries_file: Path = Path(__file__).resolve().parent.parent / "libraries.txt"
+
 
 settings = Settings()
+
+# Backwards-compat alias: scrape.py / download.py / markdown_convert.py
+# (the legacy import path) refer to `Config` rather than `Settings`.
+Config = Settings

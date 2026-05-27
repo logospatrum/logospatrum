@@ -8,7 +8,6 @@ from bs4 import BeautifulSoup
 from ebooklib import epub
 
 from .config import Config
-from .models import ChapterDocument
 
 
 class MarkdownConverter:

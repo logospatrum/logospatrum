@@ -50,3 +50,26 @@ class ConceptEntry(BaseModel):
     related: list[str] = Field(default_factory=list)
     antonyms: list[str] = Field(default_factory=list)
     greek: list[str] = Field(default_factory=list)
+
+
+# Scrape-side dataclasses, used by Scraper / Downloader / MarkdownConverter
+# (the legacy import path). These mirror the JSON written under data/<section>/
+# <author>/<work>.json.
+
+class WorkMetadata(BaseModel):
+    title: str
+    work_url: str
+    creation_date: str | None = None
+    views: float = 0
+    section: str
+    epub_url: str | None = None
+    annotation: str | None = None
+    epub_path: str | None = None
+
+
+class AuthorMetadata(BaseModel):
+    name: str
+    author_url: str
+    years_of_life: str | None = None
+    global_section: str
+    works: list[WorkMetadata] = Field(default_factory=list)

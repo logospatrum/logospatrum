@@ -36,6 +36,22 @@ def pravo(throttle_ms: int = 200):
         col.run()
 
 
+@app.command(name="ingest-azbyka")
+def ingest_azbyka(authors_file: str) -> None:
+    """Scrape → download → markdown-convert for a JSON list of azbyka author URLs.
+
+    Input file format: [{"url": "https://azbyka.ru/otechnik/...",
+                         "name": "...",
+                         "expected_slug": "..."}, ...]
+    Produced by `scripts/canonized_diff.py`.
+
+    Resumable: per-work skip if metadata JSON exists; per-epub skip if epub
+    file exists.
+    """
+    from .ingest_azbyka import run as _run
+    _run(authors_file=authors_file)
+
+
 @app.command(name="bible-markdown")
 def bible_markdown() -> None:
     """Конвертит Bible epub'ы → один-стих-один-md в output/Bible/. Skip-if-exists."""
