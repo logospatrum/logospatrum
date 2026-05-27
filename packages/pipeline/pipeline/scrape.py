@@ -77,14 +77,39 @@ class Scraper:
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "lxml")
 
-        works = []
-        sections = soup.find_all("div", class_="text-base mb-2")
+        # Scope to the primary "groupItems" container — the same page also
+        # carries `sortedGroupItems` and a flat `sortedItems` duplicate that
+        # the SPA toggles via JS. Without scoping we used to traverse every
+        # `text-base mb-2` on the page (3× duplicates, plus stray ones outside
+        # the books section).
+        container = (
+            soup.find("div", attrs={"data-author--book-target": "groupItems"})
+            or soup.find("section", id="author-groups-books")
+            or soup.find("section", id="author-groups")
+            or soup
+        )
 
+        works = []
+        sections = container.find_all("div", class_="text-base mb-2")
+
+        # Two layouts in the wild as of 2026:
+        #   A) Authors with multiple work groups (typesetter-categorized):
+        #      <div class="text-base mb-2">
+        #        <span class="...author-group__title">Section name</span>
+        #        <ul><li>work</li>...</ul>
+        #      </div>
+        #   B) Authors with a flat list (newer canonized saints, e.g.
+        #      Михаил Селищинский — священномученики, оптинские старцы):
+        #      <div class="text-base mb-2">
+        #        <span id="<slug>"></span>      <!-- anchor only -->
+        #        <ul><li>single work</li></ul>
+        #      </div>
+        # Layout B has no author-group__title; we use empty section_title.
         excluded_divs = set()
         for section_div in sections:
             section_title_span = section_div.find("span", class_="author-group__title")
             if not section_title_span:
-                continue
+                continue  # layout B: no title to check for exclusion
 
             section_title = section_title_span.get_text(strip=True)
             if section_title in EXCLUDED_SECTIONS:
@@ -97,10 +122,11 @@ class Scraper:
                 continue
 
             section_title_span = section_div.find("span", class_="author-group__title")
-            if not section_title_span:
-                continue
-
-            section_title = section_title_span.get_text(strip=True)
+            if section_title_span:
+                section_title = section_title_span.get_text(strip=True)
+            else:
+                # Layout B fallback: keep processing without a category label.
+                section_title = ""
 
             work_items = section_div.find_all("li", recursive=False)
             if not work_items:
