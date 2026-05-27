@@ -1,0 +1,33 @@
+[bench] running…
+  expand_concept hit/miss…
+  list_authors variants…
+  list_works variants…
+  lexical_search variants…
+  semantic_search variants (slower, CPU embed)…
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 24804.85it/s]
+  read_passage hit/miss…
+
+tool variant                                                                med     mean      min      max   payload
+--------------------------------------------------------------------------------------------------------------
+expand_concept(hit: 'гордость')                                            0.3ms     0.3ms     0.3ms     0.4ms      547b
+expand_concept(miss: 'Фаворский свет')                                     0.3ms     0.4ms     0.3ms     0.4ms       35b
+list_authors() [all 86, default limit=20]                                 35.6ms    39.9ms    34.2ms    66.5ms     4.4KB
+list_authors(q='палама')                                                  35.1ms    35.5ms    34.0ms    38.2ms      213b
+list_authors(q='святитель') [many matches]                                36.1ms    40.1ms    35.4ms    48.1ms     4.5KB
+list_works(zlatoust) [154 works, capped at limit=30]                      40.9ms    41.9ms    34.7ms    55.1ms    11.3KB
+list_works(zlatoust, q='беседы') [~filtered]                              35.6ms    36.9ms    35.0ms    46.1ms     8.6KB
+list_works(palama, no q) [small author]                                   44.9ms    42.4ms    34.5ms    49.5ms     9.5KB
+lexical_search('смирение') [no filter]                                   468.5ms   473.8ms   428.6ms   531.0ms     5.0KB
+lexical_search('смирение', author=Palama)                                237.2ms   237.4ms   213.9ms   269.2ms     5.0KB
+lexical_search('смирение', author=[Z, Nis, Avg, Pal])                    895.3ms   925.0ms   865.1ms  1165.3ms     5.0KB
+lexical_search('смирение', section='bible')                               76.2ms    76.6ms    70.4ms    84.6ms     3.6KB
+lexical_search('смирение', section='patristic')                          449.0ms   448.7ms   419.9ms   470.0ms     5.0KB
+semantic_search('смирение') [no filter]                                  198.8ms   205.1ms   186.0ms   236.8ms     3.4KB
+semantic_search('смирение', author=Palama)                               284.0ms   287.1ms   263.0ms   317.5ms     5.1KB
+semantic_search('смирение', author=[Z, Nis, Avg, Pal])                   274.8ms   271.7ms   254.9ms   282.4ms     4.6KB
+semantic_search('смирение', section='bible')                             332.8ms   336.6ms   309.2ms   371.7ms     3.9KB
+semantic_search('смирение', section='patristic')                         227.3ms   228.9ms   211.9ms   249.0ms     3.4KB
+read_passage(real, context=2)                                             72.3ms   103.4ms    70.2ms   301.9ms     2.7KB
+read_passage(real, context=0)                                            106.2ms    98.8ms    69.2ms   135.7ms      532b
+read_passage(hallucinated)                                                48.3ms    57.1ms    44.8ms    84.7ms      262b
