@@ -48,3 +48,4 @@ apps/backend/.langgraph_api/
 apps/backend/_smoke/
 bench/baseline-run.log
 bench/after-nestloop-fix*.txt
+canonized_diff.json
