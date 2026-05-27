@@ -64,10 +64,19 @@ async def semantic_search(
 
     where = ("WHERE " + " AND ".join(filters)) if filters else ""
 
-    # Two-stage retrieval with bit-quantized HNSW:
-    # 1) HNSW finds top-N candidates by Hamming distance over binary-quantized vectors
-    # 2) Exact halfvec cosine reranks within those candidates
-    candidate_pool = max(100, limit * 5)
+    # Three-stage retrieval with bit-quantized HNSW + per-paragraph dedup:
+    #  1) HNSW finds top-N candidates by Hamming distance (bit-quantized).
+    #  2) DISTINCT ON (work_slug, chapter_num, para_num) keeps only the
+    #     best-matching window per paragraph — without this, top-K may
+    #     return up to 6 rows pointing at the same paragraph via different
+    #     window_sizes (ws=1 P3, ws=2 P3+P4, ws=3 P1+P2+P3, etc.), wasting
+    #     downstream agent attention and read_passage calls.
+    #  3) Exact halfvec cosine reranks the deduped survivors.
+    #
+    # candidate_pool is 2× larger than the no-dedup version because dedup
+    # collapses ~2-3 candidates per unique paragraph on average; without
+    # the larger pool, top-K can shrink to fewer than `limit` results.
+    candidate_pool = max(200, limit * 15)
     sql = f"""
         WITH cand AS (
           SELECT e.work_slug, e.chapter_num, e.para_num, e.window_size, e.vector
@@ -78,17 +87,24 @@ async def semantic_search(
           ORDER BY binary_quantize(e.vector)::bit(1024)
                    <~> binary_quantize(%s::halfvec(1024))::bit(1024)
           LIMIT %s
+        ),
+        deduped AS (
+          SELECT DISTINCT ON (work_slug, chapter_num, para_num)
+                 work_slug, chapter_num, para_num, window_size, vector
+          FROM cand
+          ORDER BY work_slug, chapter_num, para_num,
+                   vector <=> %s::halfvec(1024)
         )
-        SELECT w2.author_slug, cand.work_slug, cand.chapter_num, cand.para_num, cand.window_size,
+        SELECT w2.author_slug, d.work_slug, d.chapter_num, d.para_num, d.window_size,
                LEFT(p.text, 200) AS snippet,
-               1 - (cand.vector <=> %s::halfvec(1024)) AS score
-        FROM cand
-        JOIN works w2 ON w2.slug = cand.work_slug
-        JOIN paragraphs p ON p.work_slug=cand.work_slug AND p.chapter_num=cand.chapter_num AND p.para_num=cand.para_num
-        ORDER BY cand.vector <=> %s::halfvec(1024)
+               1 - (d.vector <=> %s::halfvec(1024)) AS score
+        FROM deduped d
+        JOIN works w2 ON w2.slug = d.work_slug
+        JOIN paragraphs p ON p.work_slug=d.work_slug AND p.chapter_num=d.chapter_num AND p.para_num=d.para_num
+        ORDER BY d.vector <=> %s::halfvec(1024)
         LIMIT %s
     """
-    params = where_params + [vec, candidate_pool, vec, vec, limit]
+    params = where_params + [vec, candidate_pool, vec, vec, vec, limit]
 
     # When a selective WHERE filter is combined with HNSW ORDER BY, the default
     # ef_search=40 yields top-40 globally and then the filter rejects most/all
