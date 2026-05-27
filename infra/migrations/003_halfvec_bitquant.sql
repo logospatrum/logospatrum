@@ -20,14 +20,16 @@
 
 BEGIN;
 
--- Step 1: cast existing vectors to halfvec in place.
+-- Step 1: drop the old HNSW(vector_cosine_ops) index FIRST.
+-- ALTER TYPE on a column would otherwise try to re-create dependent indexes
+-- with the new type, and vector_cosine_ops doesn't accept halfvec → error.
+DROP INDEX IF EXISTS embeddings_vector_idx;
+
+-- Step 2: cast existing vectors to halfvec in place.
 -- ALTER TYPE with USING rewrites all heap pages → slow on 2M rows.
 ALTER TABLE embeddings
   ALTER COLUMN vector TYPE halfvec(1024)
   USING vector::halfvec(1024);
-
--- Step 2: drop the old HNSW index on the float32 vector.
-DROP INDEX IF EXISTS embeddings_vector_idx;
 
 -- Step 3: build a bit-quantized HNSW index. The expression
 --   binary_quantize(vector)::bit(1024)
