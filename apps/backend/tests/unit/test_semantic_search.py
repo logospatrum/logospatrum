@@ -32,7 +32,7 @@ async def db_with_real_vectors(db_with_seed_authors, fake_model):
             )
             await c.execute(
                 "INSERT INTO embeddings (work_slug, chapter_num, para_num, window_size, vector, text_for_lexical) "
-                "VALUES (%s,%s,%s,1,%s,to_tsvector('russian',%s))",
+                "VALUES (%s,%s,%s,1,%s::halfvec(1024),to_tsvector('russian',%s))",
                 [t[0], t[1], t[2], v.tolist(), t[3]],
             )
     yield
@@ -68,3 +68,34 @@ async def test_semantic_search_filter_by_author(db_with_real_vectors, fake_model
             assert "lestvichnik" in r["citation"]
     finally:
         await svc.stop()
+
+
+@pytest.mark.asyncio
+async def test_semantic_search_uses_two_stage_rerank(db_with_real_vectors, fake_model, monkeypatch):
+    """Verify the SQL issued contains binary_quantize for stage 1 and halfvec cosine for stage 2."""
+    svc = EmbeddingService(model=fake_model, batch_size=4, window_ms=20)
+    await svc.start()
+    async def _stub():
+        return svc
+    monkeypatch.setattr(ss_module, "_get_service", _stub)
+
+    captured: list[str] = []
+    real_execute = None
+
+    async def spy_execute(self, sql, *args, **kwargs):
+        captured.append(sql if isinstance(sql, str) else str(sql))
+        return await real_execute(self, sql, *args, **kwargs)
+
+    import psycopg
+    real_execute = psycopg.AsyncCursor.execute  # type: ignore[attr-defined]
+    monkeypatch.setattr(psycopg.AsyncCursor, "execute", spy_execute)
+
+    try:
+        await ss_module.semantic_search.ainvoke({"query": "Послушание"})
+    finally:
+        await svc.stop()
+
+    joined = " ".join(captured)
+    assert "binary_quantize" in joined
+    assert "bit_hamming_ops" in joined or "<~>" in joined
+    assert "halfvec" in joined or "<=>" in joined  # rerank distance present

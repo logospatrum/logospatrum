@@ -64,37 +64,35 @@ async def semantic_search(
 
     where = ("WHERE " + " AND ".join(filters)) if filters else ""
 
+    # Two-stage retrieval with bit-quantized HNSW:
+    # 1) HNSW finds top-N candidates by Hamming distance over binary-quantized vectors
+    # 2) Exact halfvec cosine reranks within those candidates
+    candidate_pool = max(100, limit * 5)
     sql = f"""
-        SELECT w.author_slug, e.work_slug, e.chapter_num, e.para_num, e.window_size,
+        WITH cand AS (
+          SELECT e.work_slug, e.chapter_num, e.para_num, e.window_size, e.vector
+          FROM embeddings e
+          JOIN works w ON w.slug = e.work_slug
+          JOIN authors a ON a.slug = w.author_slug
+          {where}
+          ORDER BY binary_quantize(e.vector)::bit(1024)
+                   <~> binary_quantize(%s::halfvec(1024))::bit(1024)
+          LIMIT %s
+        )
+        SELECT w2.author_slug, cand.work_slug, cand.chapter_num, cand.para_num, cand.window_size,
                LEFT(p.text, 200) AS snippet,
-               1 - (e.vector <=> %s::vector) AS score
-        FROM embeddings e
-        JOIN works w ON w.slug = e.work_slug
-        JOIN authors a ON a.slug = w.author_slug
-        JOIN paragraphs p ON p.work_slug=e.work_slug AND p.chapter_num=e.chapter_num AND p.para_num=e.para_num
-        {where}
-        ORDER BY e.vector <=> %s::vector
+               1 - (cand.vector <=> %s::halfvec(1024)) AS score
+        FROM cand
+        JOIN works w2 ON w2.slug = cand.work_slug
+        JOIN paragraphs p ON p.work_slug=cand.work_slug AND p.chapter_num=cand.chapter_num AND p.para_num=cand.para_num
+        ORDER BY cand.vector <=> %s::halfvec(1024)
         LIMIT %s
     """
-    params = [vec] + where_params + [vec, limit]
+    params = where_params + [vec, candidate_pool, vec, vec, limit]
 
-    # HNSW + selective filter is a post-filter trap: at the default
-    # ef_search=40, the index returns ~40 nearest vectors anywhere in the
-    # corpus, the WHERE clause then rejects nearly all of them (one author
-    # is ~1-2% of 2M windows), and the result silently comes back empty.
-    #
-    # Fix: pgvector 0.8+ `iterative_scan = strict_order` re-enters the
-    # index until LIMIT rows survive the filter, preserving exact
-    # distance ordering. It also automatically caps the work — no need
-    # to guess ef_search per selectivity. See:
-    # https://github.com/pgvector/pgvector#iterative-index-scans
     async with conn() as c:
-        async with c.transaction():
-            if filters:
-                await c.execute("SET LOCAL hnsw.iterative_scan = strict_order")
-                await c.execute("SET LOCAL hnsw.ef_search = 100")
-            cur = await c.execute(sql, params)
-            rows = await cur.fetchall()
+        cur = await c.execute(sql, params)
+        rows = await cur.fetchall()
 
     return [
         {
