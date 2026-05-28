@@ -73,6 +73,10 @@ services:
       - "--proxy-headers"
       - "--workers"
       - "2"
+    # Persist the HF/sentence-transformers download (~2GB bge-m3) across image
+    # pulls. Dockerfile sets HF_HOME=SENTENCE_TRANSFORMERS_HOME=/cache/huggingface.
+    volumes:
+      - hf_cache:/cache/huggingface
     depends_on:
       postgres:
         condition: service_healthy
@@ -112,3 +116,4 @@ volumes:
   postgres-data:
   letsencrypt:
   certbot-webroot:
+  hf_cache:
