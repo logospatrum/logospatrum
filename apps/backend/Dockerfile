@@ -39,6 +39,18 @@ COPY pyproject.toml ./
 COPY src/ ./src/
 RUN pip install --no-cache-dir .
 
+# Fail-fast guard: package-data must ship skills/*.md and styles/*.md into
+# site-packages, otherwise the runtime registries silently degrade to empty
+# and the agent loses apologetics/pastoral and style middleware. Triggers
+# on broken pyproject [tool.setuptools.package-data].
+RUN python -c "import importlib.resources as r; \
+mds = sorted(p.name for p in r.files('backend').joinpath('skills').iterdir() if p.name.endswith('.md')); \
+assert mds, 'backend.skills package-data missing — see pyproject [tool.setuptools.package-data]'; \
+print('skills shipped:', mds); \
+mds = sorted(p.name for p in r.files('backend').joinpath('styles').iterdir() if p.name.endswith('.md')); \
+assert mds, 'backend.styles package-data missing'; \
+print('styles shipped:', mds)"
+
 # --- runtime stage: copy site-packages + the app ---
 FROM base AS runtime
 

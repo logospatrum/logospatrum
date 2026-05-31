@@ -35,6 +35,13 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# Skill/style registries are *.md files loaded at runtime via
+# Path(__file__).parent / "skills" (see graph.py). Without this stanza pip
+# install . copies only .py modules; on prod _SKILLS/_STYLES silently degrade
+# to empty and the agent loses apologetics/pastoral/style middleware.
+[tool.setuptools.package-data]
+backend = ["skills/*.md", "styles/*.md"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
